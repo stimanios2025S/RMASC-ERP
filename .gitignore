@@ -13,6 +13,8 @@ backend/dist/
 backend/node_modules/
 backend/.env
 backend/prisma/seed.ts
+backend/prisma/migrations/
+backend/public/updates/*.exe
 
 # Environment
 .env
@@ -33,14 +35,30 @@ Thumbs.db
 *.log
 logs/
 
-# Prisma (generated)
-backend/prisma/migrations/
+# Electron — Web app only
+electron/
 
-# Large binaries (block GitHub)
+# Large binaries
 portable-node/
-backend/public/updates/*.exe
 *.exe
+*.dll
+*.msi
+*.ico
 
 # Git helper scripts (contain credentials)
 git-push.bat
 git-push.ps1
+deploy-vercel.ps1
+
+# License keys
+*.key
+
+# PDF catalogs
+*.pdf
+
+# Test scripts
+*.spec.ts
+*.test.ts
+extract-pdf.cjs
+BUILD_*.bat
+SUPER_DEPLOY.bat
