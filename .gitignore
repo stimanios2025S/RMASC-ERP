@@ -43,8 +43,6 @@ logs/
 *.msi
 *.ico
 
-# Test scripts
-*.spec.ts
-*.test.ts
-
-.vercel
+# Vercel — track project binding, ignore cache
+.vercel/*
+!.vercel/project.json
