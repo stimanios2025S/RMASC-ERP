@@ -1,7 +1,7 @@
 {
   "name": "rmasc-erp",
   "version": "2.5.3",
-  "description": "RMASC FACTORY — ERP Ascenseur | Progressive Web Application",
+  "description": "RMASC FACTORY — ERP Ascenseur | MongoDB Edition",
   "type": "module",
   "private": true,
   "scripts": {
@@ -10,18 +10,22 @@
     "start": "cd backend && node api.mjs",
     "preview": "vite preview --host"
   },
-  "keywords": ["erp", "rmasc", "ascenseur", "pwa"],
+  "keywords": [
+    "erp",
+    "rmasc",
+    "ascenseur"
+  ],
   "author": "RMASC",
   "license": "UNLICENSED",
   "dependencies": {
-    "@prisma/client": "^5.14.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^7.4.0",
+    "mongoose": "^8.4.0",
     "pdfkit": "^0.19.1",
-    "prisma": "^5.14.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "vite": "^5.3.1",

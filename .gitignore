@@ -7,12 +7,10 @@ yarn-error.log*
 # Build output
 dist/
 
-# Backend build
+# Backend
 backend/dist/
 backend/node_modules/
 backend/.env
-backend/prisma/seed.ts
-backend/prisma/migrations/
 backend/public/updates/*.exe
 
 # Environment
@@ -34,7 +32,7 @@ Thumbs.db
 *.log
 logs/
 
-# License keys (generated, never commit)
+# License keys
 *.key
 
 # Large binaries
