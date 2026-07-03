@@ -1,0 +1,46 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+D:/RMASC-FACTORY-BUILD/
+
+# Backend
+backend/dist/
+backend/node_modules/
+backend/.env
+backend/prisma/seed.ts
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Prisma (generated)
+backend/prisma/migrations/
+
+# Large binaries (block GitHub)
+portable-node/
+backend/public/updates/*.exe
+*.exe
+
+# Git helper scripts (contain credentials)
+git-push.bat
+git-push.ps1

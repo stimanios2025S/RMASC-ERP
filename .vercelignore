@@ -1,0 +1,6 @@
+electron/
+scripts/
+D:/
+*.exe
+*.dll
+portable-node/

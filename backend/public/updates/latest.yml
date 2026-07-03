@@ -1,0 +1,8 @@
+version: 2.5.3
+releaseDate: 2026-07-02T12:00:00.000Z
+files:
+  - url: RMASC FACTORY-Setup-2.5.3.exe
+    sha512: 05c0c4684a0843a840aea2326c5dc99cf87cdbe06f862031f44bbccc9e0cbebbea2aa41eac9a0fd06ab64aed308a498aec0affa84f958677e9aae4f9c0d0526b
+    size: 196930860
+path: RMASC FACTORY-Setup-2.5.3.exe
+sha512: 05c0c4684a0843a840aea2326c5dc99cf87cdbe06f862031f44bbccc9e0cbebbea2aa41eac9a0fd06ab64aed308a498aec0affa84f958677e9aae4f9c0d0526b

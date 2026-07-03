@@ -1,0 +1,47 @@
+RMASC FACTORY — CONTRAT DE LICENCE UTILISATEUR FINAL (CLUF)
+
+Copyright © 2026 RMASC. Tous droits réservés.
+
+IMPORTANT — VEUILLEZ LIRE ATTENTIVEMENT CE CONTRAT AVANT D'INSTALLER OU D'UTILISER LE LOGICIEL.
+
+1. OCTROI DE LICENCE
+   Le présent contrat vous accorde une licence non exclusive, non transférable,
+   pour utiliser le logiciel RMASC FACTORY sur un seul ordinateur, pour une
+   durée d'un (1) an à compter de la date d'activation.
+
+2. PROPRIÉTÉ INTELLECTUELLE
+   Le logiciel et tous les droits de propriété intellectuelle y afférents
+   restent la propriété exclusive de RMASC. Aucun titre de propriété n'est
+   transféré par le présent contrat.
+
+3. RESTRICTIONS
+   - Vous ne pouvez pas copier, modifier, désassembler, décompiler ou
+     effectuer du reverse engineering sur le logiciel.
+   - Vous ne pouvez pas redistribuer ou revendre le logiciel.
+   - Vous ne pouvez pas utiliser le logiciel au-delà de la période de
+     validité de votre licence.
+
+4. DURÉE
+   Cette licence est valide pour une durée d'un (1) an à compter de la date
+   d'activation. À l'expiration, vous devez renouveler votre licence pour
+   continuer à utiliser le logiciel.
+
+5. GARANTIE LIMITÉE
+   Le logiciel est fourni "EN L'ÉTAT", sans garantie d'aucune sorte, expresse
+   ou implicite. RMASC ne garantit pas que le logiciel répondra à tous vos
+   besoins ou fonctionnera sans interruption.
+
+6. LIMITATION DE RESPONSABILITÉ
+   En aucun cas RMASC ne pourra être tenu responsable des dommages indirects,
+   consécutifs ou spéciaux découlant de l'utilisation du logiciel.
+
+7. RÉSILIATION
+   En cas de non-respect des termes du présent contrat, la licence prend
+   fin automatiquement sans préavis.
+
+8. LOI APPLICABLE
+   Le présent contrat est régi par le droit algérien.
+
+---
+RMASC — https://rmasc.erp
+Contact : license@rmasc.erp
