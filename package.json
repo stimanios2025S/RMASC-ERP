@@ -7,17 +7,24 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "vercel-build": "cd backend && npm install && npx prisma generate && cd .. && npm install && npm run build",
+    "vercel-build": "npm install && npx prisma generate --schema=backend/prisma/schema.prisma && npm run build",
     "start": "cd backend && node api.mjs",
-    "preview": "vite preview --host",
-    "lint": "npx tsc --noEmit"
+    "preview": "vite preview --host"
   },
   "keywords": ["erp", "rmasc", "ascenseur", "pwa"],
   "author": "RMASC",
   "license": "UNLICENSED",
   "dependencies": {
+    "@prisma/client": "^5.14.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.19.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
@@ -25,6 +32,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
+    "prisma": "^5.14.0",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.5.2",
     "vite": "^5.3.1"
