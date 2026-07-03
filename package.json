@@ -11,7 +11,12 @@
     "start": "cd backend && node api.mjs",
     "preview": "vite preview --host"
   },
-  "keywords": ["erp", "rmasc", "ascenseur", "pwa"],
+  "keywords": [
+    "erp",
+    "rmasc",
+    "ascenseur",
+    "pwa"
+  ],
   "author": "RMASC",
   "license": "UNLICENSED",
   "dependencies": {
