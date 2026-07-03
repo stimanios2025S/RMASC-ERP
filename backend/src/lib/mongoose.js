@@ -1,46 +1,79 @@
-// ─── RMASC FACTORY — MongoDB Connection (Mongoose) ──────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//  RMASC FACTORY — MongoDB Connection Pool (Vercel Serverless Safe)
+//  Uses globalThis singleton to reuse connections across function invocations.
+//  Prevents exceeding Atlas connection limits during cold starts.
+// ═══════════════════════════════════════════════════════════════════════════════
+
 import mongoose from 'mongoose'
 
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || 'mongodb://localhost:27017/rmasc-erp'
 
-let cached = globalThis.__rmascMongoose
+if (!MONGODB_URI) {
+  throw new Error('MONGODB_URI environment variable is required')
+}
+
+// ─── Global cache — survives Vercel function re-use ───────────────────────
+const globalCache = globalThis
+
+let cached = globalCache.__rmascMongoose
+
 if (!cached) {
-  cached = globalThis.__rmascMongoose = { conn: null, promise: null }
+  cached = globalCache.__rmascMongoose = {
+    conn: null,
+    promise: null,
+  }
 }
 
 export async function connectDB() {
-  if (cached.conn) return cached.conn
+  // Return cached connection if already established
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn
+  }
 
+  // If a connection attempt is in progress, wait for it
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
+      maxPoolSize: 5,        // Limit connections for Vercel/serverless
+      minPoolSize: 1,
+      maxIdleTimeMS: 60000,  // Close idle connections quickly
+      bufferCommands: false, // Don't buffer commands when disconnected
     })
   }
 
   try {
     cached.conn = await cached.promise
-    console.log(`  ✅ MongoDB connectée: ${mongoose.connection.host}`)
+    return cached.conn
   } catch (err) {
+    // Reset promise so next invocation can retry
     cached.promise = null
-    console.warn(`  ⚠️  MongoDB: ${err.message}`)
+    cached.conn = null
     throw err
   }
-
-  return cached.conn
 }
 
 export async function disconnectDB() {
-  try { await mongoose.disconnect() } catch {}
+  try {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect()
+    }
+  } catch {
+    // Best effort — Vercel kills the process anyway
+  }
+  cached.conn = null
+  cached.promise = null
 }
 
 export async function testDBConnection() {
   const start = Date.now()
   try {
+    await connectDB()
     await mongoose.connection.db?.admin().ping()
     return { connected: true, latencyMs: Date.now() - start }
   } catch (err) {
-    return { connected: false, latencyMs: Date.now() - start, error: err.message }
+    const message = err instanceof Error ? err.message : String(err)
+    return { connected: false, latencyMs: Date.now() - start, error: message }
   }
 }
 
