@@ -11,8 +11,8 @@ import RoadmapPage from './RoadmapPage'
 import LifecyclePipeline from './LifecyclePipeline'
 import HelpPage from './HelpPage'
 import { apiFetch } from '../config/api'
-import rmascLogo from '../../assets/rmasc-logo.png.png'
 import type { PortalSession } from '../data/portalUsers'
+import rmascLogo from '../../assets/rmasc-logo.png.png'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface OrderSummary {
@@ -173,12 +173,14 @@ function Icon({ name, className = 'w-5 h-5' }: { name: string; className?: strin
 
 type ViewType = 'dashboard' | 'add-elevator' | 'be-inspect' | 'fiche' | 'commandes' | 'validations' | 'settings' | 'roadmap' | 'help' | 'invoicing' | 'lifecycle' | 'vault'
 function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => void; onLogout?: () => void }) {
-  const [activeView, setActiveView] = useState('dashboard')
+  const [activeView, setActiveView] = useState(() => {
+    try { return localStorage.getItem('rmasc_active_tab') || 'dashboard' } catch { return 'dashboard' }
+  })
 
   return (
-    <aside className="w-64 h-screen bg-sidebar-bg border-r border-gray-100 flex flex-col flex-shrink-0 draggable">
+    <aside className="w-64 h-screen bg-sidebar-bg border-r border-gray-100 flex flex-col flex-shrink-0">
       {/* Logo */}
-      <div className="px-5 pt-6 pb-4 non-draggable">
+      <div className="px-5 pt-6 pb-4">
         <div className="flex justify-center">
           <img
             src={rmascLogo}
@@ -189,7 +191,7 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
       </div>
 
       {/* MENU Section */}
-      <div className="px-4 mb-4 non-draggable">
+      <div className="px-4 mb-4">
         <p className="text-[11px] font-semibold tracking-widest text-gray-400 uppercase px-2 mb-2">Menu</p>
         <nav className="space-y-0.5">
           {menuItems.map((item) => (
@@ -213,7 +215,7 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
       </div>
 
       {/* INSPECTION Section — Quick Switch */}
-      <div className="px-4 mb-4 non-draggable">
+      <div className="px-4 mb-4">
         <p className="text-[11px] font-semibold tracking-widest text-gray-400 uppercase px-2 mb-2">Raccourcis</p>
         <nav className="space-y-0.5">
           <button
@@ -229,7 +231,7 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
       </div>
 
       {/* GÉNÉRAL Section */}
-      <div className="px-4 mb-4 non-draggable">
+      <div className="px-4 mb-4">
         <p className="text-[11px] font-semibold tracking-widest text-gray-400 uppercase px-2 mb-2">Général</p>
         <nav className="space-y-0.5">
           {generalItems.map((item) => (
@@ -259,9 +261,9 @@ function Header({ notifCount, onNotifClick, orders, user }: { notifCount: number
   const [showProfile, setShowProfile] = useState(false)
 
   return (
-    <header className="h-16 bg-gradient-to-r from-primary-50 to-surface-50 border-b border-surface-100 flex items-center justify-between px-6 draggable">
-      <div className="w-4 non-draggable" />
-      <div className="flex-1 max-w-md mx-auto non-draggable">
+    <header className="h-16 bg-gradient-to-r from-primary-50 to-surface-50 border-b border-surface-100 flex items-center justify-between px-6">
+      <div className="w-4" />
+      <div className="flex-1 max-w-md mx-auto">
         <div className="relative">
           <Icon name="Search" className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -275,7 +277,7 @@ function Header({ notifCount, onNotifClick, orders, user }: { notifCount: number
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-4 non-draggable">
+      <div className="flex items-center gap-4">
         <button
           onClick={onNotifClick}
           className="w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-all relative"

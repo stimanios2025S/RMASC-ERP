@@ -71,13 +71,21 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     return phaseIdx >= currentIdx || (activePhase === 'decoupe' && p === 'decoupe')
   })
 
-  const advancePhase = (orderId: string) => {
+  const advancePhase = async (orderId: string) => {
     const current = getProdPhase(orderId)
     const idx = PHASES.findIndex(p => p.id === current)
     if (idx < PHASES.length - 1) {
-      setProdPhase(orderId, PHASES[idx + 1].id)
+      const nextPhase = PHASES[idx + 1].id
+      setProdPhase(orderId, nextPhase)
       setExpandedId(null)
       setOrders([...orders])
+      // Sync to backend
+      try {
+        await apiFetch(`/orders/${orderId}/production-phase`, {
+          method: 'PATCH',
+          body: JSON.stringify({ productionPhase: nextPhase }),
+        })
+      } catch { /* silent — local state already updated */ }
     }
   }
 

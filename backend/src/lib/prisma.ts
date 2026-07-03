@@ -4,11 +4,11 @@
 
 import { PrismaClient } from '@prisma/client'
 
-// ─── Create client with aggressive timeouts ───────────────────────────────
-function createPrismaClient(): PrismaClient {
-  const globalKnown = globalThis as unknown as { __rmascPrisma?: PrismaClient }
+// ─── Singleton Prisma client with aggressive timeouts ─────────────────────
+const globalForPrisma = globalThis as unknown as { __rmascPrisma?: PrismaClient }
 
-  const client = new PrismaClient({
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
     log: ['warn', 'error'],
     // Connection pool settings for Neon PgBouncer compatibility
     // These prevent the "hung connection" problem across multiple laptops
@@ -18,11 +18,10 @@ function createPrismaClient(): PrismaClient {
       timeout: 15_000,    // 15s timeout for transactions
     },
   })
-
-  return client
 }
 
-const prisma = createPrismaClient()
+const prisma = globalForPrisma.__rmascPrisma ?? createPrismaClient()
+if (process.env.NODE_ENV !== 'production') globalForPrisma.__rmascPrisma = prisma
 
 // ─── Test database connectivity (returns true/false, never hangs) ─────────
 export async function testDatabaseConnection(): Promise<{

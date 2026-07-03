@@ -121,13 +121,12 @@ export default function FicheTechniqueView({ orderId, onBack }: { orderId: strin
   const [data, setData] = useState<OrderFull | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [, setPrinting] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
-        const d: OrderFull = await fetchJson(`/api/orders/${orderId}/datasheet`)
+        const d: OrderFull = await fetchJson(`/orders/${orderId}/datasheet`)
         if (!cancelled) setData(d)
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Erreur')
@@ -140,13 +139,10 @@ export default function FicheTechniqueView({ orderId, onBack }: { orderId: strin
   }, [orderId])
 
   const handlePrint = () => {
-    setPrinting(true)
-    // Add print class to body for CSS to apply before print dialog
     document.body.classList.add('printing')
     setTimeout(() => {
       window.print()
       document.body.classList.remove('printing')
-      setPrinting(false)
     }, 800)
   }
 

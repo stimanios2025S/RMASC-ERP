@@ -8,6 +8,7 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import bcrypt from 'bcryptjs'
 import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -150,8 +151,11 @@ async function seedDefaultUsers() {
       { loginId: 'production', password: 'production', name: 'Said Mansouri', role: 'PRODUCTION', canChangePassword: false },
       { loginId: 'magasinier', password: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER', canChangePassword: false },
     ]
-    for (const u of defaults) await prisma.portalUser.create({ data: u })
-    console.log(`  👥 ${defaults.length} utilisateurs par défaut créés`)
+    for (const u of defaults) {
+      const hashed = await bcrypt.hash(u.password, 12)
+      await prisma.portalUser.create({ data: { ...u, password: hashed } })
+    }
+    console.log(`  👥 ${defaults.length} utilisateurs par défaut créés (bcrypt)`)
   } catch (err: any) {
     console.warn(`  ⚠️  Seed ignoré: ${err.message}`)
   }

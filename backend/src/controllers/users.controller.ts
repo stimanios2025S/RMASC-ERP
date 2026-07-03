@@ -1,7 +1,12 @@
 // ─── Users Controller — Database-backed portal users (synced across PCs) ──
 import { Request, Response, NextFunction } from 'express'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma.js'
 import { AppError } from '../middleware/error.js'
+import { AUTH_CONFIG } from '../config/auth.js'
+
+const BCRYPT_ROUNDS = 12
 
 // ─── Login (returns user + JWT) ──────────────────────────────────────────
 export async function login(req: Request, res: Response, next: NextFunction) {
@@ -13,15 +18,30 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     }
 
     const user = await prisma.portalUser.findUnique({ where: { loginId } })
-    if (!user || user.password !== password) {
+    if (!user) {
       res.status(401).json({ error: 'Identifiant ou mot de passe incorrect.' })
       return
     }
+
+    // Compare password with bcrypt hash
+    const passwordMatch = await bcrypt.compare(password, user.password)
+    if (!passwordMatch) {
+      res.status(401).json({ error: 'Identifiant ou mot de passe incorrect.' })
+      return
+    }
+
+    // Generate JWT token for authenticated API calls
+    const token = jwt.sign(
+      { sub: user.loginId, role: user.role },
+      AUTH_CONFIG.jwtSecret,
+      { expiresIn: AUTH_CONFIG.jwtExpiresIn },
+    )
 
     res.json({
       userId: user.loginId,
       name: user.name,
       role: user.role,
+      token,
       loggedInAt: new Date().toISOString(),
     })
   } catch (e) { next(e) }
@@ -60,7 +80,10 @@ export async function updateAdminCredentials(req: Request, res: Response, next: 
 
     const admin = await prisma.portalUser.findFirst({ where: { role: 'ADMIN' } })
     if (!admin) throw new AppError(404, 'Admin introuvable.')
-    if (admin.loginId !== currentLoginId || admin.password !== currentPassword) {
+
+    // Compare current password with stored bcrypt hash
+    const passwordMatch = await bcrypt.compare(currentPassword, admin.password)
+    if (admin.loginId !== currentLoginId || !passwordMatch) {
       throw new AppError(403, 'Identifiant ou mot de passe actuel incorrect.')
     }
 
@@ -70,12 +93,20 @@ export async function updateAdminCredentials(req: Request, res: Response, next: 
       if (existing) throw new AppError(409, 'Cet identifiant est déjà utilisé.')
     }
 
+    // Hash new password before storing
+    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS)
+
     const updated = await prisma.portalUser.update({
       where: { id: admin.id },
-      data: { loginId: newLoginId, password: newPassword },
+      data: { loginId: newLoginId, password: hashedPassword },
     })
     res.json({ loginId: updated.loginId, name: updated.name, role: updated.role })
   } catch (e) { next(e) }
+}
+
+// ─── Hash helper for seeding ─────────────────────────────────────────────
+async function hashPassword(plain: string): Promise<string> {
+  return bcrypt.hash(plain, BCRYPT_ROUNDS)
 }
 
 // ─── Seed default users (called on first startup) ─────────────────────────
@@ -94,7 +125,8 @@ export async function seedUsers(req: Request, res: Response, next: NextFunction)
     ]
 
     for (const u of defaults) {
-      await prisma.portalUser.create({ data: u })
+      const hashed = await bcrypt.hash(u.password, BCRYPT_ROUNDS)
+      await prisma.portalUser.create({ data: { ...u, password: hashed } })
     }
     res.json({ message: 'Default users seeded.', count: defaults.length })
   } catch (e) { next(e) }

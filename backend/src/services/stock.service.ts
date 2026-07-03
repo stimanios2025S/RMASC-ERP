@@ -142,7 +142,7 @@ export async function createMovement(data: {
       const ref = movement.reference || movement.id.slice(0, 8).toUpperCase()
       await prisma.stockDocument.create({
         data: {
-          documentType: docType as any,
+          documentType: docType as DocumentType,
           documentNumber: ref,
           title: `${docType.replace('_', ' ')} - ${movementWithSupplier.item.name}`,
           supplierId: movement.supplierId || movementWithSupplier.item.supplierId,

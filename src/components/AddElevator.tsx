@@ -532,7 +532,7 @@ export default function AddElevator({ onBack }: Props) {
   const isFinalValid = () => areClientFieldsFilled(data) && data.agreed
 
   const handleSubmitOrder = async () => {
-    try { setSubmitting(true) } catch {}
+    setSubmitting(true)
     setSubmitError(null)
     const serial = generateSerial()
     const payload = {
@@ -561,7 +561,7 @@ export default function AddElevator({ onBack }: Props) {
     } catch (err: any) {
       await new Promise(r => setTimeout(r, 50))
       setSubmitError(err.message || '❌ Erreur lors de l\'enregistrement.')
-    } finally { try { setSubmitting(false) } catch {} }
+    } finally { setSubmitting(false) }
   }
 
   const handleNext = () => { setTriedNext(true)

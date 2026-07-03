@@ -12,14 +12,15 @@ const router = Router()
 router.post('/create-and-sync', authenticate, requireAdmin, createAndSyncController.createAndSync)
 
 // ─── PLM Workflow: Advance order status ────────────────────────────────────
-router.patch('/:id/status', authenticate, async (req: Request, res: Response) => {
+router.patch('/:id/status', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
     const validStatuses: string[] = [
       'ATTENTE_DESSIN_TECH', 'ATTENTE_APPROBATION_ADMIN', 'ATTENTE_DESSIN_2D',
       'ATTENTE_VERIFICATION', 'PRET_POUR_PRODUCTION', 'VALIDEE', 'ANNULEE', 'BROUILLON',
     ]
     if (!validStatuses.includes(req.body.status)) {
-      return res.status(400).json({ error: 'Statut invalide: ' + req.body.status })
+      res.status(400).json({ error: 'Statut invalide: ' + req.body.status })
+      return
     }
     const order = await prisma.order.update({
       where: { id: req.params.id },
@@ -27,18 +28,32 @@ router.patch('/:id/status', authenticate, async (req: Request, res: Response) =>
     })
     res.json({ order })
   } catch (err: any) {
-    if (err?.code === 'P2025') return res.status(404).json({ error: 'Commande introuvable.' })
+    if (err?.code === 'P2025') { res.status(404).json({ error: 'Commande introuvable.' }); return }
+    res.status(500).json({ error: err?.message || 'Erreur serveur' })
+  }
+})
+
+// ─── PLM Workflow: Track production phase locally (runtime-store sync) ───
+router.patch('/:id/production-phase', authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } })
+    if (!order) { res.status(404).json({ error: 'Commande introuvable.' }); return }
+    // productionPhase is stored in localStorage on the frontend;
+    // this endpoint acknowledges the sync. We optionally persist it on Order.
+    res.json({ success: true, message: 'Phase de production synchronisée.' })
+  } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Erreur serveur' })
   }
 })
 
 // ─── PLM Workflow: Admin approve Plan d'Installation ───────────────────────
-router.post('/:id/approve-plan', authenticate, requireAdmin, async (req: Request, res: Response) => {
+router.post('/:id/approve-plan', authenticate, requireAdmin, async (req: Request, res: Response): Promise<void> => {
   try {
     const order = await prisma.order.findUnique({ where: { id: req.params.id } })
-    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    if (!order) { res.status(404).json({ error: 'Commande introuvable.' }); return }
     if (order.status !== 'ATTENTE_APPROBATION_ADMIN') {
-      return res.status(409).json({ error: 'Le plan n\'est pas en attente d\'approbation. Statut actuel: ' + order.status })
+      res.status(409).json({ error: 'Le plan n\'est pas en attente d\'approbation. Statut actuel: ' + order.status })
+      return
     }
     const updated = await prisma.order.update({
       where: { id: req.params.id },
@@ -51,33 +66,33 @@ router.post('/:id/approve-plan', authenticate, requireAdmin, async (req: Request
 })
 
 // ─── PLM Workflow: Admin reject Plan d'Installation ────────────────────────
-router.post('/:id/reject-plan', authenticate, requireAdmin, async (req: Request, res: Response) => {
+router.post('/:id/reject-plan', authenticate, requireAdmin, async (req: Request, res: Response): Promise<void> => {
   try {
     const { reason } = req.body
     const order = await prisma.order.findUnique({ where: { id: req.params.id } })
-    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    if (!order) { res.status(404).json({ error: 'Commande introuvable.' }); return }
     if (order.status !== 'ATTENTE_APPROBATION_ADMIN') {
-      return res.status(409).json({ error: 'Le plan n\'est pas en attente d\'approbation.' })
+      res.status(409).json({ error: 'Le plan n\'est pas en attente d\'approbation.' })
+      return
     }
     const updated = await prisma.order.update({
       where: { id: req.params.id },
-      data: {
-        status: 'ATTENTE_DESSIN_TECH',
-      },
+      data: { status: 'ATTENTE_DESSIN_TECH' },
     })
-    res.json({ order: updated, message: `Plan rejeté. Motif: ${reason || 'Non spécifié'}. Retour à l\'Ingénieur 1.` })
+    res.json({ order: updated, message: `Plan rejeté. Motif: ${reason || 'Non spécifié'}. Retour à l'Ingénieur 1.` })
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Erreur serveur' })
   }
 })
 
 // ─── PLM Workflow: Submit to production (Chief Verifier) ──────────────────
-router.post('/:id/submit-production', authenticate, requireAdmin, async (req: Request, res: Response) => {
+router.post('/:id/submit-production', authenticate, requireAdmin, async (req: Request, res: Response): Promise<void> => {
   try {
     const order = await prisma.order.findUnique({ where: { id: req.params.id } })
-    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    if (!order) { res.status(404).json({ error: 'Commande introuvable.' }); return }
     if (order.status !== 'ATTENTE_VERIFICATION') {
-      return res.status(409).json({ error: 'La commande n\'est pas en attente de vérification finale.' })
+      res.status(409).json({ error: 'La commande n\'est pas en attente de vérification finale.' })
+      return
     }
     const updated = await prisma.order.update({
       where: { id: req.params.id },
@@ -90,13 +105,13 @@ router.post('/:id/submit-production', authenticate, requireAdmin, async (req: Re
 })
 
 // ─── Datasheet: full order with all fields for Fiche Technique ───────────
-router.get('/:id/datasheet', authenticate, async (req: Request, res: Response) => {
+router.get('/:id/datasheet', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
     const order = await prisma.order.findUnique({
       where: { id: req.params.id },
       include: { cadSubmissions: { orderBy: { engineeringType: 'asc' } } },
     })
-    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    if (!order) { res.status(404).json({ error: 'Commande introuvable.' }); return }
     res.json(order)
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Erreur serveur' })
@@ -105,7 +120,7 @@ router.get('/:id/datasheet', authenticate, async (req: Request, res: Response) =
 
 // ─── Admin-only order management ───────────────────────────────────────────
 router.post('/',      authenticate, requireAdmin, ordersController.create)
-router.patch('/:id',  authenticate, requireAdmin, async (req: Request, res: Response) => {
+router.patch('/:id',  authenticate, requireAdmin, async (req: Request, res: Response): Promise<void> => {
   try {
     const { clientName, clientCity } = req.body
     const order = await prisma.order.update({
@@ -114,7 +129,7 @@ router.patch('/:id',  authenticate, requireAdmin, async (req: Request, res: Resp
     })
     res.json({ order, message: 'Commande mise à jour.' })
   } catch (err: any) {
-    if (err?.code === 'P2025') return res.status(404).json({ error: 'Commande introuvable.' })
+    if (err?.code === 'P2025') { res.status(404).json({ error: 'Commande introuvable.' }); return }
     res.status(500).json({ error: err?.message || 'Erreur serveur' })
   }
 })

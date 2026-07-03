@@ -295,12 +295,19 @@ export default function InvoicingPage({ onBack }: Props) {
   const [transportPose, setTransportPose] = useState(45000)
 
   useEffect(() => {
-    try {
-      const data: OrderSummary[] = await apiFetch('/orders')
-      setOrders(data)
-      if (data.length > 0) setSelectedOrderId(data[0].id)
-    } catch { /* silent */ }
-    finally { setLoading(false) }
+    let cancelled = false
+    async function load() {
+      try {
+        const data: OrderSummary[] = await apiFetch('/orders')
+        if (!cancelled) {
+          setOrders(data)
+          if (data.length > 0) setSelectedOrderId(data[0].id)
+        }
+      } catch { /* silent */ }
+      finally { if (!cancelled) setLoading(false) }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   const selectedOrder = useMemo(

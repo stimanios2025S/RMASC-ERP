@@ -1,69 +1,97 @@
-# 🏭 RMASC FACTORY — ERP Ascenseur v2.5.3
+# 🏭 RMASC FACTORY — ERP Ascenseur
 
 **Progiciel de Gestion Intégré pour l'Industrie Ascenseur**
 
-Production-ready web application deployed on Vercel with Neon PostgreSQL backend.
+Application web full-stack déployée sur Vercel avec base de données Neon PostgreSQL.
 
 ---
 
-## 🚀 Quick Deploy
+## 🚀 Déploiement Express (Vercel)
 
-### Prerequisites
-- [GitHub](https://github.com) account
-- [Vercel](https://vercel.com) account
-- [Neon](https://neon.tech) PostgreSQL database
+1. **Poussez sur GitHub :**
+   ```bash
+   git add -A
+   git commit -m "Deploy v2.5.3"
+   git push
+   ```
 
-### One-Click Deploy
+2. **Importez le repo** sur [vercel.com](https://vercel.com)
 
-1. Push to GitHub: `git push`
-2. Import repo on [vercel.com](https://vercel.com)
-3. Add environment variables:
-   - `DATABASE_URL` — Neon pooled connection string
-   - `DIRECT_URL` — Neon direct connection string  
-   - `JWT_SECRET` — Random 64-character secret
+3. **Ajoutez les variables d'environnement :**
+   | Variable | Description |
+   |----------|-------------|
+   | `DATABASE_URL` | Neon PostgreSQL poolé |
+   | `DIRECT_URL` | Neon PostgreSQL direct |
+   | `JWT_SECRET` | Chaîne aléatoire 64 caractères |
 
-4. Deploy. Done.
-
----
-
-## 🔐 Login
-
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | `admin` | `admin123` |
-| Engineer 1 | `ingenieur1` | `ingenieur1` |
-| Engineer 2 | `ingenieur2` | `ingenieur2` |
-| Verifier | `verificateur` | `verificateur` |
-| Production | `production` | `production` |
-| Stock | `magasinier` | `magasinier` |
+4. **Déployez.** — Le frontend et l'API sont servis depuis la même URL.
 
 ---
 
-## 🏗️ Architecture
+## 🔗 Architecture
 
 ```
-RMASC-ERP/
-├── src/                 # React + Vite Frontend
-│   ├── components/      # 20+ React components
-│   ├── config/          # API client, runtime store
-│   └── data/            # Auth, local store
+rmasc-factory/
+├── src/                    # React + Vite (Frontend)
+│   ├── components/         # 20+ composants métier
+│   ├── config/             # Client API, store runtime
+│   └── data/               # Authentification, stockage local
 ├── backend/
-│   ├── api.mjs          # Vercel serverless API entry
-│   ├── prisma/          # PostgreSQL schema (Neon)
-│   └── src/             # Express routes, controllers
-├── vercel.json          # Monorepo config (frontend + backend)
-└── vite.config.ts       # Vite build config
+│   ├── api.mjs             # Entry point serverless Vercel
+│   ├── prisma/             # Schéma PostgreSQL (Neon)
+│   └── src/                # Routes Express, contrôleurs, services
+├── public/                 # Assets statiques
+├── vercel.json             # Configuration Vercel
+└── vite.config.ts          # Build Vite
 ```
 
-## 📦 Modules
+**Stack :** React 18 · TypeScript · Tailwind CSS · Vite · Express · Prisma · PostgreSQL (Neon) · Zod · JWT
 
-- **Ajouter Ascenseur** — Multi-step wizard with Salim Hamoun AI dimension calculator
-- **Bureau d'Études** — Engineer portal with file vault and document tracking
-- **Facturation** — Automated invoicing with owner pricing matrix
-- **Validations** — Admin approval workflow for engineering plans
-- **Production** — 7-stage manufacturing pipeline
-- **Pipeline Cycle de Vie** — Full order lifecycle tracking
-- **Paramètres** — User management and settings
+---
+
+## 🔐 Identifiants par défaut
+
+| Rôle | Identifiant | Mot de passe |
+|------|-------------|--------------|
+| 👑 Administration | `admin` | `admin123` |
+| 📐 Ingénieur Dessinateur 1 | `ingenieur1` | `ingenieur1` |
+| ✏️ Ingénieur Dessinateur 2 | `ingenieur2` | `ingenieur2` |
+| 🔍 Vérificateur | `verificateur` | `verificateur` |
+| 🏭 Production | `production` | `production` |
+| 📦 Magasinier | `magasinier` | `magasinier` |
+
+---
+
+## 🧩 Modules fonctionnels
+
+| Module | Description |
+|--------|-------------|
+| **Ajouter un ascenseur** | Assistant 6 étapes avec calculateur Salim Hamoun AI (normes EN 81-20/50) |
+| **Bureau d'Études** | Portail ingénieurs — dépôt de fichiers, validation des plans |
+| **Facturation** | Devis automatique basé sur la matrice tarifaire propriétaire |
+| **Validations** | Workflow d'approbation des plans techniques |
+| **Production** | Pipeline de fabrication en 7 phases |
+| **Cycle de Vie** | Suivi complet du cycle de vie des commandes |
+| **Stocks** | Gestion des articles, fournisseurs, mouvements et documents |
+| **Paramètres** | Gestion des utilisateurs et configuration système |
+
+---
+
+## 🖥️ Développement local
+
+```bash
+# Frontend
+npm install
+npm run dev
+
+# Backend (dans un second terminal)
+cd backend
+npm install
+npx prisma db push    # Crée les tables PostgreSQL
+npx tsx src/index.ts  # API sur http://localhost:4000
+```
+
+> L'API proxy est configurée dans `vite.config.ts` — le frontend (`:5173`) transmet `/api/*` au backend (`:4000`).
 
 ---
 

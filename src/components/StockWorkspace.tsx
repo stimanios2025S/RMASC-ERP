@@ -98,11 +98,11 @@ export default function StockWorkspace({ onBack, session }: Props) {
   const loadData = useCallback(async () => {
     try {
       const [s, i, sup, m, d] = await Promise.all([
-        fetchJson('/api/stock/stats').catch(() => null),
-        fetchJson('/api/stock/items').catch(() => []),
-        fetchJson('/api/stock/suppliers').catch(() => []),
-        fetchJson('/api/stock/movements').catch(() => []),
-        fetchJson('/api/stock/documents').catch(() => []),
+        fetchJson('/stock/stats').catch(() => null),
+        fetchJson('/stock/items').catch(() => []),
+        fetchJson('/stock/suppliers').catch(() => []),
+        fetchJson('/stock/movements').catch(() => []),
+        fetchJson('/stock/documents').catch(() => []),
       ])
       if (s) setStats(s)
       if (Array.isArray(i)) setItems(i)
@@ -422,7 +422,7 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
     setSaving(true)
     try {
       const docNumber = `BC-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`
-      const result = await fetchJson('/api/stock/bon-commande', {
+      const result = await fetchJson('/stock/bon-commande', {
         method: 'POST',
         body: JSON.stringify({
           documentNumber: docNumber,
@@ -609,7 +609,7 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
     e.preventDefault()
     setSaving(true)
     try {
-      const item = await fetchJson('/api/stock/items', { method: 'POST', body: JSON.stringify(form) })
+      const item = await fetchJson('/stock/items', { method: 'POST', body: JSON.stringify(form) })
       // Upload image if selected
       if (imageFile && item?.id) {
         const reader = new FileReader()
@@ -621,7 +621,7 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
           reader.onerror = reject
           reader.readAsDataURL(imageFile)
         })
-        await fetchJson(`/api/stock/items/${item.id}/image`, {
+        await fetchJson(`/stock/items/${item.id}/image`, {
           method: 'POST',
           body: JSON.stringify({ imageBase64: base64, mimeType: imageFile.type }),
         })
@@ -759,7 +759,7 @@ function ItemDetailView({ item, onBack, feedback }: { item: StockItem; onBack: (
 
   useEffect(() => {
     let ignore = false
-    fetchJson(`/api/stock/movements?itemId=${item.id}`)
+    fetchJson(`/stock/movements?itemId=${item.id}`)
       .then((data) => { if (!ignore) setMovements(data) })
       .catch(() => {})
       .finally(() => { if (!ignore) setLoading(false) })
@@ -854,7 +854,7 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
   // Load items for the selected supplier
   useEffect(() => {
     if (!selectedSupplier) return
-    fetchJson(`/api/stock/items?supplierId=${selectedSupplier.id}`)
+    fetchJson(`/stock/items?supplierId=${selectedSupplier.id}`)
       .then((data) => { if (Array.isArray(data)) setSupplierItems(data) })
       .catch(() => setSupplierItems([]))
   }, [selectedSupplier])
@@ -864,10 +864,10 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
     setSaving(true)
     try {
       if (editingId) {
-        await fetchJson(`/api/stock/suppliers/${editingId}`, { method: 'PATCH', body: JSON.stringify(form) })
+        await fetchJson(`/stock/suppliers/${editingId}`, { method: 'PATCH', body: JSON.stringify(form) })
         feedback(true, '✅ Fournisseur mis à jour.')
       } else {
-        await fetchJson('/api/stock/suppliers', { method: 'POST', body: JSON.stringify(form) })
+        await fetchJson('/stock/suppliers', { method: 'POST', body: JSON.stringify(form) })
         feedback(true, `✅ Fournisseur "${form.name}" créé.`)
       }
       setShowForm(false); setEditingId(null); setForm({ name: '', contactName: '', email: '', phone: '', address: '', notes: '' }); onRefresh()
@@ -1033,7 +1033,7 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
         orderId: form.orderId || undefined,
         supplierId: form.supplierId || undefined,
       }
-      await fetchJson('/api/stock/movements', { method: 'POST', body: JSON.stringify(payload) })
+      await fetchJson('/stock/movements', { method: 'POST', body: JSON.stringify(payload) })
       const item = items.find(i => i.id === form.itemId)
       feedback(true, `✅ ${form.type === 'ENTRY' ? 'Entrée' : 'Sortie'} enregistrée pour "${item?.name || 'article'}"`)
       setShowForm(false)
@@ -1139,7 +1139,7 @@ function DocumentsTab({ documents, showForm, setShowForm, suppliers, showView, s
     setSaving(true)
     try {
       const payload = { ...form, totalTTC: form.totalHT + form.totalTVA, supplierId: form.supplierId || undefined }
-      await fetchJson('/api/stock/documents', { method: 'POST', body: JSON.stringify(payload) })
+      await fetchJson('/stock/documents', { method: 'POST', body: JSON.stringify(payload) })
       feedback(true, `✅ ${docTypeLabel(form.documentType)} "${form.documentNumber}" créé.`)
       setShowForm(false); onRefresh()
     } catch (err: any) { feedback(false, err.message) }

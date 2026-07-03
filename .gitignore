@@ -6,9 +6,8 @@ yarn-error.log*
 
 # Build output
 dist/
-D:/RMASC-FACTORY-BUILD/
 
-# Backend
+# Backend build
 backend/dist/
 backend/node_modules/
 backend/.env
@@ -35,30 +34,15 @@ Thumbs.db
 *.log
 logs/
 
-# Electron — Web app only
-electron/
+# License keys (generated, never commit)
+*.key
 
 # Large binaries
-portable-node/
 *.exe
 *.dll
 *.msi
 *.ico
 
-# Git helper scripts (contain credentials)
-git-push.bat
-git-push.ps1
-deploy-vercel.ps1
-
-# License keys
-*.key
-
-# PDF catalogs
-*.pdf
-
 # Test scripts
 *.spec.ts
 *.test.ts
-extract-pdf.cjs
-BUILD_*.bat
-SUPER_DEPLOY.bat

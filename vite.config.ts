@@ -2,13 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-const apiTarget = process.env.VITE_API_URL || 'http://192.168.0.189:4000'
+const apiTarget = process.env.VITE_API_URL || 'http://localhost:4000'
 
 export default defineConfig({
   plugins: [react()],
   base: '/',
   build: {
-    outDir: 'dist/renderer',
+    outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
     minify: 'esbuild',

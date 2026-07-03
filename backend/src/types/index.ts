@@ -2,7 +2,7 @@
 
 export type EngineeringType = 'DESSIN_TECH_1' | 'DESSIN_TECH_2' | 'MODEL_2D' | 'MODEL_3D'
 export type CADStatus = 'EN_ATTENTE' | 'APPROUVE' | 'REJETE'
-export type OrderStatus = 'BROUILLON' | 'EN_ATTENTE' | 'VALIDEE' | 'ANNULEE'
+export type OrderStatus = 'BROUILLON' | 'ATTENTE_DESSIN_TECH' | 'ATTENTE_APPROBATION_ADMIN' | 'ATTENTE_DESSIN_2D' | 'ATTENTE_VERIFICATION' | 'PRET_POUR_PRODUCTION' | 'VALIDEE' | 'ANNULEE'
 
 // ─── JWT payload ───────────────────────────────────────────────────────────
 export interface JwtPayload {

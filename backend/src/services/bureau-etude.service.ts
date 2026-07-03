@@ -5,6 +5,7 @@ import type { SubmitCadInput } from '../schemas/bureau-etude.schema.js'
 import { AppError } from '../middleware/error.js'
 import { AUTH_CONFIG } from '../config/auth.js'
 import type { ApprovalTokenPayload, RejectionLogEntry } from '../types/index.js'
+import type { Prisma } from '@prisma/client'
 
 // ─── Helper: map engineering type to French label ──────────────────────────
 function engineeringLabel(type: string): string {
@@ -205,7 +206,7 @@ export async function rejectCad(cadId: string, motifRejet: string, adminId: stri
     data: {
       status: 'REJETE',
       rejectionReason: motifRejet,
-      rejectionLog: updatedLog as any,
+      rejectionLog: updatedLog as Prisma.JsonArray,
     },
   })
 

@@ -196,7 +196,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
                     ) : (
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold text-slate-800">{u.name}</p>
-                        {u.id === 'admin' && <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Admin</span>}
+                        {u.role === 'ADMIN' && <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Admin</span>}
                         {isCurrentUser && !isEditing && <span className="text-[9px] text-slate-400">— Vous</span>}
                       </div>
                     )}
@@ -297,39 +297,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
           </div>
         )}
 
-        {/* ── Mises à jour ── */}
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-base font-bold text-slate-800">🔄 Mises à jour</h2>
-            {(window as any).electronAPI?.updater && <>
-              <button onClick={async () => {
-                try {
-                  const result = await (window as any).electronAPI.updater.checkNow()
-                  if (result?.error) {
-                    setFeedback({ ok: false, msg: `⚠️ ${result.error}` })
-                    setTimeout(() => setFeedback(null), 8000)
-                  }
-                } catch {}
-              }}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-sm">
-                🔍 Vérifier maintenant
-              </button>
-              <p className="text-[10px] text-slate-400 mt-1">Serveur: 192.168.0.189:4000</p>
-            </>}
-          </div>
-          <div className="bg-surface-50 border border-slate-100 rounded-xl px-4 py-3 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-slate-700">Version actuelle</p>
-              <p className="text-xs text-slate-400">v2.5.2 — Enterprise</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Mise à jour automatique activée</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Connexions ── */}
+        {/* ── Connexions système ── */}
         <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
           <h2 className="text-base font-bold text-slate-800 mb-4">🔌 Connexions système</h2>
           <div className="space-y-3">

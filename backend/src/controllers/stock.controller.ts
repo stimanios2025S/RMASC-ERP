@@ -1,18 +1,6 @@
 // ─── Stock Controller ────────────────────────────────────────────────────────
 import { Request, Response, NextFunction } from 'express'
 import * as stockService from '../services/stock.service.js'
-import path from 'node:path'
-import fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
-// imageFileName helper (no uuid needed)
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const IMAGES_DIR = path.resolve(__dirname, '../../public/images/items')
-
-function ensureImagesDir() {
-  if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true })
-}
 
 // ─── Items ──────────────────────────────────────────────────────────────────
 export async function createItem(req: Request, res: Response, next: NextFunction) {
@@ -114,20 +102,16 @@ export async function getStockStats(req: Request, res: Response, next: NextFunct
   catch (e) { next(e) }
 }
 
-// ─── Image Upload ─────────────────────────────────────────────────────────
+// ─── Image Upload (serverless-compatible: stores as base64 data URL) ──────
 export async function uploadItemImage(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params
     const { imageBase64, mimeType } = req.body
     if (!imageBase64) { res.status(400).json({ error: 'imageBase64 requis.' }); return }
 
-    if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true })
-    const ext = (mimeType || 'image/png').split('/')[1] || 'png'
-    const fileName = `item_${id}_${Date.now()}.${ext}`
-    const filePath = path.join(IMAGES_DIR, fileName)
-    fs.writeFileSync(filePath, Buffer.from(imageBase64, 'base64'))
-    const imageUrl = `/images/items/${fileName}`
-    await stockService.updateItem(id, { imageUrl } as any)
-    res.json({ imageUrl })
+    const mime = (mimeType || 'image/png')
+    const dataUrl = `data:${mime};base64,${imageBase64}`
+    await stockService.updateItem(id, { imageUrl: dataUrl })
+    res.json({ imageUrl: dataUrl })
   } catch (e) { next(e) }
 }

@@ -23,8 +23,6 @@ export async function createOrder(data: CreateOrderInput) {
   }
 
   // ── Build the create payload with explicit null-coercion for optional fields ──
-  // This prevents Prisma from receiving an empty string where it expects null,
-  // which would cause a schema-level constraint crash.
   const order = await prisma.order.create({
     data: {
       // Required string fields

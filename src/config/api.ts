@@ -7,20 +7,20 @@ let baseUrl = ''
 
 export function getApiUrl(): string {
   if (baseUrl) return baseUrl
-  // Production: same origin (Vercel serves both frontend and API)
+  // Production: same origin (Vercel serves both frontend and API via /api)
   if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) {
     const envUrl = (import.meta as any).env.VITE_API_URL
     if (envUrl === 'same-origin' || !envUrl) {
-      baseUrl = ''
-      return ''
+      baseUrl = '/api'
+      return '/api'
     }
     baseUrl = envUrl
     return baseUrl
   }
   // Check if running on Vercel (no host header means same-origin)
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    baseUrl = ''
-    return ''
+    baseUrl = '/api'
+    return '/api'
   }
   return `http://localhost:${activePort}/api`
 }
@@ -28,6 +28,8 @@ export function getApiUrl(): string {
 export function resolveUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path
   const api = getApiUrl()
+  // If path already starts with the API prefix, don't double it
+  if (api && path.startsWith(api)) return path
   if (!api) return path.startsWith('/') ? path : `/${path}`
   return `${api}${path.startsWith('/') ? path : `/${path}`}`
 }
