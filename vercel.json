@@ -1,12 +1,4 @@
 {
-  "buildCommand": "cd backend && npm ci && npx prisma generate && cd .. && npm ci && npm run build",
-  "installCommand": "cd backend && npm ci && cd .. && npm ci",
-  "functions": {
-    "backend/api.mjs": {
-      "memory": 300,
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/backend/api.mjs" },
     { "source": "/(.*)", "destination": "/index.html" }
