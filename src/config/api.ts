@@ -1,34 +1,36 @@
-// ─── RMASC FACTORY — Production API Config ──────────────────────────────
-// Connects exclusively to the Neon PostgreSQL backend.
-// NO localStorage fallback. NO offline mode. Production only.
+// ─── RMASC FACTORY — API Configuration ─────────────────────────────────
+// In production (Vercel): the API is served from the same origin at /api.
+// In development (localhost): the Vite proxy forwards /api to the backend.
+// NEVER use an absolute URL with an IP address — it won't work on Vercel.
 
-let activePort = 4000
 let baseUrl = ''
 
 export function getApiUrl(): string {
   if (baseUrl) return baseUrl
-  // Production: same origin (Vercel serves both frontend and API via /api)
-  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) {
-    const envUrl = (import.meta as any).env.VITE_API_URL
-    if (envUrl === 'same-origin' || !envUrl) {
-      baseUrl = '/api'
-      return '/api'
-    }
-    baseUrl = envUrl
-    return baseUrl
-  }
-  // Check if running on Vercel (no host header means same-origin)
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+
+  // On Vercel or any production domain: same-origin API
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('192.')) {
     baseUrl = '/api'
     return '/api'
   }
-  return `http://localhost:${activePort}/api`
+
+  // For dev with explicit env var (VITE_API_URL set in .env)
+  if (typeof import.meta !== 'undefined') {
+    const envUrl = (import.meta as any).env?.VITE_API_URL
+    if (envUrl && envUrl !== 'same-origin') {
+      baseUrl = envUrl
+      return baseUrl
+    }
+  }
+
+  // Default: Vite proxy on localhost
+  baseUrl = '/api'
+  return '/api'
 }
 
 export function resolveUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path
   const api = getApiUrl()
-  // If path already starts with the API prefix, don't double it
   if (api && path.startsWith(api)) return path
   if (!api) return path.startsWith('/') ? path : `/${path}`
   return `${api}${path.startsWith('/') ? path : `/${path}`}`
@@ -53,12 +55,11 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {},
       const res = await fetch(url, {
         ...options,
         headers,
-        signal: controller.signal
+        signal: controller.signal,
       })
       clearTimeout(timeout)
 
       if (res.status === 401 && attempt < retries) {
-        // Token expired — try to refresh
         continue
       }
 
@@ -79,7 +80,6 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {},
   throw new Error('Impossible de contacter le serveur. Vérifiez que le backend est démarré.')
 }
 
-// ─── Simple API wrapper ─────────────────────────────────────────────────
 export const api = {
   get: <T = any>(path: string) => apiFetch<T>(path),
   post: <T = any>(path: string, body?: any) => apiFetch<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
