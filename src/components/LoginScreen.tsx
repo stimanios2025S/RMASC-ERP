@@ -7,19 +7,6 @@ interface Props {
   onLogin: (session: PortalSession) => void
 }
 
-// ─── Factory Icon ──────────────────────────────────────────────────────────
-function FactoryIcon({ className = 'w-10 h-10' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 20V8a2 2 0 0 1 2-2h2v12"/>
-      <path d="M6 20V6a2 2 0 0 1 2-2h2v16"/>
-      <path d="M10 20V4a2 2 0 0 1 2-2h2v18"/>
-      <path d="M14 20v-8a2 2 0 0 1 2-2h4v10"/>
-      <path d="M2 20h20"/>
-    </svg>
-  )
-}
-
 // ─── Role Descriptions ────────────────────────────────────────────────────
 const ROLE_INFO: Record<string, { icon: string; label: string; desc: string }> = {
   ADMIN:          { icon: '👑', label: 'Direction & Administration', desc: 'Gestion globale, commandes, validations, tableau de bord' },
@@ -88,24 +75,23 @@ export default function LoginScreen({ onLogin }: Props) {
       {/* Full background image with overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1920&q=80"
+          src="/images/login-bg.jpg"
           alt=""
           className="w-full h-full object-cover"
-          style={{ filter: 'brightness(0.3) saturate(1.2) contrast(1.1)' }}
         />
-        {/* Gradient overlay */}
+        {/* Dark gradient overlay pour lisibilité */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/20" />
-        {/* Subtle orange glow */}
-        <div className="absolute -top-40 right-1/4 w-[500px] h-[500px] rounded-full bg-amber-500/8 blur-3xl" />
-        <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full bg-orange-600/8 blur-3xl" />
+        {/* Lueur ambiante orange RMASC */}
+        <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
       </div>
 
       {/* ── Left Panel: Branding + Info ── */}
       <div className="flex-1 flex flex-col justify-center px-16 relative z-10">
         <div className="max-w-lg">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
-              <FactoryIcon className="w-9 h-9 text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25 overflow-hidden">
+              <img src="/images/rmasc-logo.png" alt="RMASC" className="w-11 h-11 object-contain" />
             </div>
             <div>
               <h1 className="text-4xl font-extrabold tracking-tight">
