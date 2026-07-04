@@ -181,25 +181,9 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
       {/* Logo RMASC */}
       <div className="px-5 pt-6 pb-4">
         <div className="flex justify-center">
-          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Fond du badge */}
-            <rect width="56" height="56" rx="12" fill="url(#rm-grad-dash)" />
-            {/* Icône usine/industrie */}
-            <path d="M12 44V24a3 3 0 0 1 3-3h3v23" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-            <path d="M18 44V20a3 3 0 0 1 3-3h3v27" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-            <path d="M24 44V18a3 3 0 0 1 3-3h3v29" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-            <path d="M30 44v-14a3 3 0 0 1 3-3h6v17" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-            <path d="M12 44h32" stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
-            {/* Lettrage RM au centre */}
-            <text x="28" y="30" textAnchor="middle" fill="white" fontSize="11" fontWeight="900" fontFamily="system-ui" letterSpacing="-0.5">RM</text>
-            <text x="28" y="42" textAnchor="middle" fill="#fbbf24" fontSize="7" fontWeight="800" fontFamily="system-ui" letterSpacing="1">FACTORY</text>
-            <defs>
-              <linearGradient id="rm-grad-dash" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#f97316" />
-                <stop offset="100%" stopColor="#ea580c" />
-              </linearGradient>
-            </defs>
-          </svg>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25 overflow-hidden">
+            <img src="/images/rmasc-logo.png" alt="RMASC" className="w-10 h-10 object-contain" />
+          </div>
         </div>
       </div>
 
@@ -821,17 +805,32 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
 
   if (view === 'add-elevator') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <AddElevator onBack={() => persistView('dashboard')} />
       </div>
+    </div>
     )
   }
 
   // ── Bureau d'Études PLM ───────────────────────────────────────────
   if (view === 'be-inspect') {
     return (
-      <div className="h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50 flex flex-col">
+      <div className="h-screen flex flex-col relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex-1 flex flex-col">
         {/* Inspection banner bar */}
         <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-2.5 flex items-center justify-between shadow-lg z-50">
           <div className="flex items-center gap-2.5">
@@ -850,13 +849,21 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
           <BureauEtudeWorkspace onBack={() => persistView('dashboard')} />
         </div>
       </div>
+      </div>
     )
   }
 
   // ── Mes Commandes ──────────────────────────────────────────────────
   if (view === 'commandes') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <div className="flex-1 overflow-y-auto">
           <MesCommandesPage onBack={() => persistView('dashboard')} onFiche={(id) => { setFicheOrderId(id); persistView('fiche') }} />
@@ -868,12 +875,20 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ── Validations en attente ──────────────────────────────────────────
   if (view === 'validations') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <ValidationsPage
           onBack={() => persistView('dashboard')}
           onFiche={(id) => { setFicheOrderId(id); persistView('fiche') }}
         />
+        </div>
       </div>
     )
   }
@@ -881,7 +896,14 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ── Aide & Catalogue ────────────────────────────────────────────────
   if (view === 'help') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <HelpPage onBack={() => persistView('dashboard')} />
       </div>
@@ -891,7 +913,14 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ── Paramètres ─────────────────────────────────────────────────────
   if (view === 'settings') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <SettingsPage onBack={() => persistView('dashboard')} session={session} onSessionUpdate={onSessionUpdate} />
       </div>
@@ -901,7 +930,14 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ── Roadmap Production ──────────────────────────────────────────────
   if (view === 'roadmap') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <RoadmapPage orders={orders as any} onBack={() => persistView('dashboard')} />
       </div>
@@ -916,7 +952,14 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ── Salim Hamoun AI — Invoicing & Devis ─────────────────────────────
   if (view === 'invoicing') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <InvoicingPage onBack={() => persistView('dashboard')} />
       </div>
@@ -926,7 +969,14 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ── Bureau d'Etude — File Vault ────────────────────────────────────
   if (view === 'vault') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <BureauEtudeVault onBack={() => persistView('dashboard')} />
       </div>
@@ -936,7 +986,14 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ── Lifecycle Pipeline ─────────────────────────────────────────────
   if (view === 'lifecycle') {
     return (
-      <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <LifecyclePipeline onBack={() => persistView('dashboard')} />
       </div>
@@ -946,7 +1003,14 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   const currentUserData = buildCurrentUser(session)
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-primary-50/80 via-surface-50 to-surface-50">
+    <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
       {/* Sidebar */}
       <Sidebar onNavigate={persistView} onLogout={onLogout} />
 
@@ -1051,6 +1115,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
           </div>
         </main>
       </div>
+    </div>
     </div>
   )
 }
