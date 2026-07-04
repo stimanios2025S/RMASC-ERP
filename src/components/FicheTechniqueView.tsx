@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { apiFetch } from '../config/api'
 
-// ─── Types ────────────────────────────────────────────────────────────────
 interface CADSubmission {
   id: string
   engineeringType: string
@@ -13,120 +12,253 @@ interface CADSubmission {
 }
 
 interface OrderFull {
-  id: string
-  serialNumber: string
-  clientName: string
-  clientEmail: string | null
-  clientPhone: string
-  clientCity: string
-  status: string
-  typeMotorisation: string
-  sousTypeElectrique: string | null
-  vitesseMs: string | null
-  nombreEtages: string | null
-  largeurGaineMm: string
-  profondeurGaineMm: string
-  hauteurGaineMm: string
-  profondeurCuvetteMm?: string | null
-  hauteurDernierEtageMm?: string | null
-  largeurCabineCalculeeMm?: string | null
-  profondeurCabineCalculeeMm?: string | null
-  contrepoidsPosition?: string | null
-  positionContrepoids?: string | null
-  materiauCabine: string | null
-  materiauPortes: string | null
-  materiauParois: string | null
-  materiauSol: string | null
-  // ── Mekisan catalog fields
-  typeCabine: string | null
-  typePorte: string | null
-  finitionPorteCabine: string | null
-  typeChassisArcade: string | null
-  finitionInterieurCabine: string | null
-  revetementSol: string | null
-  largeurPassageLibreMm: string | null
-  hauteurUtileCabineMm: string | null
-  typeSuspensionGuidage: string | null
-  systemeSurcharge: string | null
-  optPanoramique: boolean
-  optSecours: boolean
-  optAnnoncesVocales: boolean
-  optCctv: boolean
-  optPortesCoupeFeu: boolean
-  optPanneauTactile: boolean
-  createdAt: string
-  cadSubmissions: CADSubmission[]
+  id: string; serialNumber: string; clientName: string
+  clientEmail: string | null; clientPhone: string; clientCity: string
+  status: string; typeMotorisation: string
+  sousTypeElectrique: string | null; vitesseMs: string | null; nombreEtages: string | null
+  largeurGaineMm: string; profondeurGaineMm: string; hauteurGaineMm: string
+  profondeurCuvetteMm?: string | null; hauteurDernierEtageMm?: string | null
+  largeurCabineCalculeeMm?: string | null; profondeurCabineCalculeeMm?: string | null
+  contrepoidsPosition?: string | null; positionContrepoids?: string | null
+  materiauCabine: string | null; materiauPortes: string | null
+  materiauParois: string | null; materiauSol: string | null
+  typeCabine: string | null; typePorte: string | null
+  finitionPorteCabine: string | null; typeChassisArcade: string | null
+  finitionInterieurCabine: string | null; revetementSol: string | null
+  largeurPassageLibreMm: string | null; hauteurUtileCabineMm: string | null
+  typeSuspensionGuidage: string | null; systemeSurcharge: string | null
+  optPanoramique: boolean; optSecours: boolean; optAnnoncesVocales: boolean
+  optCctv: boolean; optPortesCoupeFeu: boolean; optPanneauTactile: boolean
+  createdAt: string; cadSubmissions: CADSubmission[]
 }
 
-async function fetchJson(path: string) {
-  return apiFetch(path)
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────
-function statusLabel(status: string): string {
+function statusLabel(s: string): string {
   const labels: Record<string, string> = {
     BROUILLON: 'Brouillon', ATTENTE_DESSIN_TECH: 'Attente Plan Installation',
     ATTENTE_APPROBATION_ADMIN: 'Approbation Admin', ATTENTE_DESSIN_2D: 'Attente Dessin 2D',
     ATTENTE_VERIFICATION: 'Vérification Finale', PRET_POUR_PRODUCTION: 'Prêt Production',
+    EN_LIVRAISON: 'En Livraison', LIVREE: 'Livrée',
     VALIDEE: 'Validée', ANNULEE: 'Annulée',
   }
-  return labels[status] || status
+  return labels[s] || s
 }
 
-function formatCatalogEnum(val: string | null | undefined): string {
+function fmt(val: string | null | undefined): string {
   if (!val) return '—'
-  return val
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase())
+  return val.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function optionsList(data: OrderFull): string[] {
-  const opts: string[] = []
-  if (data.optPanoramique) opts.push('Ascenseur panoramique')
-  if (data.optSecours) opts.push('Alimentation de secours')
-  if (data.optAnnoncesVocales) opts.push('Annonces vocales')
-  if (data.optCctv) opts.push('CCTV intégré')
-  if (data.optPortesCoupeFeu) opts.push('Portes coupe-feu')
-  if (data.optPanneauTactile) opts.push('Panneau tactile')
-  return opts
+function optsList(d: OrderFull): string[] {
+  const o: string[] = []
+  if (d.optPanoramique) o.push('Ascenseur panoramique')
+  if (d.optSecours) o.push('Alimentation de secours')
+  if (d.optAnnoncesVocales) o.push('Annonces vocales')
+  if (d.optCctv) o.push('CCTV intégré')
+  if (d.optPortesCoupeFeu) o.push('Portes coupe-feu')
+  if (d.optPanneauTactile) o.push('Panneau tactile')
+  return o
 }
 
-function formatDate(iso: string): string {
+function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-// ─── Row helper for consistency ───────────────────────────────────────────
-function FieldRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+// ─── A4 Document Component ────────────────────────────────────────────────
+function FicheDocument({ data }: { data: OrderFull }) {
+  const opts = optsList(data)
+  const vitesse = data.vitesseMs ? parseFloat(data.vitesseMs) : 0
+  const hauteurM = data.hauteurGaineMm ? (parseInt(data.hauteurGaineMm) / 1000).toFixed(1) : '—'
+  const nbreEtages = data.nombreEtages || '—'
+  const chargeUtile = 1250
+  const nbrePersonnes = Math.round(chargeUtile / 75)
+  const d = data
+  const hasNC = (d.profondeurCuvetteMm && parseInt(d.profondeurCuvetteMm) < 1400) ||
+                (d.hauteurDernierEtageMm && parseInt(d.hauteurDernierEtageMm) < 3800)
+
   return (
-    <div className={`flex items-center justify-between py-1 px-2 rounded ${highlight ? 'bg-amber-50/50' : ''}`}>
-      <span className="text-[11px] text-slate-500 font-medium">{label}</span>
-      <span className="text-[11px] font-semibold text-slate-800 text-right max-w-[55%]">{value || '—'}</span>
+    <div className="fiche-document">
+      {/* ─── HEADER ─── */}
+      <table className="fiche-header">
+        <tr>
+          <td className="fiche-header-brand">
+            <div className="fiche-title">RM<span className="fiche-orange">ASC</span></div>
+            <div className="fiche-subtitle">FICHE TECHNIQUE ASCENSEUR</div>
+          </td>
+          <td className="fiche-header-serial">
+            <div className="fiche-serial-label">NUMÉRO DE SÉRIE</div>
+            <div className="fiche-serial-value">{data.serialNumber}</div>
+          </td>
+        </tr>
+      </table>
+
+      <div className="fiche-date">{fmtDate(data.createdAt)}</div>
+
+      {/* ─── 1. CLIENT ─── */}
+      <div className="fiche-section">1. INFORMATIONS CLIENT</div>
+      <table className="fiche-table">
+        <tr className="fiche-row-bold"><td className="fiche-label">Nom du client</td><td className="fiche-value">{data.clientName}</td></tr>
+        <tr><td className="fiche-label">Email</td><td className="fiche-value">{data.clientEmail || '(Optionnel — non renseigné)'}</td></tr>
+        <tr><td className="fiche-label">Téléphone</td><td className="fiche-value">{data.clientPhone}</td></tr>
+        <tr className="fiche-row-highlight"><td className="fiche-label">Ville</td><td className="fiche-value">{data.clientCity}</td></tr>
+      </table>
+
+      {/* ─── 2. MOTORISATION ─── */}
+      <div className="fiche-section">2. MOTORISATION</div>
+      <table className="fiche-table">
+        <tr className="fiche-row-bold"><td className="fiche-label">Type de motorisation</td><td className="fiche-value">{data.typeMotorisation}</td></tr>
+        <tr><td className="fiche-label">Sous-type</td><td className="fiche-value">{data.sousTypeElectrique || '—'}</td></tr>
+        <tr><td className="fiche-label">Vitesse</td><td className="fiche-value">{vitesse > 0 ? `${vitesse} m/s` : '—'}</td></tr>
+        <tr className="fiche-row-highlight"><td className="fiche-label">Nombre d'étages</td><td className="fiche-value">{data.nombreEtages || '—'}</td></tr>
+      </table>
+
+      {/* ─── 3. DIMENSIONS ─── */}
+      <div className="fiche-section">3. DIMENSIONS (GAINE TECHNIQUE)</div>
+      <table className="fiche-table">
+        <tr className="fiche-row-bold"><td className="fiche-label">Largeur gaine</td><td className="fiche-value">{data.largeurGaineMm} mm</td></tr>
+        <tr><td className="fiche-label">Profondeur gaine</td><td className="fiche-value">{data.profondeurGaineMm} mm</td></tr>
+        <tr className="fiche-row-highlight"><td className="fiche-label">Hauteur de la gaine</td><td className="fiche-value">{data.hauteurGaineMm} mm</td></tr>
+      </table>
+
+      {/* ─── 4. MATÉRIAUX & FINITIONS ─── */}
+      <div className="fiche-section">4. MATÉRIAUX & FINITIONS</div>
+      <table className="fiche-table">
+        <tr className="fiche-row-bold"><td className="fiche-label">Matériau cabine</td><td className="fiche-value">{data.materiauCabine || '—'}</td></tr>
+        <tr><td className="fiche-label">Matériau portes</td><td className="fiche-value">{data.materiauPortes || '—'}</td></tr>
+        <tr className="fiche-row-highlight"><td className="fiche-label">Finition portes cabine</td><td className="fiche-value">{fmt(data.finitionPorteCabine)}</td></tr>
+        <tr className="fiche-row-bold"><td className="fiche-label">Finition intérieur cabine</td><td className="fiche-value">{fmt(data.finitionInterieurCabine)}</td></tr>
+        <tr><td className="fiche-label">Matériau parois</td><td className="fiche-value">{data.materiauParois || '—'}</td></tr>
+        <tr className="fiche-row-highlight"><td className="fiche-label">Revêtement de sol</td><td className="fiche-value">{fmt(data.revetementSol)}</td></tr>
+        <tr><td className="fiche-label">Matériau sol</td><td className="fiche-value">{data.materiauSol || '—'}</td></tr>
+      </table>
+
+      {/* ─── 5. COMPOSANTS MÉCANIQUES ─── */}
+      <div className="fiche-section">5. COMPOSANTS MÉCANIQUES SPÉCIFIQUES</div>
+      <table className="fiche-table">
+        <tr className="fiche-row-bold"><td className="fiche-label">Type de cabine</td><td className="fiche-value">{fmt(data.typeCabine)}</td></tr>
+        <tr className="fiche-row-bold"><td className="fiche-label">Type de châssis / arcade</td><td className="fiche-value">{fmt(data.typeChassisArcade)}</td></tr>
+        <tr className="fiche-row-highlight"><td className="fiche-label">Type de portes palières</td><td className="fiche-value">{fmt(data.typePorte) || '—'}</td></tr>
+        <tr className="fiche-row-bold"><td className="fiche-label">Largeur de passage libre</td><td className="fiche-value">{data.largeurPassageLibreMm ? `${data.largeurPassageLibreMm} mm` : '—'}</td></tr>
+        <tr><td className="fiche-label">Hauteur utile cabine</td><td className="fiche-value">{data.hauteurUtileCabineMm ? `${data.hauteurUtileCabineMm} mm` : '—'}</td></tr>
+        <tr className="fiche-row-bold"><td className="fiche-label">Type suspension / guidage</td><td className="fiche-value">{fmt(data.typeSuspensionGuidage)}</td></tr>
+        <tr className="fiche-row-highlight"><td className="fiche-label">Système de surcharge</td><td className="fiche-value">{fmt(data.systemeSurcharge)}</td></tr>
+      </table>
+
+      {/* ─── 6. OPTIONS ─── */}
+      <div className="fiche-section">6. OPTIONS & ACCESSOIRES</div>
+      <table className="fiche-table">
+        {opts.length === 0 ? (
+          <tr><td className="fiche-label">Options sélectionnées</td><td className="fiche-value">Aucune</td></tr>
+        ) : opts.map((o, i) => (
+          <tr key={i} className={i % 2 === 0 ? 'fiche-row-highlight' : ''}>
+            <td className="fiche-label">{o}</td>
+            <td className="fiche-value">✓ Inclus</td>
+          </tr>
+        ))}
+      </table>
+
+      {/* ─── 7. APPROBATIONS ─── */}
+      <div className="fiche-section">7. APPROBATIONS & CACHETS</div>
+      <table className="fiche-stamp-table">
+        <tr>
+          <td className="fiche-stamp-cell">
+            <div className="fiche-stamp-title">Plan d'Installation</div>
+            {data.cadSubmissions?.some(s => s.engineeringType === 'DESSIN_TECH_1' && s.status === 'APPROUVE')
+              ? <div className="fiche-stamp-ok">✅ Approuvé</div>
+              : <div className="fiche-stamp-wait">En attente...</div>}
+          </td>
+          <td className="fiche-stamp-cell">
+            <div className="fiche-stamp-title">Dessin 2D Cabine</div>
+            {data.cadSubmissions?.some(s => s.engineeringType === 'DESSIN_TECH_2' && s.status === 'APPROUVE')
+              ? <div className="fiche-stamp-ok">✅ Approuvé</div>
+              : <div className="fiche-stamp-wait">En attente...</div>}
+          </td>
+        </tr>
+      </table>
+
+      {/* ─── NON-CONFORMITÉS NF EN 81-20 ─── */}
+      {hasNC && (
+        <div className="fiche-remark-box">
+          <div className="fiche-remark-title">📋 Remarques Techniques — Non-Conformités</div>
+          {data.profondeurCuvetteMm && parseInt(data.profondeurCuvetteMm) < 1400 && (
+            <div className="fiche-remark-item">
+              ⚠️ <strong>Profondeur cuvette insuffisante</strong> ({data.profondeurCuvetteMm} mm &lt; 1400 mm)<br />
+              La gaine n'est pas conforme aux spécifications standards. Des travaux supplémentaires de génie civil seront nécessaires.
+            </div>
+          )}
+          {data.hauteurDernierEtageMm && parseInt(data.hauteurDernierEtageMm) < 3800 && (
+            <div className="fiche-remark-item">
+              ⚠️ <strong>Hauteur sous dalle insuffisante</strong> ({data.hauteurDernierEtageMm} mm &lt; 3800 mm)<br />
+              La hauteur du dernier étage n'est pas conforme. Des adaptations structurelles seront requises.
+            </div>
+          )}
+          <div style={{ fontSize: 9, color: '#991b1b', fontStyle: 'italic', marginTop: 6, paddingTop: 6, borderTop: '1px solid #fecaca' }}>
+            Ces remarques n'ont pas bloqué le processus de commande. Elles sont transmises à titre d'information technique.
+          </div>
+        </div>
+      )}
+
+      {/* ─── FOOTER ─── */}
+      <div className="fiche-footer">
+        Document généré automatiquement par RMASC ERP — Bureau d'étude intégré
+        <br />N° {data.serialNumber} — {fmtDate(data.createdAt)}
+      </div>
+
+      {/* Embed CSS for this document */}
+      <style>{`
+        .fiche-document { font-family: 'Arial', 'Helvetica', sans-serif; color: #1f2937; }
+        .fiche-header { width: 100%; border-collapse: collapse; background: #1e3a8a; color: white; }
+        .fiche-header-brand { padding: 12px 16px; width: 60%; }
+        .fiche-title { font-size: 22px; font-weight: 800; color: #f59e0b; }
+        .fiche-orange { color: #ea580c; }
+        .fiche-subtitle { font-size: 10px; color: #94a3b8; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+        .fiche-header-serial { padding: 12px 16px; text-align: right; }
+        .fiche-serial-label { font-size: 8px; font-weight: bold; letter-spacing: 1px; }
+        .fiche-serial-value { font-size: 14px; font-weight: bold; color: #f59e0b; }
+        .fiche-date { font-size: 9px; color: #64748b; margin: 8px 0 4px 0; }
+        .fiche-section { background: #1e3a8a; color: white; font-size: 10px; font-weight: bold; padding: 6px 12px; margin: 10px 0 4px 0; letter-spacing: 1px; text-transform: uppercase; }
+        .fiche-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        .fiche-table tr { border-bottom: 1px solid #e2e8f0; }
+        .fiche-table td { padding: 4px 12px; }
+        .fiche-label { width: 45%; color: #64748b; font-weight: 500; }
+        .fiche-value { width: 55%; font-weight: 600; color: #1f2937; }
+        .fiche-row-bold td { font-weight: 700; }
+        .fiche-row-highlight td { background: #fff7ed; }
+        .fiche-stamp-table { width: 100%; border-collapse: collapse; }
+        .fiche-stamp-cell { width: 50%; border: 2px dashed #94a3b8; border-radius: 8px; padding: 10px; text-align: center; }
+        .fiche-stamp-title { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+        .fiche-stamp-ok { font-size: 11px; font-weight: bold; color: #059669; margin-top: 4px; }
+        .fiche-stamp-wait { font-size: 10px; color: #94a3b8; font-style: italic; margin-top: 4px; }
+        .fiche-footer { font-size: 8px; color: #64748b; text-align: center; margin-top: 12px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
+        .fiche-remark-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 10px; margin: 6px 0; }
+        .fiche-remark-title { font-size: 10px; font-weight: bold; color: #b91c1c; text-transform: uppercase; letter-spacing: 1px; }
+        .fiche-remark-item { font-size: 9px; color: #991b1b; margin-top: 4px; }
+        @media print {
+          .fiche-document { padding: 0; margin: 0; }
+          .fiche-section { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #1e3a8a !important; }
+          .fiche-row-highlight td { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff7ed !important; }
+          .fiche-stamp-cell { border-color: #94a3b8; }
+          .fiche-remark-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+      `}</style>
     </div>
   )
 }
 
-function SectionTitle({ title }: { title: string }) {
-  return (
-    <div className="bg-slate-800 px-3 py-1.5 rounded-lg">
-      <span className="text-[11px] font-bold text-white uppercase tracking-wider">{title}</span>
-    </div>
-  )
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// ─── Main Component ─────────────────────────────────────────────────────────
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+//  MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export default function FicheTechniqueView({ orderId, onBack }: { orderId: string; onBack?: () => void }) {
   const [data, setData] = useState<OrderFull | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const docRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
-        const d: OrderFull = await fetchJson(`/orders/${orderId}/datasheet`)
+        const d: OrderFull = await apiFetch(`/orders/${orderId}/datasheet`)
         if (!cancelled) setData(d)
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Erreur')
@@ -139,19 +271,49 @@ export default function FicheTechniqueView({ orderId, onBack }: { orderId: strin
   }, [orderId])
 
   const handlePrint = () => {
-    document.body.classList.add('printing')
-    setTimeout(() => {
-      window.print()
-      document.body.classList.remove('printing')
-    }, 800)
+    if (!data || !docRef.current) return
+    const printWindow = window.open('', '_blank', 'width=1200,height=800')
+    if (!printWindow) return
+
+    // Get the rendered fiche-document HTML
+    const ficheHtml = docRef.current.innerHTML
+
+    const styles = Array.from(document.querySelectorAll('style, link[rel=stylesheet]'))
+      .map(el => el.outerHTML)
+      .join('\n')
+
+    const content = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Fiche Technique — ${data.serialNumber}</title>
+  ${styles}
+  <style>
+    @page { margin: 8mm; size: A4 portrait; }
+    body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .fiche-document { width: 100%; padding: 0; }
+    .fiche-section, .fiche-table, .fiche-remark-box { break-inside: avoid; }
+    .no-print { display: none !important; }
+  </style>
+</head>
+<body>
+  <div style="max-width: 190mm; margin: 0 auto;">${ficheHtml}</div>
+  <script>
+    window.onload = function() { setTimeout(function() { window.print(); setTimeout(function() { window.close(); }, 500); }, 500); };
+  <\/script>
+</body>
+</html>`
+
+    printWindow.document.write(content)
+    printWindow.document.close()
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-3 border-slate-200 border-t-blue-600 animate-spin" />
-          <p className="text-sm text-slate-400">Génération de la Fiche Technique...</p>
+      <div className="flex items-center justify-center min-h-screen bg-slate-100">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-3 border-slate-300 border-t-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-sm text-slate-500">Génération de la Fiche Technique...</p>
         </div>
       </div>
     )
@@ -159,33 +321,19 @@ export default function FicheTechniqueView({ orderId, onBack }: { orderId: strin
 
   if (error || !data) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center min-h-screen bg-slate-100">
         <div className="text-center">
           <p className="text-red-500 text-sm font-medium">Erreur: {error || 'Données introuvables'}</p>
-          <button onClick={onBack} className="mt-3 text-xs text-primary-600 underline">Retour</button>
+          {onBack && <button onClick={onBack} className="mt-3 text-xs text-blue-600 underline">Retour</button>}
         </div>
       </div>
     )
   }
 
-  const opts = optionsList(data)
-  const vitesse = data.vitesseMs ? parseFloat(data.vitesseMs) : 0
-  const hauteurM = data.hauteurGaineMm ? (parseInt(data.hauteurGaineMm) / 1000).toFixed(1) : '—'
-  const nbreEtages = data.nombreEtages || '—'
-  const chargeUtile = 1250 // default KG for spec sheet
-  const nbrePersonnes = Math.round(chargeUtile / 75)
-
   return (
-    <div className="bg-slate-100 print:bg-white" style={{ minHeight: '100vh' }}>
-      <style>{`
-        @media print {
-          @page { margin: 5mm; size: A4; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .no-print { display: none !important; }
-        }
-      `}</style>
-      {/* ── Toolbar (hidden when printing) ── */}
-      <div className="no-print sticky top-0 z-40 bg-surface-50 border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
+    <>
+      {/* ─── TOOLBAR (HIDDEN IN PRINT) ─── */}
+      <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm no-print">
         <div className="flex items-center gap-3">
           {onBack && (
             <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-all">
@@ -193,197 +341,24 @@ export default function FicheTechniqueView({ orderId, onBack }: { orderId: strin
             </button>
           )}
           <h1 className="text-base font-extrabold text-slate-800">Fiche Technique</h1>
-          <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{data.serialNumber}</span>
+          <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2.5 py-1 rounded">{data.serialNumber}</span>
         </div>
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold transition-all shadow-sm"
-        >
-          🖨️ Imprimer / PDF
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handlePrint}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-all shadow-sm">
+            🖨️ Imprimer / PDF
+          </button>
+        </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          FICHE TECHNIQUE — Full page document
-          ════════════════════════════════════════════════════════════════════ */}
-      <div className="w-full mx-auto py-4 px-3 md:px-4 print:mx-0 print:py-0 print:px-0" style={{ maxWidth: '900px' }}>
-        <div className="bg-surface-50 rounded-2xl shadow-lg border border-slate-200 print:rounded-none print:shadow-none print:border-0">
-
-          {/* ═══ HEADER ═══ */}
-          <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 print:bg-slate-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-extrabold text-white tracking-tight"><span className="text-amber-400">RM</span><span className="text-orange-400">ASC</span> <span className="text-amber-400">FACTORY</span></h2>
-                <p className="text-[9px] text-slate-400 tracking-widest uppercase mt-0.5">Fiche Technique Ascenseur</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[11px] font-mono text-amber-400 font-bold">{data.serialNumber}</p>
-                <p className="text-[9px] text-slate-400">Émis le: {formatDate(data.createdAt)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* ═══ CLIENT + STATUS ═══ */}
-          <div className="grid grid-cols-2 gap-px bg-slate-200 print:bg-slate-200">
-            <div className="bg-surface-50 px-4 py-2">
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Client</p>
-              <p className="text-sm font-bold text-slate-800">{data.clientName}</p>
-              <p className="text-[11px] text-slate-500">{data.clientCity}</p>
-              {data.clientEmail && <p className="text-[9px] text-slate-400">{data.clientEmail}</p>}
-              <p className="text-[9px] text-slate-400">{data.clientPhone}</p>
-            </div>
-            <div className="bg-surface-50 px-4 py-2 text-right">
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Statut</p>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${
-                ['PRET_POUR_PRODUCTION', 'VALIDEE', 'ATTENTE_VERIFICATION'].includes(data.status)
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : data.status === 'BROUILLON' ? 'bg-slate-100 text-slate-600'
-                  : 'bg-amber-100 text-amber-700'
-              }`}>
-                {statusLabel(data.status)}
-              </span>
-              <p className="text-[10px] text-slate-400 mt-1.5">Motorisation: {data.typeMotorisation}</p>
-              <p className="text-[10px] text-slate-400">{data.sousTypeElectrique || '—'}</p>
-            </div>
-          </div>
-
-          {/* ═══ BODY: 2-column grid of sections ═══ */}
-          <div className="p-3 md:p-4 space-y-2">
-
-            {/* Section 1: Caractéristiques Générales */}
-            <SectionTitle title="1. Caractéristiques Générales" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0.5">
-              <FieldRow label="Charge utile" value={`${chargeUtile} kg`} highlight />
-              <FieldRow label="Nombre de personnes" value={`${nbrePersonnes} pers. (75 kg/pers.)`} />
-              <FieldRow label="Vitesse nominale" value={vitesse > 0 ? `${vitesse} m/s` : '—'} highlight />
-              <FieldRow label="Course totale" value={`${hauteurM} m`} />
-              <FieldRow label="Nombre de niveaux" value={`${nbreEtages} arrêts`} highlight />
-              <FieldRow label="Type de motorisation" value={data.typeMotorisation} />
-            </div>
-
-            {/* Section 2: Chaîne Cinématique / Motorisation */}
-            <SectionTitle title="2. Chaîne Cinématique & Motorisation" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0.5">
-              <FieldRow label="Type de traction" value={data.sousTypeElectrique || '—'} highlight />
-              <FieldRow label="Machine Roomless (MRL)" value={data.typeMotorisation === 'ÉLECTRIQUE' ? 'Oui' : 'Non'} />
-              <FieldRow label="Alimentation" value="Triphasé 380V / Monophasé 220V" highlight />
-              <FieldRow label="Fréquence" value="50 Hz" />
-              <FieldRow label="Application" value="Résidentiel / Commercial" highlight />
-            </div>
-
-            {/* Section 3: Dimensions Gaine & Cabine */}
-            <SectionTitle title="3. Dimensions de la Gaine & Cabine (mm)" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0.5">
-              <FieldRow label="Largeur gaine" value={`${data.largeurGaineMm} mm`} highlight />
-              <FieldRow label="Profondeur gaine" value={`${data.profondeurGaineMm} mm`} />
-              <FieldRow label="Hauteur gaine" value={`${data.hauteurGaineMm} mm`} highlight />
-              <FieldRow label="Profondeur cuvette (Pit)" value={data.profondeurCuvetteMm ? `${data.profondeurCuvetteMm} mm` : '—'} highlight />
-              <FieldRow label="Hauteur dernier étage (Headroom)" value={data.hauteurDernierEtageMm ? `${data.hauteurDernierEtageMm} mm` : '—'} />
-              <FieldRow label="Largeur cabine calculée" value={data.largeurCabineCalculeeMm ? `${data.largeurCabineCalculeeMm} mm` : '—'} highlight />
-              <FieldRow label="Profondeur cabine calculée" value={data.profondeurCabineCalculeeMm ? `${data.profondeurCabineCalculeeMm} mm` : '—'} />
-              <FieldRow label="Position contrepoids" value={data.contrepoidsPosition === 'Fond' ? 'Au Fond' : data.contrepoidsPosition === 'Latéral' ? 'Latéral' : '—'} highlight />
-            </div>
-
-            {/* ─── REMARQUES TECHNIQUES NF EN 81-20 ─────────────────────── */}
-            {(data.profondeurCuvetteMm && parseInt(data.profondeurCuvetteMm) < 1400) || (data.hauteurDernierEtageMm && parseInt(data.hauteurDernierEtageMm) < 3800) ? (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 space-y-1.5 print:bg-red-50 print:border-red-200">
-                <div className="flex items-center gap-2">
-                  <span className="text-red-500 text-sm">📋</span>
-                  <span className="text-xs font-bold uppercase tracking-wider text-red-700">Remarques Techniques — Non-Conformités</span>
-                </div>
-                <div className="space-y-1.5 pl-1">
-                  {data.profondeurCuvetteMm && parseInt(data.profondeurCuvetteMm) < 1400 && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-red-500 text-[10px] mt-0.5">⚠️</span>
-                      <div>
-                        <p className="text-xs font-semibold text-red-700">Profondeur cuvette insuffisante ({data.profondeurCuvetteMm} mm &lt; 1400 mm)</p>
-                        <p className="text-[10px] text-red-600 leading-tight">La gaine n'est pas conforme aux spécifications standards. Des travaux supplémentaires de génie civil seront nécessaires pour l'adaptation de la cuvette. Cette non-conformité entraîne un surcoût d'installation et des délais supplémentaires.</p>
-                      </div>
-                    </div>
-                  )}
-                  {data.hauteurDernierEtageMm && parseInt(data.hauteurDernierEtageMm) < 3800 && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-red-500 text-[10px] mt-0.5">⚠️</span>
-                      <div>
-                        <p className="text-xs font-semibold text-red-700">Hauteur sous dalle insuffisante ({data.hauteurDernierEtageMm} mm &lt; 3800 mm)</p>
-                        <p className="text-[10px] text-red-600 leading-tight">La hauteur du dernier étage n'est pas conforme aux spécifications standards. Des adaptations structurelles seront requises pour l'échappement de tête et les dégagements de sécurité NF EN 81-20.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <p className="text-[10px] text-red-500 italic pt-1 border-t border-red-100">Ces remarques n'ont pas bloqué le processus de commande. Elles sont transmises à titre d'information technique pour le client et l'équipe d'installation.</p>
-              </div>
-            ) : null}
-
-            {/* Section 4: Baies & Portes */}
-            <SectionTitle title="4. Baies & Portes Palières" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0.5">
-              <FieldRow label="Type de portes" value={data.optPortesCoupeFeu ? 'Coupe-feu' : 'Standard'} highlight />
-              <FieldRow label="Type d'ouverture" value={formatCatalogEnum(data.typePorte)} highlight />
-              <FieldRow label="Nombre de vantaux" value="2 vantaux (OU) / Centrales 2V" />
-              <FieldRow label="Largeur de passage libre" value={data.largeurPassageLibreMm ? `${data.largeurPassageLibreMm} mm` : '~800 mm'} highlight />
-              <FieldRow label="Hauteur de passage libre" value={data.hauteurUtileCabineMm ? `${data.hauteurUtileCabineMm} mm` : '~2100 mm'} />
-              <FieldRow label="Finition portes cabine" value={formatCatalogEnum(data.finitionPorteCabine)} highlight />
-              <FieldRow label="Finition portes palières" value={data.materiauPortes || '—'} />
-              <FieldRow label="Finition cabine" value={data.materiauCabine || '—'} />
-              <FieldRow label="Matériau parois" value={data.materiauParois || '—'} highlight />
-              <FieldRow label="Matériau sol" value={data.materiauSol || '—'} />
-            </div>
-
-            {/* Section 5: Composants Mécaniques Spécifiques */}
-            <SectionTitle title="5. Composants Mécaniques Spécifiques" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0.5">
-              <FieldRow label="Type de cabine" value={formatCatalogEnum(data.typeCabine)} highlight />
-              <FieldRow label="Type de châssis / arcade" value={formatCatalogEnum(data.typeChassisArcade)} highlight />
-              <FieldRow label="Finition intérieur cabine" value={formatCatalogEnum(data.finitionInterieurCabine)} highlight />
-              <FieldRow label="Revêtement de sol" value={formatCatalogEnum(data.revetementSol)} />
-              <FieldRow label="Suspension / guidage" value={formatCatalogEnum(data.typeSuspensionGuidage)} highlight />
-              <FieldRow label="Système de surcharge" value={formatCatalogEnum(data.systemeSurcharge)} />
-            </div>
-
-            {/* Section 6: Options */}
-            <SectionTitle title="6. Options & Accessoires" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0.5">
-              {opts.length === 0 ? (
-                <FieldRow label="Options sélectionnées" value="Aucune" />
-              ) : (
-                opts.map((opt, i) => (
-                  <FieldRow key={i} label={opt} value="✓ Inclus" highlight={i % 2 === 0} />
-                ))
-              )}
-            </div>
-
-            {/* Section 7: Signatures & Stamps */}
-            <SectionTitle title="7. Approbations & Cachets Bureau d'Études" />
-            <div className="border border-dashed border-slate-300 rounded-xl p-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-2 border border-slate-200 rounded-lg flex flex-col items-center justify-center min-h-[50px]">
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Plan d'Installation</p>
-                  {data.cadSubmissions && data.cadSubmissions.some(s => s.engineeringType === 'DESSIN_TECH_1' && s.status === 'APPROUVE') ? (
-                    <p className="text-[11px] font-bold text-emerald-600 mt-1">✅ Approuvé</p>
-                  ) : (
-                    <p className="text-[10px] text-slate-400 italic mt-1">En attente...</p>
-                  )}
-                </div>
-                <div className="text-center p-2 border border-slate-200 rounded-lg flex flex-col items-center justify-center min-h-[50px]">
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Dessin 2D Cabine</p>
-                  {data.cadSubmissions && data.cadSubmissions.some(s => s.engineeringType === 'DESSIN_TECH_2' && s.status === 'APPROUVE') ? (
-                    <p className="text-[11px] font-bold text-emerald-600 mt-1">✅ Approuvé</p>
-                  ) : (
-                    <p className="text-[10px] text-slate-400 italic mt-1">En attente...</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-[8px] text-slate-400">
-              <p>RMASC FACTORY — Fiche Technique générée automatiquement</p>
-              <p>N° {data.serialNumber} — {formatDate(data.createdAt)}</p>
-            </div>
+      {/* ─── FICHE TECHNIQUE — FULL WIDTH ─── */}
+      <div className="bg-slate-100 py-6 px-4 flex justify-center no-print">
+        <div className="bg-white shadow-lg rounded-2xl" style={{ width: '210mm', maxWidth: '100%' }}>
+          <div className="p-5 md:p-8" ref={docRef}>
+            <FicheDocument data={data} />
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
