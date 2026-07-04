@@ -22,7 +22,7 @@ const PHASES = [
   { id: 'peinture', icon: '🎨', label: 'Peinture', desc: 'Application des revêtements et finitions', color: 'from-rose-500 to-rose-600', bgColor: 'bg-rose-50', borderColor: 'border-rose-200', textColor: 'text-rose-700' },
   { id: 'assemblage', icon: '🔩', label: 'Assemblage', desc: 'Assemblage final des sous-ensembles', color: 'from-amber-500 to-orange-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-200', textColor: 'text-amber-700' },
   { id: 'emballage', icon: '📦', label: 'Emballage', desc: 'Emballage et protection pour le transport', color: 'from-emerald-500 to-emerald-600', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', textColor: 'text-emerald-700' },
-  { id: 'livraison', icon: '🚛', label: 'Livraison', desc: 'Transport et installation sur site client', color: 'from-cyan-500 to-cyan-600', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200', textColor: 'text-cyan-700' },
+  { id: 'livraison', icon: '🚛', label: 'Livraison', desc: 'Transport, installation sur site client et confirmation de réception', color: 'from-cyan-500 to-cyan-600', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200', textColor: 'text-cyan-700' },
 ]
 
 function getProdPhase(orderId: string): string {
@@ -85,6 +85,10 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           method: 'PATCH',
           body: JSON.stringify({ productionPhase: nextPhase }),
         })
+        // When moving to livraison, mark order as ready for delivery
+        if (nextPhase === 'livraison') {
+          await apiFetch(`/orders/${orderId}/mark-delivery`, { method: 'POST' })
+        }
       } catch { /* silent — local state already updated */ }
     }
   }

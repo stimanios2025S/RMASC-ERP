@@ -32,8 +32,8 @@ const PIPELINE_STAGES = [
 
 function detectStage(order: Order): string {
   if (order.lifecycleStage) return order.lifecycleStage
-  if (order.status === 'VALIDEE') return 'delivered'
-  if (order.status === 'PRET_POUR_PRODUCTION') return 'production'
+  if (order.status === 'LIVREE' || order.status === 'VALIDEE') return 'delivered'
+  if (order.status === 'EN_LIVRAISON' || order.status === 'PRET_POUR_PRODUCTION') return 'production'
   if (order.status === 'ATTENTE_APPROBATION_ADMIN') return 'invoicing'
   return 'engineering'
 }

@@ -340,6 +340,8 @@ function OrderRoadmap({ order }: { order: OrderSummary }) {
     { key: 'ATTENTE_DESSIN_2D', label: 'Dessin 2D Cabine', icon: '✏️', hours: 24 },
     { key: 'ATTENTE_VERIFICATION', label: 'Vérification', icon: '🔍', hours: 8 },
     { key: 'PRET_POUR_PRODUCTION', label: 'Prêt Production', icon: '🏭', hours: 0 },
+    { key: 'EN_LIVRAISON', label: 'Livraison', icon: '🚛', hours: 8 },
+    { key: 'LIVREE', label: 'Livrée', icon: '✅', hours: 0 },
   ]
 
   const now = Date.now()
@@ -612,9 +614,9 @@ function CollaborationCard() {
 
 function ProgressArc({ orders }: { orders: OrderSummary[] }) {
   const total = orders.length || 1
-  const termines = orders.filter(o => ['VALIDEE', 'PRET_POUR_PRODUCTION', 'ANNULEE'].includes(o.status)).length
-  const enCours = orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION'].includes(o.status)).length
-  const enAttente = orders.filter(o => ['BROUILLON', 'ATTENTE_APPROBATION_ADMIN'].includes(o.status)).length
+  const termines = orders.filter(o => ['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length
+  const enCours = orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION', 'EN_LIVRAISON'].includes(o.status)).length
+  const enAttente = orders.filter(o => ['BROUILLON', 'ATTENTE_APPROBATION_ADMIN', 'PRET_POUR_PRODUCTION'].includes(o.status)).length
   const completedPct = Math.round((termines / total) * 100)
   const inProgressPct = Math.round((enCours / total) * 100)
   const pendingPct = Math.round((enAttente / total) * 100)
@@ -674,7 +676,9 @@ const PHASE_HOURS: Record<string, number> = {
   ATTENTE_APPROBATION_ADMIN: 4,  // Validation Admin — demi-journée
   ATTENTE_DESSIN_2D: 24,         // Dessin 2D Cabine — 3 jours ouvrés
   ATTENTE_VERIFICATION: 8,       // Vérification Finale — 1 jour
-  PRET_POUR_PRODUCTION: 0,       // Terminé
+  PRET_POUR_PRODUCTION: 0,
+  EN_LIVRAISON: 8,               // Livraison — 1 jour
+  LIVREE: 0,                     // Terminé
 }
 
 function TimeTracker({ orders }: { orders: OrderSummary[] }) {
@@ -797,9 +801,9 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ── Live KPI computations ──────────────────────────────────────────
   const kpis = {
     total: orders.length,
-    termines: orders.filter(o => o.status === 'VALIDEE' || o.status === 'PRET_POUR_PRODUCTION').length,
-    enCours: orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION'].includes(o.status)).length,
-    enAttente: orders.filter(o => o.status === 'BROUILLON' || o.status === 'ATTENTE_APPROBATION_ADMIN').length,
+    termines: orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length,
+    enCours: orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION', 'EN_LIVRAISON'].includes(o.status)).length,
+    enAttente: orders.filter(o => ['BROUILLON', 'ATTENTE_APPROBATION_ADMIN', 'PRET_POUR_PRODUCTION'].includes(o.status)).length,
   }
 
   if (view === 'add-elevator') {

@@ -206,7 +206,7 @@ app.post('/api/orders/create-and-sync', authenticate, async (req, res) => {
 
 app.patch('/api/orders/:id/status', authenticate, async (req, res) => {
   try {
-    const valid = ['BROUILLON','ATTENTE_DESSIN_TECH','ATTENTE_APPROBATION_ADMIN','ATTENTE_DESSIN_2D','ATTENTE_VERIFICATION','PRET_POUR_PRODUCTION','VALIDEE','ANNULEE']
+    const valid = ['BROUILLON','ATTENTE_DESSIN_TECH','ATTENTE_APPROBATION_ADMIN','ATTENTE_DESSIN_2D','ATTENTE_VERIFICATION','PRET_POUR_PRODUCTION','EN_LIVRAISON','LIVREE','ANNULEE']
     if (!valid.includes(req.body.status)) return res.status(400).json({ error: 'Statut invalide.' })
     const order = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true })
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
@@ -241,6 +241,32 @@ app.post('/api/orders/:id/reject-plan', authenticate, async (req, res) => {
     order.status = 'ATTENTE_DESSIN_TECH'
     await order.save()
     res.json({ message: 'Plan rejeté.' })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+// ─── Delivery Workflow: Submit as ready for delivery ────────────────────
+app.post('/api/orders/:id/mark-delivery', authenticate, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    if (order.status !== 'PRET_POUR_PRODUCTION') return res.status(409).json({ error: `Statut actuel: ${order.status}. Attendu: PRET_POUR_PRODUCTION.` })
+    order.status = 'EN_LIVRAISON'
+    await order.save()
+    res.json({ message: '✅ Commande marquée prête pour livraison. En attente de validation Admin.', order })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+// ─── Delivery Workflow: Admin confirms delivery ─────────────────────────
+app.post('/api/orders/:id/confirm-delivery', authenticate, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    if (order.status !== 'EN_LIVRAISON') return res.status(409).json({ error: `Statut actuel: ${order.status}. Attendu: EN_LIVRAISON.` })
+    order.status = 'LIVREE'
+    order.lifecycleStage = 'delivered'
+    order.completedAt = new Date()
+    await order.save()
+    res.json({ message: '✅ Livraison confirmée. Commande terminée.', order })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 

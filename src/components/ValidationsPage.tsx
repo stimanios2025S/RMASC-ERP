@@ -36,6 +36,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
   useEffect(() => { load() }, [])
 
   const pending = orders.filter(o => o.status === 'ATTENTE_APPROBATION_ADMIN')
+  const pendingDelivery = orders.filter(o => o.status === 'EN_LIVRAISON')
   const recent = orders.filter(o => ['ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION'].includes(o.status))
 
   const approvePlan = async (id: string) => {
@@ -64,11 +65,21 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
     } finally { setSubmitting(false); setTimeout(() => setActionMsg(null), 4000) }
   }
 
+  const confirmDelivery = async (id: string) => {
+    try {
+      setSubmitting(true)
+      const r = await apiFetch(`/orders/${id}/confirm-delivery`, { method: 'POST', body: JSON.stringify({}) })
+      setActionMsg(`✅ ${r.message || 'Livraison confirmée.'}`)
+      load()
+    } catch (err: any) {
+      setActionMsg(`⚠️ ${err.message}`)
+    } finally { setSubmitting(false); setTimeout(() => setActionMsg(null), 4000) }
+  }
+
   // ── Full-screen CAD review overlay ──
   if (cadOrder) {
     return (
       <div className="h-screen flex flex-col bg-gradient-to-br from-primary-50/60 via-surface-50 to-surface-50">
-        {/* Top bar */}
         <div className="flex-shrink-0 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
           <div className="flex items-center gap-4">
             <button onClick={() => { setCadOrder(null); setShowReject(false) }} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
@@ -95,7 +106,6 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
           </div>
         </div>
 
-        {/* Action feedback */}
         {actionMsg && (
           <div className={`flex-shrink-0 px-6 py-2.5 text-sm font-medium flex items-center gap-2 ${actionMsg.includes('✅') ? 'bg-emerald-50 text-emerald-700 border-b border-emerald-100' : 'bg-amber-50 text-amber-700 border-b border-amber-100'}`}>
             <span>{actionMsg}</span>
@@ -103,26 +113,19 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
           </div>
         )}
 
-        {/* File Viewer — affiche le fichier réel uploadé par l'ingénieur */}
         <div className="flex-1 overflow-hidden p-4">
           {(() => {
-            // Retrieve the uploaded file from the shared in-memory store
-              let uploadData: { data: string; name: string; type: string } | null = null
+            let uploadData: { data: string; name: string; type: string } | null = null
             try {
               const uploads = getUploads(cadOrder.id)
               uploadData = uploads[0] || null
             } catch { /* ignore */ }
             return (
-              <FileViewer
-                fileData={uploadData?.data}
-                fileName={uploadData?.name}
-                fileType={uploadData?.type}
-              />
+              <FileViewer fileData={uploadData?.data} fileName={uploadData?.name} fileType={uploadData?.type} />
             )
           })()}
         </div>
 
-        {/* Rejection modal */}
         {showReject && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-surface-50 rounded-2xl shadow-2xl p-6 w-[420px]">
@@ -155,14 +158,16 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
             </button>
           )}
           <h1 className="text-lg font-extrabold text-slate-800">✅ Validations</h1>
-          <span className="text-xs font-mono text-slate-400">{pending.length} en attente</span>
+          <span className="text-xs font-mono text-slate-400">{pending.length + pendingDelivery.length} en attente</span>
         </div>
         {actionMsg && (
           <span className={`text-sm font-medium ${actionMsg.includes('✅') ? 'text-emerald-600' : 'text-amber-600'}`}>{actionMsg}</span>
         )}
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-8">
+
+        {/* ── SECTION 1: Plans d'Installation ── */}
         <div>
           <h2 className="text-sm font-bold text-amber-700 flex items-center gap-2 mb-3">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
@@ -173,7 +178,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
           ) : pending.length === 0 ? (
             <div className="bg-surface-50 rounded-xl border border-slate-200 p-8 text-center">
               <span className="text-3xl">✅</span>
-              <p className="text-sm text-slate-400 mt-2">Toutes les commandes sont à jour. Aucune approbation en attente.</p>
+              <p className="text-sm text-slate-400 mt-2">Tous les plans sont approuvés.</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -195,9 +200,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
                     </button>
                     {onFiche && (
                       <button onClick={() => onFiche(order.id)}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">
-                        📄
-                      </button>
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">📄</button>
                     )}
                   </div>
                 </div>
@@ -206,6 +209,49 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
           )}
         </div>
 
+        {/* ── SECTION 2: Confirmations de Livraison ── */}
+        <div>
+          <h2 className="text-sm font-bold text-cyan-700 flex items-center gap-2 mb-3">
+            <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+            🚚 Confirmations de Livraison — En attente ({pendingDelivery.length})
+          </h2>
+          {loading ? (
+            <div className="text-sm text-slate-400 italic p-4">Chargement...</div>
+          ) : pendingDelivery.length === 0 ? (
+            <div className="bg-surface-50 rounded-xl border border-slate-200 p-8 text-center">
+              <span className="text-3xl">🚚</span>
+              <p className="text-sm text-slate-400 mt-2">Aucune livraison en attente de validation.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {pendingDelivery.map(order => (
+                <div key={order.id} className="bg-surface-50 rounded-xl border border-cyan-200 p-4 flex items-center justify-between hover:shadow-sm transition-all">
+                  <div className="flex items-center gap-4">
+                    <span className="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center text-lg">🚛</span>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 font-mono">{order.serialNumber}</p>
+                      <p className="text-xs text-slate-500">{order.clientName} — {order.clientCity}</p>
+                      <p className="text-[10px] text-slate-400">{order.typeMotorisation} • Gaine: {order.largeurGaineMm}×{order.profondeurGaineMm}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-cyan-600 bg-cyan-50 px-2.5 py-1 rounded-lg">Prêt pour livraison</span>
+                    <button onClick={() => confirmDelivery(order.id)} disabled={submitting}
+                      className="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center gap-1.5">
+                      ✅ Confirmer la livraison
+                    </button>
+                    {onFiche && (
+                      <button onClick={() => onFiche(order.id)}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">📄</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── SECTION 3: En cours de traitement ── */}
         <div>
           <h2 className="text-sm font-bold text-slate-600 flex items-center gap-2 mb-3">
             En cours de traitement ({recent.length})
@@ -231,6 +277,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
             )}
           </div>
         </div>
+
       </div>
     </div>
   )

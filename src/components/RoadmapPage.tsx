@@ -16,17 +16,21 @@ const STATUS_STEPS = [
   { key: 'ATTENTE_DESSIN_2D', label: 'Dessin 2D Cabine', icon: '✏️', hours: 24 },
   { key: 'ATTENTE_VERIFICATION', label: 'Vérification', icon: '🔍', hours: 8 },
   { key: 'PRET_POUR_PRODUCTION', label: 'Prêt Production', icon: '🏭', hours: 0 },
+  { key: 'EN_LIVRAISON', label: 'Livraison', icon: '🚛', hours: 8 },
+  { key: 'LIVREE', label: 'Livrée', icon: '✅', hours: 0 },
 ]
 
 function StatusBadge({ status }: { status: string }) {
   const s = STATUS_STEPS.find(s => s.key === status)
   return (
     <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-      status === 'PRET_POUR_PRODUCTION' || status === 'VALIDEE'
+      status === 'LIVREE' || status === 'VALIDEE'
         ? 'bg-emerald-100 text-emerald-700'
-        : status === 'ANNULEE'
-          ? 'bg-red-100 text-red-700'
-          : 'bg-amber-100 text-amber-700'
+        : status === 'EN_LIVRAISON'
+          ? 'bg-cyan-100 text-cyan-700'
+          : status === 'ANNULEE'
+            ? 'bg-red-100 text-red-700'
+            : 'bg-amber-100 text-amber-700'
     }`}>
       {s?.label || status}
     </span>

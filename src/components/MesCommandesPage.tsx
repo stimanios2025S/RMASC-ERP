@@ -40,6 +40,8 @@ const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot:
   ATTENTE_DESSIN_2D:       { label: 'Attente Dessin 2D', bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
   ATTENTE_VERIFICATION:    { label: 'Vérification', bg: 'bg-rose-50', text: 'text-rose-700', dot: 'bg-rose-500' },
   PRET_POUR_PRODUCTION:    { label: 'Prêt Production', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  EN_LIVRAISON:            { label: 'En Livraison', bg: 'bg-cyan-50', text: 'text-cyan-700', dot: 'bg-cyan-500' },
+  LIVREE:                  { label: 'Livrée', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
   VALIDEE:                 { label: 'Validée', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
   ANNULEE:                 { label: 'Annulée', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
 }
@@ -99,9 +101,9 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
 
   const stats = {
     total: orders.length,
-    actives: orders.filter(o => !['VALIDEE', 'ANNULEE', 'PRET_POUR_PRODUCTION'].includes(o.status)).length,
-    pret: orders.filter(o => o.status === 'PRET_POUR_PRODUCTION').length,
-    validees: orders.filter(o => o.status === 'VALIDEE').length,
+    actives: orders.filter(o => !['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length,
+    pret: orders.filter(o => o.status === 'PRET_POUR_PRODUCTION' || o.status === 'EN_LIVRAISON').length,
+    validees: orders.filter(o => o.status === 'LIVREE' || o.status === 'VALIDEE').length,
   }
 
   const uniqueStatuses = [...new Set(orders.map(o => o.status))]
