@@ -222,6 +222,33 @@ app.patch('/api/orders/:id/production-phase', authenticate, async (req, res) => 
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
+// ─── Archive: all documents linked to an order ─────────────────────────
+app.get('/api/orders/:id/archive', authenticate, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+
+    const [cadSubmissions, stockDocuments] = await Promise.all([
+      CAD_Submission.find({ order: order._id }).sort({ createdAt: -1 }),
+      StockDocument.find({ order: order._id }).populate('supplier').populate({ path: 'lines.item' }).sort({ createdAt: -1 }),
+    ])
+
+    res.json({
+      order: {
+        id: order._id,
+        serialNumber: order.serialNumber,
+        clientName: order.clientName,
+        clientCity: order.clientCity,
+        status: order.status,
+        createdAt: order.createdAt,
+        completedAt: order.completedAt,
+      },
+      cadSubmissions: addIdField(cadSubmissions),
+      stockDocuments: addIdField(stockDocuments),
+    })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
 app.post('/api/orders/:id/approve-plan', authenticate, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
