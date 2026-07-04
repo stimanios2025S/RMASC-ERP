@@ -12,7 +12,6 @@ import LifecyclePipeline from './LifecyclePipeline'
 import HelpPage from './HelpPage'
 import { apiFetch } from '../config/api'
 import type { PortalSession } from '../data/portalUsers'
-import rmascLogo from '../../assets/rmasc-logo.png.png'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface OrderSummary {
@@ -179,14 +178,28 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
 
   return (
     <aside className="w-64 h-screen bg-sidebar-bg border-r border-gray-100 flex flex-col flex-shrink-0">
-      {/* Logo */}
+      {/* Logo RMASC */}
       <div className="px-5 pt-6 pb-4">
         <div className="flex justify-center">
-          <img
-            src={rmascLogo}
-            alt="RMASC Logo"
-            className="w-14 h-14 object-contain"
-          />
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Fond du badge */}
+            <rect width="56" height="56" rx="12" fill="url(#rm-grad-dash)" />
+            {/* Icône usine/industrie */}
+            <path d="M12 44V24a3 3 0 0 1 3-3h3v23" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M18 44V20a3 3 0 0 1 3-3h3v27" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M24 44V18a3 3 0 0 1 3-3h3v29" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M30 44v-14a3 3 0 0 1 3-3h6v17" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M12 44h32" stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
+            {/* Lettrage RM au centre */}
+            <text x="28" y="30" textAnchor="middle" fill="white" fontSize="11" fontWeight="900" fontFamily="system-ui" letterSpacing="-0.5">RM</text>
+            <text x="28" y="42" textAnchor="middle" fill="#fbbf24" fontSize="7" fontWeight="800" fontFamily="system-ui" letterSpacing="1">FACTORY</text>
+            <defs>
+              <linearGradient id="rm-grad-dash" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#ea580c" />
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
       </div>
 
