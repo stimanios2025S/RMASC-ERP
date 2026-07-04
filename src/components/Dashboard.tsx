@@ -907,6 +907,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <HelpPage onBack={() => persistView('dashboard')} />
+        </div>
       </div>
     )
   }
@@ -924,6 +925,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <SettingsPage onBack={() => persistView('dashboard')} session={session} onSessionUpdate={onSessionUpdate} />
+        </div>
       </div>
     )
   }
@@ -941,6 +943,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <RoadmapPage orders={orders as any} onBack={() => persistView('dashboard')} />
+        </div>
       </div>
     )
   }
@@ -963,6 +966,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <InvoicingPage onBack={() => persistView('dashboard')} />
+        </div>
       </div>
     )
   }
@@ -980,6 +984,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <BureauEtudeVault onBack={() => persistView('dashboard')} />
+        </div>
       </div>
     )
   }
@@ -997,6 +1002,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <LifecyclePipeline onBack={() => persistView('dashboard')} />
+        </div>
       </div>
     )
   }
@@ -1116,7 +1122,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
           </div>
         </main>
       </div>
-    </div>
+        </div>
     </div>
   )
 }
