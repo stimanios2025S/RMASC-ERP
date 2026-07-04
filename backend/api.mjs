@@ -206,7 +206,7 @@ app.post('/api/orders/create-and-sync', authenticate, async (req, res) => {
 
 app.patch('/api/orders/:id/status', authenticate, async (req, res) => {
   try {
-    const valid = ['BROUILLON','ATTENTE_DESSIN_TECH','ATTENTE_APPROBATION_ADMIN','ATTENTE_DESSIN_2D','ATTENTE_VERIFICATION','PRET_POUR_PRODUCTION','EN_LIVRAISON','LIVREE','ANNULEE']
+    const valid = ['BROUILLON','ATTENTE_DESSIN_TECH','ATTENTE_APPROBATION_ADMIN','ATTENTE_DESSIN_2D','ATTENTE_VERIFICATION','PRET_POUR_PRODUCTION','EN_LIVRAISON','LIVREE','VALIDEE','ANNULEE']
     if (!valid.includes(req.body.status)) return res.status(400).json({ error: 'Statut invalide.' })
     const order = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true })
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
