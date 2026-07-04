@@ -815,8 +815,8 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <AddElevator onBack={() => persistView('dashboard')} />
+        </div>
       </div>
-    </div>
     )
   }
 
@@ -867,6 +867,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         <Sidebar onNavigate={persistView} onLogout={onLogout} />
         <div className="flex-1 overflow-y-auto">
           <MesCommandesPage onBack={() => persistView('dashboard')} onFiche={(id) => { setFicheOrderId(id); persistView('fiche') }} />
+        </div>
         </div>
       </div>
     )
