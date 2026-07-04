@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Dashboard from './components/Dashboard'
-import BureauEtudeWorkspace from './components/BureauEtudeWorkspace'
+import IngenieurPortal from './components/IngenieurPortal'
 import ProductionWorkspace from './components/ProductionWorkspace'
 import StockWorkspace from './components/StockWorkspace'
 import LoginScreen from './components/LoginScreen'
@@ -26,16 +26,18 @@ export default function App() {
 
   const role = session.role
 
+  // ── Each role has its OWN private portal ─────────────────────────
   if (role === 'ADMIN') {
     return <Dashboard onLogout={handleLogout} session={session} onSessionUpdate={handleSessionUpdate} />
   }
-  if (role === 'INGENIEUR_1' || role === 'INGENIEUR_2' || role === 'VERIFICATEUR') {
-    const ROLE_TO_ENGINEER_TAB: Record<string, string> = {
-      INGENIEUR_1: 'ingenieur-1',
-      INGENIEUR_2: 'ingenieur-2',
-      VERIFICATEUR: 'verificateur',
-    }
-    return <BureauEtudeWorkspace onBack={handleLogout} forcedTab={ROLE_TO_ENGINEER_TAB[role]} session={session} />
+  if (role === 'INGENIEUR_1') {
+    return <IngenieurPortal onBack={handleLogout} session={session} role="INGENIEUR_1" />
+  }
+  if (role === 'INGENIEUR_2') {
+    return <IngenieurPortal onBack={handleLogout} session={session} role="INGENIEUR_2" />
+  }
+  if (role === 'VERIFICATEUR') {
+    return <IngenieurPortal onBack={handleLogout} session={session} role="VERIFICATEUR" />
   }
   if (role === 'PRODUCTION') {
     return <ProductionWorkspace onBack={handleLogout} session={session} />
