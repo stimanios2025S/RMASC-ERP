@@ -15,20 +15,43 @@
 
   body {
     font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    background:
-      radial-gradient(circle at top left, rgba(249, 115, 22, 0.12), transparent 32%),
-      radial-gradient(circle at bottom right, rgba(234, 88, 12, 0.08), transparent 28%),
-      linear-gradient(180deg, #0F172A 0%, #020617 100%);
     color: #E2E8F0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
     height: 100vh;
-    background-attachment: fixed;
     text-rendering: optimizeLegibility;
   }
 
   #root {
+    height: 100vh;
+    overflow: hidden;
+    background: #0F172A;
+    position: relative;
+  }
+
+  #root::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: url('/images/login-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.4);
+  }
+
+  #root::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(90deg, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.6) 50%, rgba(15,23,42,0.15) 100%);
+  }
+
+  .app-content {
+    position: relative;
+    z-index: 1;
     height: 100vh;
     overflow: hidden;
   }

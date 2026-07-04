@@ -4,6 +4,7 @@ import FileViewer from './FileViewer'
 import type { PortalSession } from '../data/portalUsers'
 import { apiFetch } from '../config/api'
 import { getProductionPhase, setProductionPhase, getUploads } from '../config/runtime-store'
+import { PageBackground } from './PageBackground'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -94,7 +95,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-surface-50">
+    <PageBackground className="h-full flex flex-col">
       <header className="flex-shrink-0 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-slate-100 text-slate-500"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
@@ -274,6 +275,6 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         <span>RMASC Factory — Production & Atelier v2.5.2</span>
         <span>{orders.length} commandes en production</span>
       </footer>
-    </div>
+    </PageBackground>
   )
 }

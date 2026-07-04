@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import FileViewer from './FileViewer'
 import { apiFetch } from '../config/api'
 import { getUploads } from '../config/runtime-store'
+import { PageBackground } from './PageBackground'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -86,7 +87,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
   if (deliveryOrder) return <DeliveryDetail order={deliveryOrder} onBack={() => setDeliveryOrder(null)} onConfirm={confirmDelivery} submitting={submitting} actionMsg={actionMsg} setActionMsg={setActionMsg} onFiche={onFiche} />
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gradient-to-br from-primary-50/60 via-surface-50 to-surface-50">
+    <PageBackground className="flex-1 overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -272,7 +273,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
           </div>
         )}
       </div>
-    </div>
+    </PageBackground>
   )
 }
 

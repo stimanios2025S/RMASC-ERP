@@ -4,6 +4,7 @@ import FileViewer from './FileViewer'
 import type { PortalSession } from '../data/portalUsers'
 import { apiFetch } from '../config/api'
 import { addUpload, getUploads } from '../config/runtime-store'
+import { PageBackground } from './PageBackground'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -196,7 +197,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
   ]
 
   return (
-    <div className="h-full flex flex-col bg-surface-50">
+    <PageBackground className="h-full flex flex-col">
       {/* ═══ HEADER ═══ */}
       <header className="flex-shrink-0 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -604,6 +605,6 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
         <span>RMASC Factory — Bureau d'Études PLM v2.5.3</span>
         <span>{kpis.pretProd} prêtes prod • {kpis.fichiers} fichiers • {kpis.ingenieurs} ingénieurs</span>
       </footer>
-    </div>
+    </PageBackground>
   )
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { PortalSession } from '../data/portalUsers'
 import { apiFetch, apiPath } from '../config/api'
+import { PageBackground } from './PageBackground'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface StockItem {
@@ -144,7 +145,7 @@ export default function StockWorkspace({ onBack, session }: Props) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-primary-50/60 via-surface-50 to-surface-50">
+    <PageBackground className="h-full flex flex-col">
       {/* ── Header ── */}
       <header className="flex-shrink-0 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -202,7 +203,7 @@ export default function StockWorkspace({ onBack, session }: Props) {
       <div className="flex-1 overflow-y-auto p-6">
         {renderContent()}
       </div>
-    </div>
+    </PageBackground>
   )
 }
 
