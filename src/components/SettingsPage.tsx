@@ -66,18 +66,22 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
   }
 
   const saveName = async (userId: string) => {
-    if (!editName.trim()) { setFeedback({ ok: false, msg: 'Le nom ne peut pas être vide.' }); return }
+    if (!userId || !editName.trim()) { setFeedback({ ok: false, msg: 'Le nom ne peut pas être vide.' }); return }
     setSavingId(userId)
-    const result = await updateUserDisplayName(userId, editName.trim())
-    setSavingId(null)
-    if (result.success) {
-      setFeedback({ ok: true, msg: '✅ Nom mis à jour avec succès.' })
-      setEditingId(null)
-      refreshUsers()
-      if (onSessionUpdate) onSessionUpdate()
-    } else {
-      setFeedback({ ok: false, msg: result.error || 'Erreur.' })
+    try {
+      const result = await updateUserDisplayName(userId, editName.trim())
+      if (result.success) {
+        setFeedback({ ok: true, msg: '✅ Nom mis à jour avec succès.' })
+        setEditingId(null)
+        await refreshUsers()
+        if (onSessionUpdate) onSessionUpdate()
+      } else {
+        setFeedback({ ok: false, msg: result.error || 'Erreur lors de la mise à jour.' })
+      }
+    } catch {
+      setFeedback({ ok: false, msg: 'Erreur réseau. Vérifiez votre connexion.' })
     }
+    setSavingId(null)
     setTimeout(() => setFeedback(null), 3000)
   }
 

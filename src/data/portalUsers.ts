@@ -42,8 +42,10 @@ export async function updateUserDisplayName(userId: string, newName: string): Pr
     await api.patch(`/users/${userId}/name`, { name: newName })
     const allUsers: any[] = await api.get('/users')
     const updated = allUsers.find(u => u.id === userId)
-    if (updated && currentSession && currentSession.userId === updated.loginId)
+    if (updated && currentSession && currentSession.userId === updated.loginId) {
       currentSession = { ...currentSession, name: updated.name }
+      saveSession(currentSession) // Persist to localStorage
+    }
     return { success: true }
   } catch (e: any) { return { success: false, error: e.message } }
 }

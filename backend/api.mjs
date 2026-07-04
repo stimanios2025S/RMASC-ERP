@@ -119,6 +119,21 @@ app.put('/api/users/admin', authenticate, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
+// ─── Helper: add `id` from `_id` for aggregation results ─────────────
+function addIdField(doc) {
+  if (Array.isArray(doc)) return doc.map(d => addIdField(d))
+  if (doc && typeof doc === 'object' && doc._id) {
+    doc.id = typeof doc._id === 'object' ? doc._id.toString() : doc._id
+    // Recursively process nested objects and arrays
+    for (const key of Object.keys(doc)) {
+      if (key === 'cadSubmissions' || key === 'lines' || key === 'movements' || key === 'items') {
+        if (Array.isArray(doc[key])) doc[key] = doc[key].map((item) => addIdField(item))
+      }
+    }
+  }
+  return doc
+}
+
 // ═══ ORDERS ══════════════════════════════════════════════════════════════
 app.get('/api/orders', authenticate, async (_req, res) => {
   try {
@@ -128,7 +143,7 @@ app.get('/api/orders', authenticate, async (_req, res) => {
       { $addFields: { _count: { cadSubmissions: { $size: '$cadSubmissions' } } } },
       { $project: { cadSubmissions: 0 } },
     ])
-    res.json(orders)
+    res.json(addIdField(orders))
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
@@ -297,7 +312,7 @@ app.get('/api/stock/suppliers', authenticate, async (req, res) => {
       { $addFields: { _count: { items: { $size: '$items' }, movements: { $size: '$movements' } } } },
       { $sort: { name: 1 } },
     ])
-    res.json(suppliers)
+    res.json(addIdField(suppliers))
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
@@ -418,7 +433,8 @@ app.get('/api/stock/stats', authenticate, async (req, res) => {
     res.json({
       totalItems,
       lowStockItems: allItems.filter(i => i.quantity <= i.alertThreshold).length,
-      totalSuppliers, recentMovements,
+      totalSuppliers,
+      recentMovements: addIdField(recentMovements),
       categoryCounts: await StockItem.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]),
     })
   } catch (e) { res.status(500).json({ error: e.message }) }

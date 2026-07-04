@@ -1,16 +1,48 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-//  RMASC FACTORY — MongoDB Connection Pool (Vercel Serverless Safe)
-//  Uses globalThis singleton to reuse connections across function invocations.
-//  Prevents exceeding Atlas connection limits during cold starts.
+//  RMASC FACTORY — MongoDB Connection Pool + Global JSON Transform
+//  - Global `toJSON` transform: maps `_id` → `id` for every model
+//  - Prevents the `id` vs `_id` bug that breaks ALL frontend CRUD operations
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import mongoose from 'mongoose'
+import { Schema } from 'mongoose'
 
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || 'mongodb://localhost:27017/rmasc-erp'
 
 if (!MONGODB_URI) {
   throw new Error('MONGODB_URI environment variable is required')
 }
+
+// ─── Global Plugin: auto-map _id → id in JSON responses ────────────────
+// This ensures every Mongoose document returned via res.json() includes
+// an `id` field matching the MongoDB _id, exactly like Prisma did.
+mongoose.plugin(function setIdPlugin(schema) {
+  // Only add if not already present
+  if (!schema.paths['id']) {
+    schema.virtual('id').get(function () {
+      return this._id?.toString()
+    })
+  }
+
+  // Ensure virtuals are included in JSON
+  schema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform(_doc, ret) {
+      ret.id = ret._id?.toString()
+      return ret
+    },
+  })
+
+  schema.set('toObject', {
+    virtuals: true,
+    versionKey: false,
+    transform(_doc, ret) {
+      ret.id = ret._id?.toString()
+      return ret
+    },
+  })
+})
 
 // ─── Global cache — survives Vercel function re-use ───────────────────────
 const globalCache = globalThis
@@ -25,20 +57,18 @@ if (!cached) {
 }
 
 export async function connectDB() {
-  // Return cached connection if already established
   if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn
   }
 
-  // If a connection attempt is in progress, wait for it
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
-      maxPoolSize: 5,        // Limit connections for Vercel/serverless
+      maxPoolSize: 5,
       minPoolSize: 1,
-      maxIdleTimeMS: 60000,  // Close idle connections quickly
-      bufferCommands: false, // Don't buffer commands when disconnected
+      maxIdleTimeMS: 60000,
+      bufferCommands: false,
     })
   }
 
@@ -46,7 +76,6 @@ export async function connectDB() {
     cached.conn = await cached.promise
     return cached.conn
   } catch (err) {
-    // Reset promise so next invocation can retry
     cached.promise = null
     cached.conn = null
     throw err
@@ -58,9 +87,7 @@ export async function disconnectDB() {
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect()
     }
-  } catch {
-    // Best effort — Vercel kills the process anyway
-  }
+  } catch {}
   cached.conn = null
   cached.promise = null
 }

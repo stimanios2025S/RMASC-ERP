@@ -65,7 +65,4 @@ orderSchema.virtual('cadSubmissions', {
   foreignField: 'order',
 })
 
-orderSchema.set('toJSON', { virtuals: true })
-orderSchema.set('toObject', { virtuals: true })
-
 export default mongoose.model('Order', orderSchema)
