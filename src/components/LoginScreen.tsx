@@ -84,13 +84,20 @@ export default function LoginScreen({ onLogin }: Props) {
   }
 
   return (
-    <div className="h-screen flex bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
-      {/* Industrial grid background */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle, #f97316 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }} />
+    <div className="h-screen flex relative overflow-hidden">
+      {/* Full background image with overlay */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1920&q=80"
+          alt=""
+          className="w-full h-full object-cover"
+          style={{ filter: 'brightness(0.3) saturate(1.2) contrast(1.1)' }}
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/20" />
+        {/* Subtle orange glow */}
+        <div className="absolute -top-40 right-1/4 w-[500px] h-[500px] rounded-full bg-amber-500/8 blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full bg-orange-600/8 blur-3xl" />
       </div>
 
       {/* ── Left Panel: Branding + Info ── */}
