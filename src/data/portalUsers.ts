@@ -57,3 +57,11 @@ export async function changeAdminCredentials(currentLoginId: string, currentPass
     return { success: true }
   } catch (e: any) { return { success: false, error: e.message } }
 }
+
+// ─── Admin: Change any user's password ──────────────────────────────────
+export async function changeUserPassword(userId: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await api.patch(`/users/${userId}/password`, { newPassword })
+    return { success: true }
+  } catch (e: any) { return { success: false, error: e.message } }
+}

@@ -119,6 +119,17 @@ app.put('/api/users/admin', authenticate, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
+// ─── Admin: Change any user's password ──────────────────────────────────
+app.patch('/api/users/:id/password', authenticate, async (req, res) => {
+  try {
+    const { newPassword } = req.body
+    if (!newPassword || newPassword.length < 4) return res.status(400).json({ error: 'Mot de passe min. 4 caractères.' })
+    const hashed = await bcrypt.hash(newPassword, BCRYPT_ROUNDS)
+    await PortalUser.findByIdAndUpdate(req.params.id, { password: hashed })
+    res.json({ success: true, message: 'Mot de passe mis à jour.' })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
 // ─── Helper: add `id` from `_id` for aggregation results ─────────────
 function addIdField(doc) {
   if (Array.isArray(doc)) return doc.map(d => addIdField(d))
@@ -297,11 +308,38 @@ app.post('/api/orders/:id/confirm-delivery', authenticate, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
+// ─── Admin: Full update ANY order (even completed/in production) ──────
 app.patch('/api/orders/:id', authenticate, async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    const allowed = ['clientName','clientEmail','clientPhone','clientCity','serialNumber',
+      'typeMotorisation','sousTypeElectrique','vitesseMs','nombreEtages',
+      'largeurGaineMm','profondeurGaineMm','hauteurGaineMm',
+      'profondeurCuvetteMm','hauteurDernierEtageMm','contrepoidsPosition','positionContrepoids',
+      'largeurCabineCalculeeMm','profondeurCabineCalculeeMm',
+      'materiauCabine','materiauPortes','materiauParois','materiauSol',
+      'typeCabine','typePorte','finitionPorteCabine','typeChassisArcade',
+      'finitionInterieurCabine','revetementSol',
+      'largeurPassageLibreMm','hauteurUtileCabineMm','typeSuspensionGuidage','systemeSurcharge',
+      'priority','lifecycleStage','engineeredBy','totalCostDZD','salePriceDZD','marginPct',
+      'optPanoramique','optSecours','optAnnoncesVocales','optCctv','optPortesCoupeFeu',
+      'optPanneauTactile','optVentilation','optBarreaudage','optAlarme',
+      'status']
+    const update = {}
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) update[key] = req.body[key]
+    }
+    const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true })
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
-    res.json({ order, message: 'Mis à jour.' })
+    res.json({ order, message: '✅ Commande mise à jour avec succès.' })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+// ─── Admin: Delete order (hard delete, admin only) ─────────────────────
+app.delete('/api/orders/:id', authenticate, async (req, res) => {
+  try {
+    await CAD_Submission.deleteMany({ order: req.params.id })
+    await Order.findByIdAndDelete(req.params.id)
+    res.json({ success: true, message: 'Commande supprimée.' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 

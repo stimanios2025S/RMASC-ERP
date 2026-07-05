@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { PortalSession, PortalUser } from '../data/portalUsers'
-import { getSession, changeAdminCredentials, updateUserDisplayName, fetchAllUsers } from '../data/portalUsers'
+import { getSession, changeAdminCredentials, changeUserPassword, updateUserDisplayName, fetchAllUsers } from '../data/portalUsers'
 
 interface Props {
   onBack?: () => void
@@ -285,6 +285,51 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Gestion des mots de passe (Admin only) ── */}
+        {isAdmin && (
+          <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-slate-800">🔑 Gestion des mots de passe</h2>
+            </div>
+            <p className="text-[11px] text-slate-400 mb-4">Définissez un nouveau mot de passe pour chaque utilisateur.</p>
+            <div className="space-y-2">
+              {sorted.map(u => {
+                const [showPw, setShowPw] = useState(false)
+                const [pw, setPw] = useState('')
+                const [savingPw, setSavingPw] = useState(false)
+                return (
+                  <div key={u.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-surface-50">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${
+                      u.role === 'ADMIN' ? 'bg-amber-500' : u.role === 'INGENIEUR_1' ? 'bg-sky-500' : u.role === 'INGENIEUR_2' ? 'bg-violet-500' : u.role === 'VERIFICATEUR' ? 'bg-rose-500' : u.role === 'PRODUCTION' ? 'bg-emerald-500' : 'bg-cyan-500'
+                    }`}>{u.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800">{u.name}</p>
+                      <p className="text-[10px] text-slate-400">{u.loginId} — {ROLE_LABELS[u.role] || u.role}</p>
+                    </div>
+                    {showPw ? (
+                      <div className="flex items-center gap-2">
+                        <input type="text" value={pw} onChange={e => setPw(e.target.value)} placeholder="Nouveau mot de passe" className="w-40 h-9 px-3 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-amber-200" />
+                        <button onClick={async () => {
+                          if (!pw || pw.length < 4) { setFeedback({ ok: false, msg: 'Min. 4 caractères.' }); setTimeout(() => setFeedback(null), 3000); return }
+                          setSavingPw(true)
+                          const r = await changeUserPassword(u.id, pw)
+                          setSavingPw(false)
+                          setFeedback(r.success ? { ok: true, msg: `✅ Mot de passe mis à jour pour ${u.name}` } : { ok: false, msg: r.error || 'Erreur' })
+                          setTimeout(() => setFeedback(null), 3000)
+                          if (r.success) { setShowPw(false); setPw('') }
+                        }} disabled={savingPw} className="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 disabled:opacity-60">{savingPw ? '⏳' : '💾'}</button>
+                        <button onClick={() => { setShowPw(false); setPw('') }} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 text-xs font-semibold">✕</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setShowPw(true)} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 text-xs font-semibold transition-all">🔑 Changer mot de passe</button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 

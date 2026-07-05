@@ -13,6 +13,7 @@ function generateSerial(): string {
 type StepKey = 'client' | 'motorisation' | 'dimensions' | 'materiaux' | 'options' | 'finalisation'
 
 interface FormData {
+  serialNumber: string; priority: string
   clientName: string; clientEmail: string; clientPhone: string; clientCity: string
   motorType: string; motorSubtype: string; motorSpeed: string; motorFloors: string
   dimWidth: string; dimDepth: string; dimHeight: string
@@ -39,7 +40,15 @@ const STEPS: StepInfo[] = [
   { key: 'finalisation', label: 'Finalisation', icon: 'FileCheck' },
 ]
 
+const PRIORITY_OPTIONS = [
+  { value: 'URGENT', label: '🔴 Urgent', color: 'text-red-600 bg-red-50' },
+  { value: 'HAUTE', label: '🟠 Haute', color: 'text-orange-600 bg-orange-50' },
+  { value: 'NORMAL', label: '🔵 Normal', color: 'text-blue-600 bg-blue-50' },
+  { value: 'BASSE', label: '🟢 Basse', color: 'text-green-600 bg-green-50' },
+]
+
 const INITIAL_FORM: FormData = {
+  serialNumber: '', priority: 'NORMAL',
   clientName: '', clientEmail: '', clientPhone: '', clientCity: '',
   motorType: 'ÉLECTRIQUE', motorSubtype: '', motorSpeed: '', motorFloors: '',
   dimWidth: '', dimDepth: '', dimHeight: '',
@@ -270,19 +279,36 @@ function FormCheckbox({ label, checked, onChange }: any) {
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────
-function areClientFieldsFilled(d: FormData) { return d.clientName.trim() !== '' && d.clientPhone.trim() !== '' && d.clientCity.trim() !== '' }
+function areClientFieldsFilled(d: FormData) { return d.clientName.trim() !== '' && d.clientPhone.trim() !== '' && d.clientCity.trim() !== '' && d.serialNumber.trim() !== '' }
 function isFinalisationValid(d: FormData) { return areClientFieldsFilled(d) && d.agreed === true }
 
 // ─── Step 1: Client ───────────────────────────────────────────────────────
 function StepClient({ data, setData }: any) {
   const s = (f: keyof FormData) => (v: string) => setData({ ...data, [f]: v })
   return <div className="space-y-5">
-    <p className="text-sm text-gray-400 mb-1">Informations du client pour ce projet d'ascenseur.</p>
+    <p className="text-sm text-gray-400 mb-1">Informations de la commande.</p>
     <div className="grid grid-cols-2 gap-4">
       <div className="col-span-2"><FormInput label="Nom du client" value={data.clientName} onChange={s('clientName')} placeholder="Ex: Ascenseurs Bouira" required /></div>
       <FormInput label="Email" value={data.clientEmail} onChange={s('clientEmail')} placeholder="contact@client.com" type="email" optional />
       <FormInput label="Téléphone" value={data.clientPhone} onChange={s('clientPhone')} placeholder="+213..." type="tel" required />
       <FormInput label="Ville" value={data.clientCity} onChange={s('clientCity')} placeholder="Ex: Bouira" required />
+    </div>
+    <div className="border-t border-gray-200 pt-4">
+      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">⚙️ Configuration & Priorité</p>
+      <div className="grid grid-cols-2 gap-4">
+        <FormInput label="N° de série *" value={data.serialNumber} onChange={s('serialNumber')} placeholder="Ex: RMASC-2026-XXXXXX" required />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">Priorité <span className="text-red-400 text-xs">*</span></label>
+          <div className="flex gap-2 h-10">
+            {PRIORITY_OPTIONS.map(p => (
+              <button key={p.value} type="button" onClick={() => setData({ ...data, priority: p.value })}
+                className={`flex-1 rounded-xl text-xs font-bold border-2 transition-all ${data.priority === p.value ? `${p.color} border-current` : 'border-gray-200 text-gray-400 bg-surface-50 hover:border-gray-300'}`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 }
@@ -534,10 +560,11 @@ export default function AddElevator({ onBack }: Props) {
   const handleSubmitOrder = async () => {
     setSubmitting(true)
     setSubmitError(null)
-    const serial = generateSerial()
+    const serial = data.serialNumber.trim() || `RMASC-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-5)}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
     const payload = {
       clientName: data.clientName, clientEmail: data.clientEmail?.includes('@') ? data.clientEmail : undefined,
       clientPhone: data.clientPhone, clientCity: data.clientCity, serialNumber: serial,
+      priority: data.priority || 'NORMAL',
       typeMotorisation: data.motorType, sousTypeElectrique: data.motorSubtype || undefined,
       vitesseMs: data.motorSpeed || undefined, nombreEtages: data.motorFloors || undefined,
       largeurGaineMm: data.dimWidth, profondeurGaineMm: data.dimDepth, hauteurGaineMm: data.dimHeight,

@@ -57,6 +57,10 @@ const orderSchema = new mongoose.Schema({
   optVentilation:     { type: Boolean, default: false },
   optBarreaudage:     { type: Boolean, default: false },
   optAlarme:          { type: Boolean, default: false },
+
+  // ── Priorité & contrôle Admin ─────────────────────────────────────────
+  priority:           { type: String, default: 'NORMAL', enum: ['URGENT','HAUTE','NORMAL','BASSE'] },
+  serialNumberLocked: { type: Boolean, default: false },
 }, { timestamps: true })
 
 orderSchema.virtual('cadSubmissions', {
