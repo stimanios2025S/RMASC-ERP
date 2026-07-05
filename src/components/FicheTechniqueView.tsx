@@ -351,10 +351,10 @@ export default function FicheTechniqueView({ orderId, onBack }: { orderId: strin
         </div>
       </div>
 
-      {/* ─── FICHE TECHNIQUE — FULL WIDTH ─── */}
-      <div className="bg-slate-100 py-6 px-4 flex justify-center no-print">
-        <div className="bg-white shadow-lg rounded-2xl" style={{ width: '210mm', maxWidth: '100%' }}>
-          <div className="p-5 md:p-8" ref={docRef}>
+      {/* ─── FICHE TECHNIQUE — Full visible document ─── */}
+      <div className="bg-slate-100 min-h-screen py-8 px-4 md:px-8 flex justify-center no-print">
+        <div className="bg-white shadow-xl rounded-2xl overflow-hidden w-full max-w-[210mm] print:shadow-none print:rounded-none">
+          <div className="p-6 md:p-8 print:p-4" ref={docRef}>
             <FicheDocument data={data} />
           </div>
         </div>
