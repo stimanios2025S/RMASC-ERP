@@ -66,7 +66,9 @@ const INITIAL_FORM: FormData = {
 
 // ─── Catalog Options ──────────────────────────────────────────────────────
 const CABIN_WALL_MATERIALS = [
-  'Acier Inoxydable Brossé', 'Acier Inoxydable Miroir', 'Verre Trempé (Stratifié 12mm)',
+  'Acier Inoxydable Brossé', 'Acier Inoxydable Miroir', 'Inox Inoxydable',
+  'Inox Inoxydable + Galvanisé',
+  'Verre Trempé (Stratifié 12mm)',
   'Aluminium', 'Méthacrylate', 'Bois Décoratif Ignifuge', 'Mélaminé / Laminé Haute Pression',
 ]
 const DOOR_MATERIALS = ['Acier Inoxydable Brossé', 'Acier Inoxydable Miroir', 'Verre Trempé']
