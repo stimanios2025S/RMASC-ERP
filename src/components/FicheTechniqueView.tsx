@@ -12,7 +12,7 @@ interface CADSubmission {
 }
 
 interface OrderFull {
-  id: string; serialNumber: string; clientName: string
+  id: string; serialNumber: string; clientName: string; notes?: string | null
   clientEmail: string | null; clientPhone: string; clientCity: string
   status: string; typeMotorisation: string
   sousTypeElectrique: string | null; vitesseMs: string | null; nombreEtages: string | null
@@ -258,6 +258,14 @@ function FicheDocument({ data }: { data: OrderFull }) {
           </td>
         </tr>
       </table>
+
+      {/* ─── NOTES COMPLÉMENTAIRES ─── */}
+      {data.notes && (
+        <div className="fiche-remark-box" style={{ background: '#f0f9ff', borderColor: '#bae6fd' }}>
+          <div className="fiche-remark-title" style={{ color: '#0369a1' }}>📝 Notes complémentaires</div>
+          <div className="fiche-remark-item" style={{ color: '#0c4a6e', fontSize: 10, marginTop: 4 }}>{data.notes}</div>
+        </div>
+      )}
 
       {/* ─── NON-CONFORMITÉS NF EN 81-20 ─── */}
       {hasNC && (

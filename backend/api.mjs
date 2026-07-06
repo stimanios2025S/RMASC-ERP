@@ -182,7 +182,7 @@ app.post('/api/orders/create-and-sync', authenticate, async (req, res) => {
 
     const order = await Order.create({
       clientName: d.clientName, clientPhone: d.clientPhone, clientPhone2: d.clientPhone2 || undefined, clientCity: d.clientCity,
-      serialNumber: d.serialNumber, projectName: d.projectName || undefined, typeMotorisation: d.typeMotorisation,
+      serialNumber: d.serialNumber, projectName: d.projectName || undefined, notes: d.notes || undefined, typeMotorisation: d.typeMotorisation,
       largeurGaineMm: d.largeurGaineMm, profondeurGaineMm: d.profondeurGaineMm, hauteurGaineMm: d.hauteurGaineMm,
       clientEmail: d.clientEmail || undefined, sousTypeElectrique: d.sousTypeElectrique || undefined,
       vitesseMs: d.vitesseMs || undefined, nombreEtages: d.nombreEtages || undefined,
@@ -321,7 +321,7 @@ app.patch('/api/orders/:id', authenticate, async (req, res) => {
       'typeCabine','typePorte','finitionPorteCabine','typeChassisArcade',
       'finitionInterieurCabine','revetementSol',
       'largeurPassageLibreMm','hauteurUtileCabineMm','typeSuspensionGuidage','systemeSurcharge',
-      'projectName','priority','lifecycleStage','engineeredBy','totalCostDZD','salePriceDZD','marginPct',
+      'projectName','priority','notes','lifecycleStage','engineeredBy','totalCostDZD','salePriceDZD','marginPct',
       'optPanoramique','optSecours','optAnnoncesVocales','optCctv','optPortesCoupeFeu',
       'optPanneauTactile','optVentilation','optBarreaudage','optAlarme',
       'status']

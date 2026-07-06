@@ -26,7 +26,7 @@ interface FormData {
   optPanoramic: boolean; optBackupPower: boolean; optVoiceAnnounce: boolean
   optCctv: boolean; optFireDoors: boolean; optTouchPanel: boolean
   optVentilation: boolean; optBarreaudage: boolean; optAlarme: boolean
-  agreed: boolean
+  notes: string; agreed: boolean
 }
 
 interface StepInfo { key: StepKey; label: string; icon: string }
@@ -61,7 +61,7 @@ const INITIAL_FORM: FormData = {
   optPanoramic: false, optBackupPower: false, optVoiceAnnounce: false,
   optCctv: false, optFireDoors: false, optTouchPanel: false,
   optVentilation: false, optBarreaudage: false, optAlarme: false,
-  agreed: false,
+  notes: '', agreed: false,
 }
 
 // ─── Catalog Options ──────────────────────────────────────────────────────
@@ -531,6 +531,14 @@ function StepFinalisation({ data, setData }: any) {
   return <div className="space-y-6">
     <div className="flex items-center gap-2 mb-1"><Icon name="FileCheck" className="w-5 h-5 text-accent-500" /><p className="text-sm font-semibold text-gray-700">Récapitulatif</p></div>
     <div className="space-y-4">{sections.map((section, si) => <div key={si}><h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{section.title}</h4><div className="border border-gray-200 rounded-xl divide-y divide-gray-100">{section.rows.length === 0 ? <p className="px-4 py-2.5 text-sm text-gray-400 italic">—</p> : section.rows.map((row: any, ri: number) => <div key={ri} className="flex items-center justify-between px-4 py-2.5"><span className="text-sm text-gray-500">{row.label}</span><span className="text-sm font-semibold text-gray-800">{row.value}</span></div>)}</div></div>)}</div>
+    {/* ─── Notes ─── */}
+    <div>
+      <label className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 block">📝 Notes complémentaires (optionnel)</label>
+      <textarea value={data.notes} onChange={e => setData({ ...data, notes: e.target.value })}
+        placeholder="Ajoutez des informations spécifiques pour cette commande (ex: accès chantier, particularités techniques, remarques installation...)"
+        rows={3}
+        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-200 resize-none" />
+    </div>
     <hr className="border-gray-100" />
     <div className="space-y-3">
       <div onClick={() => setData({ ...data, agreed: !data.agreed })} className="flex items-start gap-3 p-4 rounded-xl border-2 border-gray-200 bg-surface-50 hover:bg-surface-100 transition-all cursor-pointer select-none">
@@ -570,7 +578,7 @@ export default function AddElevator({ onBack }: Props) {
     const payload = {
       clientName: data.clientName, clientEmail: data.clientEmail?.includes('@') ? data.clientEmail : undefined,
       clientPhone: data.clientPhone, clientPhone2: data.clientPhone2 || undefined, clientCity: data.clientCity, serialNumber: serial,
-      projectName: data.projectName || undefined, priority: data.priority || 'NORMAL',
+      projectName: data.projectName || undefined, notes: data.notes || undefined, priority: data.priority || 'NORMAL',
       typeMotorisation: data.motorType, sousTypeElectrique: data.motorSubtype || undefined,
       vitesseMs: data.motorSpeed || undefined, nombreEtages: data.motorFloors || undefined,
       largeurGaineMm: data.dimWidth, profondeurGaineMm: data.dimDepth, hauteurGaineMm: data.dimHeight,

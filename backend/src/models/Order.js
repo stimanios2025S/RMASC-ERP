@@ -62,6 +62,7 @@ const orderSchema = new mongoose.Schema({
 
   // ── Priorité & contrôle Admin ─────────────────────────────────────────
   priority:           { type: String, default: 'NORMAL', enum: ['URGENT','HAUTE','NORMAL','BASSE'] },
+  notes:              String,
   serialNumberLocked: { type: Boolean, default: false },
 }, { timestamps: true })
 
