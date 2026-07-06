@@ -119,42 +119,126 @@ function FicheDocument({ data }: { data: OrderFull }) {
         <tr className="fiche-row-highlight"><td className="fiche-label">Hauteur de la gaine</td><td className="fiche-value">{data.hauteurGaineMm} mm</td></tr>
       </table>
 
-      {/* ─── 4. MATÉRIAUX & FINITIONS ─── */}
+      {/* ─── 4. MATÉRIAUX & FINITIONS — Professional Card Layout ─── */}
       <div className="fiche-section">4. MATÉRIAUX & FINITIONS</div>
-      <table className="fiche-table">
-        <tr className="fiche-row-bold"><td className="fiche-label">Matériau cabine</td><td className="fiche-value">{data.materiauCabine || '—'}</td></tr>
-        <tr><td className="fiche-label">Matériau portes</td><td className="fiche-value">{data.materiauPortes || '—'}</td></tr>
-        <tr className="fiche-row-highlight"><td className="fiche-label">Finition portes cabine</td><td className="fiche-value">{fmt(data.finitionPorteCabine)}</td></tr>
-        <tr className="fiche-row-bold"><td className="fiche-label">Finition intérieur cabine</td><td className="fiche-value">{fmt(data.finitionInterieurCabine)}</td></tr>
-        <tr><td className="fiche-label">Matériau parois</td><td className="fiche-value">{data.materiauParois || '—'}</td></tr>
-        <tr className="fiche-row-highlight"><td className="fiche-label">Revêtement de sol</td><td className="fiche-value">{fmt(data.revetementSol)}</td></tr>
-        <tr><td className="fiche-label">Matériau sol</td><td className="fiche-value">{data.materiauSol || '—'}</td></tr>
-      </table>
+      <div className="fiche-card-grid">
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🧱</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Cabine</div>
+            <div className="fiche-card-value">{data.materiauCabine || '—'}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🚪</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Portes</div>
+            <div className="fiche-card-value">{data.materiauPortes || '—'}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">📐</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Finition portes cabine</div>
+            <div className="fiche-card-value">{fmt(data.finitionPorteCabine)}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🎨</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Finition intérieur cabine</div>
+            <div className="fiche-card-value">{fmt(data.finitionInterieurCabine)}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🪟</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Parois</div>
+            <div className="fiche-card-value">{data.materiauParois || '—'}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🏠</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Revêtement de sol</div>
+            <div className="fiche-card-value">{fmt(data.revetementSol)}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🧩</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Matériau sol</div>
+            <div className="fiche-card-value">{data.materiauSol || '—'}</div>
+          </div>
+        </div>
+      </div>
 
-      {/* ─── 5. COMPOSANTS MÉCANIQUES ─── */}
+      {/* ─── 5. COMPOSANTS MÉCANIQUES — Professional Card Layout ─── */}
       <div className="fiche-section">5. COMPOSANTS MÉCANIQUES SPÉCIFIQUES</div>
-      <table className="fiche-table">
-        <tr className="fiche-row-bold"><td className="fiche-label">Type de cabine</td><td className="fiche-value">{fmt(data.typeCabine)}</td></tr>
-        <tr className="fiche-row-bold"><td className="fiche-label">Type de châssis / arcade</td><td className="fiche-value">{fmt(data.typeChassisArcade)}</td></tr>
-        <tr className="fiche-row-highlight"><td className="fiche-label">Type de portes palières</td><td className="fiche-value">{fmt(data.typePorte) || '—'}</td></tr>
-        <tr className="fiche-row-bold"><td className="fiche-label">Largeur de passage libre</td><td className="fiche-value">{data.largeurPassageLibreMm ? `${data.largeurPassageLibreMm} mm` : '—'}</td></tr>
-        <tr><td className="fiche-label">Hauteur utile cabine</td><td className="fiche-value">{data.hauteurUtileCabineMm ? `${data.hauteurUtileCabineMm} mm` : '—'}</td></tr>
-        <tr className="fiche-row-bold"><td className="fiche-label">Type suspension / guidage</td><td className="fiche-value">{fmt(data.typeSuspensionGuidage)}</td></tr>
-        <tr className="fiche-row-highlight"><td className="fiche-label">Système de surcharge</td><td className="fiche-value">{fmt(data.systemeSurcharge)}</td></tr>
-      </table>
+      <div className="fiche-card-grid">
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🏗️</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Type de cabine</div>
+            <div className="fiche-card-value">{fmt(data.typeCabine)}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🔩</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Châssis / Arcade</div>
+            <div className="fiche-card-value">{fmt(data.typeChassisArcade)}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">🚪</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Portes palières</div>
+            <div className="fiche-card-value">{fmt(data.typePorte) || '—'}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">📏</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Passage libre</div>
+            <div className="fiche-card-value">{data.largeurPassageLibreMm ? `${data.largeurPassageLibreMm} mm` : '—'}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">📐</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Hauteur utile cabine</div>
+            <div className="fiche-card-value">{data.hauteurUtileCabineMm ? `${data.hauteurUtileCabineMm} mm` : '—'}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">⚙️</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Suspension / Guidage</div>
+            <div className="fiche-card-value">{fmt(data.typeSuspensionGuidage)}</div>
+          </div>
+        </div>
+        <div className="fiche-card">
+          <div className="fiche-card-icon">⚖️</div>
+          <div className="fiche-card-content">
+            <div className="fiche-card-label">Surcharge</div>
+            <div className="fiche-card-value">{fmt(data.systemeSurcharge)}</div>
+          </div>
+        </div>
+      </div>
 
-      {/* ─── 6. OPTIONS ─── */}
+      {/* ─── 6. OPTIONS — Professional Badge Layout ─── */}
       <div className="fiche-section">6. OPTIONS & ACCESSOIRES</div>
-      <table className="fiche-table">
+      <div className="fiche-badge-grid">
         {opts.length === 0 ? (
-          <tr><td className="fiche-label">Options sélectionnées</td><td className="fiche-value">Aucune</td></tr>
+          <div className="fiche-badge-empty">Aucune option sélectionnée</div>
         ) : opts.map((o, i) => (
-          <tr key={i} className={i % 2 === 0 ? 'fiche-row-highlight' : ''}>
-            <td className="fiche-label">{o}</td>
-            <td className="fiche-value">✓ Inclus</td>
-          </tr>
+          <div key={i} className="fiche-badge">
+            <span className="fiche-badge-check">✓</span>
+            <span className="fiche-badge-text">{o}</span>
+          </div>
         ))}
-      </table>
+      </div>
 
       {/* ─── 7. APPROBATIONS ─── */}
       <div className="fiche-section">7. APPROBATIONS & CACHETS</div>
@@ -206,7 +290,7 @@ function FicheDocument({ data }: { data: OrderFull }) {
       {/* Embed CSS for this document */}
       <style>{`
         .fiche-document { font-family: 'Arial', 'Helvetica', sans-serif; color: #1f2937; }
-        .fiche-header { width: 100%; border-collapse: collapse; background: #1e3a8a; color: white; }
+        .fiche-header { width: 100%; border-collapse: collapse; background: #1e3a8a; color: white; border-radius: 6px 6px 0 0; overflow: hidden; }
         .fiche-header-brand { padding: 12px 16px; width: 60%; }
         .fiche-title { font-size: 22px; font-weight: 800; color: #f59e0b; }
         .fiche-orange { color: #ea580c; }
@@ -215,14 +299,25 @@ function FicheDocument({ data }: { data: OrderFull }) {
         .fiche-serial-label { font-size: 8px; font-weight: bold; letter-spacing: 1px; }
         .fiche-serial-value { font-size: 14px; font-weight: bold; color: #f59e0b; }
         .fiche-date { font-size: 9px; color: #64748b; margin: 8px 0 4px 0; }
-        .fiche-section { background: #1e3a8a; color: white; font-size: 10px; font-weight: bold; padding: 6px 12px; margin: 10px 0 4px 0; letter-spacing: 1px; text-transform: uppercase; }
+        .fiche-section { background: #1e3a8a; color: white; font-size: 10px; font-weight: bold; padding: 6px 12px; margin: 10px 0 6px 0; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; }
         .fiche-table { width: 100%; border-collapse: collapse; font-size: 10px; }
         .fiche-table tr { border-bottom: 1px solid #e2e8f0; }
         .fiche-table td { padding: 4px 12px; }
-        .fiche-label { width: 45%; color: #64748b; font-weight: 500; }
-        .fiche-value { width: 55%; font-weight: 600; color: #1f2937; }
+        .fiche-table .fiche-label { width: 45%; color: #64748b; font-weight: 500; }
+        .fiche-table .fiche-value { width: 55%; font-weight: 600; color: #1f2937; }
         .fiche-row-bold td { font-weight: 700; }
         .fiche-row-highlight td { background: #fff7ed; }
+        .fiche-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 4px 0 8px 0; }
+        .fiche-card { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 10px; }
+        .fiche-card-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+        .fiche-card-content { min-width: 0; }
+        .fiche-card-label { font-size: 7px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .fiche-card-value { font-size: 9px; font-weight: 700; color: #1f2937; margin-top: 1px; word-break: break-word; }
+        .fiche-badge-grid { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0; }
+        .fiche-badge { display: inline-flex; align-items: center; gap: 4px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 20px; padding: 4px 10px; }
+        .fiche-badge-check { width: 14px; height: 14px; border-radius: 50%; background: #10b981; color: white; font-size: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .fiche-badge-text { font-size: 8px; font-weight: 600; color: #065f46; }
+        .fiche-badge-empty { font-size: 9px; color: #94a3b8; font-style: italic; padding: 4px 0; }
         .fiche-stamp-table { width: 100%; border-collapse: collapse; }
         .fiche-stamp-cell { width: 50%; border: 2px dashed #94a3b8; border-radius: 8px; padding: 10px; text-align: center; }
         .fiche-stamp-title { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
@@ -236,8 +331,13 @@ function FicheDocument({ data }: { data: OrderFull }) {
           .fiche-document { padding: 0; margin: 0; }
           .fiche-section { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #1e3a8a !important; }
           .fiche-row-highlight td { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff7ed !important; }
+          .fiche-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #f8fafc !important; break-inside: avoid; }
+          .fiche-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #ecfdf5 !important; }
+          .fiche-badge-check { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #10b981 !important; }
           .fiche-stamp-cell { border-color: #94a3b8; }
           .fiche-remark-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .fiche-card-grid { break-inside: avoid; }
+          .fiche-badge-grid { break-inside: avoid; }
         }
       `}</style>
     </div>
