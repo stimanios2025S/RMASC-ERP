@@ -313,14 +313,34 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                         <div className="px-5 pb-5 border-t border-slate-100 pt-4">
                           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">📎 Documents ({orderFiles.length})</p>
                           <div className="space-y-1.5">
-                            {orderFiles.map(f => (
-                              <div key={f.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                            {orderFiles.map((f, fi) => (
+                              <div key={f.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 hover:bg-slate-100 transition-all group">
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <span>{f.type.includes('pdf') ? '📄' : '📐'}</span>
-                                  <span className="text-sm font-medium text-slate-700 truncate">{f.fileName}</span>
-                                  <span className="text-[10px] text-slate-400">• {f.size}</span>
+                                  <span>{f.type.includes('pdf') ? '📄' : (f.type.includes('dwg') || f.type.includes('image') ? '📐' : '📎')}</span>
+                                  <div className="min-w-0">
+                                    <span className="text-sm font-medium text-slate-700 truncate block">{f.fileName}</span>
+                                    <span className="text-[10px] text-slate-400">{f.size} • {f.engineer}</span>
+                                  </div>
                                 </div>
-                                <span className="text-[10px] text-slate-400">{fmtDate(f.uploadedAt)}</span>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <span className="text-[10px] text-slate-400 hidden sm:inline">{fmtDate(f.uploadedAt)}</span>
+                                  <button onClick={(e) => {
+                                    e.stopPropagation()
+                                    // Find the matching upload data for this file
+                                    const all = getUploads(order.id)
+                                    const idx = all.findIndex(u => u.name === f.fileName)
+                                    if (idx >= 0) { setFileIndex(idx); setShowFile(true) }
+                                    else { // Fallback: direct download using vault data
+                                      const a = document.createElement('a')
+                                      a.download = f.fileName
+                                      a.click()
+                                    }
+                                  }}
+                                    className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600 text-[10px] font-semibold transition-all flex items-center gap-1"
+                                    title="Télécharger / Voir">
+                                    ⬇️
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>
