@@ -291,7 +291,7 @@ function StepClient({ data, setData }: any) {
       <div className="col-span-2"><FormInput label="Nom du client" value={data.clientName} onChange={s('clientName')} placeholder="Ex: Ascenseurs Bouira" required /></div>
       <FormInput label="Email" value={data.clientEmail} onChange={s('clientEmail')} placeholder="contact@client.com" type="email" optional />
       <FormInput label="Téléphone" value={data.clientPhone} onChange={s('clientPhone')} placeholder="+213..." type="tel" required />
-      <FormInput label="Téléphone 2 (optionnel)" value={data.clientPhone2} onChange={s('clientPhone2')} placeholder="+213..." type="tel" optional />
+      <FormInput label="Téléphone 2" value={data.clientPhone2} onChange={s('clientPhone2')} placeholder="+213..." type="tel" optional />
       <FormInput label="Ville" value={data.clientCity} onChange={s('clientCity')} placeholder="Ex: Bouira" required />
     </div>
     <div className="border-t border-gray-100 pt-3 mt-2">
