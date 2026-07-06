@@ -656,12 +656,16 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
               <div className="mt-4 space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Fichiers attachés ({uploadedFiles.length})</p>
                 {uploadedFiles.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 rounded-lg px-3 py-2 group hover:bg-slate-100 transition-all">
+                  <div key={i} className="group flex items-center gap-2 text-xs text-slate-600 bg-slate-50 rounded-lg px-3 py-2 hover:bg-slate-100 transition-all cursor-pointer"
+                    onClick={() => {
+                      const uploads = getUploads(order.id)
+                      const idx = uploads.findIndex(u => u.name === f.name)
+                      if (idx >= 0) { setFileIndex(idx); setShowFile(true) }
+                    }}>
                     <span>📄</span>
                     <span className="font-medium truncate flex-1">{f.name}</span>
                     <span className="text-slate-400">{new Date(f.uploadedAt).toLocaleDateString('fr-FR')}</span>
-                    <button onClick={() => { const a = document.createElement('a'); a.href = f.data; a.download = f.name; a.click() }}
-                      className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 text-[10px] font-semibold transition-all">⬇️</button>
+                    <span className="text-[10px] text-amber-600 font-medium opacity-0 group-hover:opacity-100 transition-all">👁️ Voir & Télécharger</span>
                   </div>
                 ))}
               </div>

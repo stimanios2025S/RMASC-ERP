@@ -37,12 +37,36 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
 
   const handleDownload = () => {
     if (!fileData || !fileName) return
-    const a = document.createElement('a')
-    a.href = fileData
-    a.download = fileName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    // Create blob from base64 for reliable download
+    try {
+      let blob: Blob
+      if (fileData.startsWith('data:')) {
+        const parts = fileData.split(',')
+        const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/octet-stream'
+        const raw = atob(parts[1])
+        const bytes = new Uint8Array(raw.length)
+        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
+        blob = new Blob([bytes], { type: mime })
+      } else {
+        blob = new Blob([fileData], { type: 'application/octet-stream' })
+      }
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch {
+      // Ultimate fallback
+      const a = document.createElement('a')
+      a.href = fileData
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
   }
 
   if (!fileData) {
