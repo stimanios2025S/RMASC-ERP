@@ -261,9 +261,9 @@ function FicheDocument({ data }: { data: OrderFull }) {
 
       {/* ─── NOTES COMPLÉMENTAIRES ─── */}
       {data.notes && (
-        <div className="fiche-remark-box" style={{ background: '#f0f9ff', borderColor: '#bae6fd' }}>
-          <div className="fiche-remark-title" style={{ color: '#0369a1' }}>📝 Notes complémentaires</div>
-          <div className="fiche-remark-item" style={{ color: '#0c4a6e', fontSize: 10, marginTop: 4 }}>{data.notes}</div>
+        <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 6, padding: '8px 12px', margin: '6px 0' }}>
+          <div style={{ fontSize: 10, fontWeight: 'bold', color: '#0369a1', textTransform: 'uppercase', letterSpacing: 1 }}>📝 Notes complémentaires</div>
+          <div style={{ fontSize: 10, color: '#1e293b', marginTop: 4, lineHeight: 1.5 }}>{data.notes}</div>
         </div>
       )}
 

@@ -537,7 +537,7 @@ function StepFinalisation({ data, setData }: any) {
       <textarea value={data.notes} onChange={e => setData({ ...data, notes: e.target.value })}
         placeholder="Ajoutez des informations spécifiques pour cette commande (ex: accès chantier, particularités techniques, remarques installation...)"
         rows={3}
-        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-200 resize-none" />
+        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-slate-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-200 resize-none" />
     </div>
     <hr className="border-gray-100" />
     <div className="space-y-3">
