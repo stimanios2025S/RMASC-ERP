@@ -326,19 +326,16 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                                   <span className="text-[10px] text-slate-400 hidden sm:inline">{fmtDate(f.uploadedAt)}</span>
                                   <button onClick={(e) => {
                                     e.stopPropagation()
-                                    // Find the matching upload data for this file
                                     const all = getUploads(order.id)
                                     const idx = all.findIndex(u => u.name === f.fileName)
                                     if (idx >= 0) { setFileIndex(idx); setShowFile(true) }
-                                    else { // Fallback: direct download using vault data
-                                      const a = document.createElement('a')
-                                      a.download = f.fileName
-                                      a.click()
+                                    else {
+                                      setFileIndex(0); setShowFile(true)
                                     }
                                   }}
                                     className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600 text-[10px] font-semibold transition-all flex items-center gap-1"
-                                    title="Télécharger / Voir">
-                                    ⬇️
+                                    title="Voir / Télécharger">
+                                    👁️
                                   </button>
                                 </div>
                               </div>
