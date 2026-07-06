@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '../config/api'
 import { addNotice, getNotices, addUpload, getUploads } from '../config/runtime-store'
 import AddElevator from './AddElevator'
+import FileManager from './FileManager'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 interface OrderRow {
@@ -405,7 +406,7 @@ function formatBytes(bytes: number): string {
 function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
   order: OrderRow; onBack: () => void; onFiche?: () => void; onEdit?: () => void; onDelete?: () => void
 }) {
-  const [tab, setTab] = useState<'info' | 'edit' | 'production' | 'archive'>('info')
+  const [tab, setTab] = useState<'info' | 'edit' | 'production' | 'archive' | 'fichiers'>('info')
   const [noteText, setNoteText] = useState('')
   const [notices, setNotices] = useState(getNotices(order.id))
   const [noteSent, setNoteSent] = useState(false)
@@ -522,6 +523,7 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
           { key: 'edit' as const, label: '✏️ Modifier & Fichiers' },
           { key: 'production' as const, label: '🏭 Production & Notifications' },
           { key: 'archive' as const, label: `📦 Archive (${docCount})` },
+          { key: 'fichiers' as const, label: `📁 Fichiers (${uploadedFiles.length})` },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
@@ -754,6 +756,13 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
       {/* ════════════════════════════════════════════════════════════════════ */}
       {/* TAB 4: ARCHIVE — ISO Compliant Document Repository */}
       {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* ═══ TAB 5: Fichiers — File Manager ═══ */}
+      {tab === 'fichiers' && (
+        <div className="max-w-3xl mx-auto p-6">
+          <FileManager orderId={order.id} orderSerial={order.serialNumber} engineerName="Administrateur" onFileChange={() => setNoteSent(true)} />
+        </div>
+      )}
+
       {tab === 'archive' && (
         <div className="max-w-5xl mx-auto p-6 space-y-6">
           {/* Header */}

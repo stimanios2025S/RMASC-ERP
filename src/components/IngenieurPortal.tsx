@@ -14,6 +14,7 @@ import { apiFetch } from '../config/api'
 import { addUpload, getUploads } from '../config/runtime-store'
 import { PageBackground } from './PageBackground'
 import InstallPWA from './InstallPWA'
+import FileManager from './FileManager'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -245,34 +246,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                         </div>
                         {isExpanded && (
                           <div className="px-5 pb-5 border-t border-slate-100 pt-4 space-y-2.5">
-                            {/* Files currently uploaded */}
-                            {orderFiles.length > 0 && (
-                              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">📎 Fichiers enregistrés ({orderFiles.length})</p>
-                                <div className="space-y-1.5">
-                                  {orderFiles.map((f, fi) => (
-                                    <div key={f.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-slate-100 hover:shadow-sm transition-all">
-                                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        <span>{f.type.includes('pdf') ? '📄' : (f.type.includes('dwg') || f.type.includes('image') ? '📐' : '📎')}</span>
-                                        <span className="text-xs font-medium text-slate-700 truncate">{f.fileName}</span>
-                                        <span className="text-[9px] text-slate-400">{f.size}</span>
-                                      </div>
-                                      <button onClick={(e) => { e.stopPropagation(); setFileIndex(fi); setShowFile(true) }}
-                                        className="px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-600 text-[10px] font-semibold transition-all">⬇️ Voir</button>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Drop zone */}
-                            <div onDragOver={e => e.preventDefault()}
-                              onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFileDrop(order.id, f) }}
-                              onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '*/*'; i.onchange = (ev: any) => { const f = ev.target?.files?.[0]; if (f) handleFileDrop(order.id, f) }; i.click() }}
-                              className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${fileDropped[order.id] ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-300 bg-surface-50 hover:border-slate-400 hover:bg-slate-100'}`}>
-                              {fileDropped[order.id] ? <p className="text-sm text-emerald-600 font-semibold">✅ Prêt: {fileDropped[order.id].name}</p>
-                                : <><p className="text-sm font-semibold text-slate-600 mb-1">📂 Ajouter un fichier</p><p className="text-xs text-slate-400">Cliquez ou glissez-déposez</p></>}
-                            </div>
+                            <FileManager orderId={order.id} engineerName={session?.name || config.title} compact />
 
                             {/* Advance button */}
                             <button onClick={() => advanceStatus(order.id, config.nextStatus, '✅ ' + config.nextLabel.replace(/^[^\s]+\s/, ''))}
@@ -418,48 +392,8 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                         </div>
                       </div>
                       {isExpanded && (
-                        <div className="px-5 pb-5 border-t border-slate-100 pt-4 space-y-4">
-                          {/* Upload zone */}
-                          <div onDragOver={e => e.preventDefault()}
-                            onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFileDrop(order.id, f) }}
-                            onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '*/*'; i.onchange = (ev: any) => { const f = ev.target?.files?.[0]; if (f) handleFileDrop(order.id, f) }; i.click() }}
-                            className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all bg-surface-50 border-slate-300 hover:border-slate-400 hover:bg-slate-100">
-                            <p className="text-sm font-semibold text-slate-600 mb-1">📤 Ajouter un fichier</p>
-                            <p className="text-xs text-slate-400">Cliquez ou glissez-déposez</p>
-                          </div>
-                          {/* Existing files */}
-                          {orderFiles.length > 0 ? (
-                            <div>
-                              <p className="text-xs font-semibold text-slate-600 mb-2">📋 Fichiers ({orderFiles.length})</p>
-                              <div className="space-y-1.5">
-                                {orderFiles.map(f => (
-                                  <div key={f.id} className="flex items-center justify-between bg-surface-50 rounded-lg px-3 py-2.5 border border-slate-200 hover:border-slate-300 group transition-all">
-                                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                                      <span>{f.type.includes('pdf') ? '📄' : (f.type.includes('dwg') || f.type.includes('image') ? '📐' : '📎')}</span>
-                                      <div className="min-w-0">
-                                        <p className="text-sm font-medium text-slate-700 truncate">{f.fileName}</p>
-                                        <p className="text-[10px] text-slate-400">{f.engineer} • {f.size} • {fmtDate(f.uploadedAt)}</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
-                                      <button onClick={() => {
-                                        const all = getUploads(order.id)
-                                        const idx = all.findIndex(u => u.name === f.fileName)
-                                        setFileIndex(idx >= 0 ? idx : 0); setShowFile(true)
-                                      }}
-                                        className="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 text-xs font-semibold transition-all">⬇️</button>
-                                      <button onClick={() => deleteVaultFile(f.id)}
-                                        className="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold transition-all">🗑️</button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="bg-slate-50 rounded-xl px-4 py-3 text-center">
-                              <p className="text-xs text-slate-400 italic">Aucun fichier. Utilisez la zone ci-dessus pour ajouter un document.</p>
-                            </div>
-                          )}
+                        <div className="px-5 pb-5 border-t border-slate-100 pt-4">
+                          <FileManager orderId={order.id} orderSerial={order.serialNumber} engineerName={session?.name || config.title} onFileChange={() => loadVault()} />
                         </div>
                       )}
                     </div>
