@@ -329,13 +329,26 @@ function StepMotorisation({ data, setData }: any) {
       <FormInput label="Vitesse (m/s)" value={data.motorSpeed} onChange={s('motorSpeed')} placeholder="Ex: 1.5" type="number" />
       <FormInput label="Nombre d'étages" value={data.motorFloors} onChange={s('motorFloors')} placeholder="Ex: 6" type="number" />
     </div>
+    {/* Spécifications Structurelles — déplacé de Dimensions vers Motorisation */}
+    <div className="bg-gradient-to-r from-primary-50/60 to-surface-50 border border-primary-100 rounded-2xl p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-white text-[10px] font-bold">⚙</div>
+        <span className="text-xs font-bold uppercase tracking-wider text-gray-600">Spécifications Structurelles</span>
+        <span className="text-[9px] bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-semibold">SH AI</span>
+      </div>
+      <div className="grid gap-3 grid-cols-3">
+        <FormSelectRich label="Type de moteur" value={data.motorSubtype} onChange={s('motorSubtype')} options={MOTEUR_SUBTYPE_OPTIONS} />
+        <FormSelectRich label="Position contrepoids" value={data.contrepoidsPosition} onChange={s('contrepoidsPosition')} options={CONTREPOIDS_POSITION_OPTIONS} />
+        <FormSelectRich label="Type de porte palière" value={data.typePorte} onChange={s('typePorte')} options={TYPE_PORTE_INSTALLATION_OPTIONS} />
+      </div>
+    </div>
   </div>
 }
 
 // ─── Step 3: Dimensions ───────────────────────────────────────────────────
 function StepDimensions({ data, setData }: any) {
   const s = (f: keyof FormData) => (v: string) => setData({ ...data, [f]: v })
-  const { estimatedCabinWidth, estimatedCabinDepth, isActive, deductionLabel, deductionDetails, positionCp, porteType, moteurType, penaltyApplied, penaltyValue, isHydraulic, penaltyGB, penaltyH } = useSalimHamounAI(data.dimWidth, data.dimDepth, data.contrepoidsPosition, data.typePorte, data.motorSubtype, data.motorType)
+  const { estimatedCabinWidth, estimatedCabinDepth, isActive, deductionLabel, deductionDetails, positionCp, porteType, moteurType, penaltyApplied, penaltyValue, penaltyGB, penaltyH } = useSalimHamounAI(data.dimWidth, data.dimDepth, data.contrepoidsPosition, data.typePorte, data.motorSubtype, data.motorType)
   const pN = parseFloat(data.pitDepth); const pW = data.pitDepth !== '' && !isNaN(pN) && pN < 500
   const tN = parseFloat(data.topFloorHeight); const tW = data.topFloorHeight !== '' && !isNaN(tN) && tN < 2300
   const isE = data.motorType === 'ÉLECTRIQUE'
@@ -346,20 +359,6 @@ function StepDimensions({ data, setData }: any) {
       <FormInput label="Largeur gaine (mm)" value={data.dimWidth} onChange={s('dimWidth')} placeholder="Ex: 1600" type="number" />
       <FormInput label="Profondeur gaine (mm)" value={data.dimDepth} onChange={s('dimDepth')} placeholder="Ex: 1800" type="number" />
       <FormInput label="Hauteur de la gaine (mm)" value={data.dimHeight} onChange={s('dimHeight')} placeholder="Ex: 3600" type="number" />
-    </div>
-
-    {/* Spécifications Structurelles */}
-    <div className="bg-gradient-to-r from-primary-50/60 to-surface-50 border border-primary-100 rounded-2xl p-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-white text-[10px] font-bold">⚙</div>
-        <span className="text-xs font-bold uppercase tracking-wider text-gray-600">Spécifications Structurelles</span>
-        <span className="text-[9px] bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-semibold">SH AI</span>
-      </div>
-      <div className={`grid gap-3 ${isE ? 'grid-cols-3' : 'grid-cols-2'}`}>
-        {isE && <FormSelectRich label="Type de moteur" value={data.motorSubtype} onChange={s('motorSubtype')} options={MOTEUR_SUBTYPE_OPTIONS} />}
-        <FormSelectRich label="Position contrepoids" value={data.contrepoidsPosition} onChange={s('contrepoidsPosition')} options={CONTREPOIDS_POSITION_OPTIONS} />
-        <FormSelectRich label="Type de porte palière" value={data.typePorte} onChange={s('typePorte')} options={TYPE_PORTE_INSTALLATION_OPTIONS} />
-      </div>
     </div>
 
     {/* SH AI Calculator */}
