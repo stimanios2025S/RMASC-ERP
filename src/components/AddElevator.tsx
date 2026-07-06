@@ -13,7 +13,7 @@ function generateSerial(): string {
 type StepKey = 'client' | 'motorisation' | 'dimensions' | 'materiaux' | 'options' | 'finalisation'
 
 interface FormData {
-  serialNumber: string; priority: string
+  serialNumber: string; projectName: string; priority: string
   clientName: string; clientEmail: string; clientPhone: string; clientCity: string
   motorType: string; motorSubtype: string; motorSpeed: string; motorFloors: string
   dimWidth: string; dimDepth: string; dimHeight: string
@@ -48,7 +48,7 @@ const PRIORITY_OPTIONS = [
 ]
 
 const INITIAL_FORM: FormData = {
-  serialNumber: '', priority: 'NORMAL',
+  serialNumber: '', projectName: '', priority: 'NORMAL',
   clientName: '', clientEmail: '', clientPhone: '', clientCity: '',
   motorType: 'ÉLECTRIQUE', motorSubtype: '', motorSpeed: '', motorFloors: '',
   dimWidth: '', dimDepth: '', dimHeight: '',
@@ -292,6 +292,9 @@ function StepClient({ data, setData }: any) {
       <FormInput label="Email" value={data.clientEmail} onChange={s('clientEmail')} placeholder="contact@client.com" type="email" optional />
       <FormInput label="Téléphone" value={data.clientPhone} onChange={s('clientPhone')} placeholder="+213..." type="tel" required />
       <FormInput label="Ville" value={data.clientCity} onChange={s('clientCity')} placeholder="Ex: Bouira" required />
+    </div>
+    <div className="border-t border-gray-100 pt-3 mt-2">
+      <div className="col-span-2"><FormInput label="Nom du projet" value={data.projectName} onChange={s('projectName')} placeholder="Ex: Résidence El Manar Bâtiment B" optional /></div>
     </div>
     <div className="border-t border-gray-200 pt-4">
       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">⚙️ Configuration & Priorité</p>
@@ -564,7 +567,7 @@ export default function AddElevator({ onBack }: Props) {
     const payload = {
       clientName: data.clientName, clientEmail: data.clientEmail?.includes('@') ? data.clientEmail : undefined,
       clientPhone: data.clientPhone, clientCity: data.clientCity, serialNumber: serial,
-      priority: data.priority || 'NORMAL',
+      projectName: data.projectName || undefined, priority: data.priority || 'NORMAL',
       typeMotorisation: data.motorType, sousTypeElectrique: data.motorSubtype || undefined,
       vitesseMs: data.motorSpeed || undefined, nombreEtages: data.motorFloors || undefined,
       largeurGaineMm: data.dimWidth, profondeurGaineMm: data.dimDepth, hauteurGaineMm: data.dimHeight,

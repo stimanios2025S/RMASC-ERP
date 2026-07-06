@@ -6,6 +6,7 @@ const orderSchema = new mongoose.Schema({
   clientPhone:          { type: String, required: true },
   clientCity:           { type: String, required: true },
   serialNumber:         { type: String, required: true, unique: true },
+  projectName:          String,
   status:               { type: String, default: 'BROUILLON', enum: ['BROUILLON','ATTENTE_DESSIN_TECH','ATTENTE_APPROBATION_ADMIN','ATTENTE_DESSIN_2D','ATTENTE_VERIFICATION','PRET_POUR_PRODUCTION','EN_LIVRAISON','LIVREE','VALIDEE','ANNULEE'] },
 
   typeMotorisation:     { type: String, required: true },
