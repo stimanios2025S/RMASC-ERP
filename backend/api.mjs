@@ -181,7 +181,7 @@ app.post('/api/orders/create-and-sync', authenticate, async (req, res) => {
       return res.status(409).json({ error: `Série "${d.serialNumber}" existe déjà.` })
 
     const order = await Order.create({
-      clientName: d.clientName, clientPhone: d.clientPhone, clientCity: d.clientCity,
+      clientName: d.clientName, clientPhone: d.clientPhone, clientPhone2: d.clientPhone2 || undefined, clientCity: d.clientCity,
       serialNumber: d.serialNumber, projectName: d.projectName || undefined, typeMotorisation: d.typeMotorisation,
       largeurGaineMm: d.largeurGaineMm, profondeurGaineMm: d.profondeurGaineMm, hauteurGaineMm: d.hauteurGaineMm,
       clientEmail: d.clientEmail || undefined, sousTypeElectrique: d.sousTypeElectrique || undefined,
@@ -313,6 +313,7 @@ app.patch('/api/orders/:id', authenticate, async (req, res) => {
   try {
     const allowed = ['clientName','clientEmail','clientPhone','clientCity','serialNumber',
       'typeMotorisation','sousTypeElectrique','vitesseMs','nombreEtages',
+      'clientPhone2',
       'largeurGaineMm','profondeurGaineMm','hauteurGaineMm',
       'profondeurCuvetteMm','hauteurDernierEtageMm','contrepoidsPosition','positionContrepoids',
       'largeurCabineCalculeeMm','profondeurCabineCalculeeMm',

@@ -14,7 +14,7 @@ type StepKey = 'client' | 'motorisation' | 'dimensions' | 'materiaux' | 'options
 
 interface FormData {
   serialNumber: string; projectName: string; priority: string
-  clientName: string; clientEmail: string; clientPhone: string; clientCity: string
+  clientName: string; clientEmail: string; clientPhone: string; clientPhone2: string; clientCity: string
   motorType: string; motorSubtype: string; motorSpeed: string; motorFloors: string
   dimWidth: string; dimDepth: string; dimHeight: string
   pitDepth: string; topFloorHeight: string; contrepoidsPosition: string
@@ -49,7 +49,7 @@ const PRIORITY_OPTIONS = [
 
 const INITIAL_FORM: FormData = {
   serialNumber: '', projectName: '', priority: 'NORMAL',
-  clientName: '', clientEmail: '', clientPhone: '', clientCity: '',
+  clientName: '', clientEmail: '', clientPhone: '', clientPhone2: '', clientCity: '',
   motorType: 'ÉLECTRIQUE', motorSubtype: '', motorSpeed: '', motorFloors: '',
   dimWidth: '', dimDepth: '', dimHeight: '',
   pitDepth: '', topFloorHeight: '', contrepoidsPosition: 'Fond',
@@ -291,6 +291,7 @@ function StepClient({ data, setData }: any) {
       <div className="col-span-2"><FormInput label="Nom du client" value={data.clientName} onChange={s('clientName')} placeholder="Ex: Ascenseurs Bouira" required /></div>
       <FormInput label="Email" value={data.clientEmail} onChange={s('clientEmail')} placeholder="contact@client.com" type="email" optional />
       <FormInput label="Téléphone" value={data.clientPhone} onChange={s('clientPhone')} placeholder="+213..." type="tel" required />
+      <FormInput label="Téléphone 2 (optionnel)" value={data.clientPhone2} onChange={s('clientPhone2')} placeholder="+213..." type="tel" optional />
       <FormInput label="Ville" value={data.clientCity} onChange={s('clientCity')} placeholder="Ex: Bouira" required />
     </div>
     <div className="border-t border-gray-100 pt-3 mt-2">
@@ -566,7 +567,7 @@ export default function AddElevator({ onBack }: Props) {
     const serial = data.serialNumber.trim() || `RMASC-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-5)}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
     const payload = {
       clientName: data.clientName, clientEmail: data.clientEmail?.includes('@') ? data.clientEmail : undefined,
-      clientPhone: data.clientPhone, clientCity: data.clientCity, serialNumber: serial,
+      clientPhone: data.clientPhone, clientPhone2: data.clientPhone2 || undefined, clientCity: data.clientCity, serialNumber: serial,
       projectName: data.projectName || undefined, priority: data.priority || 'NORMAL',
       typeMotorisation: data.motorType, sousTypeElectrique: data.motorSubtype || undefined,
       vitesseMs: data.motorSpeed || undefined, nombreEtages: data.motorFloors || undefined,
