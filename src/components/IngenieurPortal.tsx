@@ -124,12 +124,19 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
     setFileDropped(prev => ({ ...prev, [orderId]: { name: file.name, size: file.size } }))
     const reader = new FileReader()
     reader.onload = () => {
-      addUpload(orderId, { data: reader.result as string, name: file.name, type: file.type, uploadedAt: new Date().toISOString() })
+      const b64 = reader.result as string
+      // Save base64 data to runtime store (persisted to localStorage)
+      addUpload(orderId, { data: b64, name: file.name, type: file.type, uploadedAt: new Date().toISOString() })
+      // Also save metadata to vault files for cross-reference
       try {
         const raw = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
-        raw.push({ id: 'f_' + Date.now(), orderId, fileName: file.name, engineer: session?.name || 'Ingénieur', uploadedAt: new Date().toISOString(), size: (file.size / 1024).toFixed(1) + ' KB', type: file.type })
-        localStorage.setItem('rmasc_vault_files', JSON.stringify(raw))
+        const existing = raw.findIndex((x: any) => x.fileName === file.name && x.orderId === orderId)
+        if (existing === -1) {
+          raw.push({ id: 'f_' + Date.now(), orderId, fileName: file.name, engineer: session?.name || 'Ingénieur', uploadedAt: new Date().toISOString(), size: (file.size / 1024).toFixed(1) + ' KB', type: file.type })
+          localStorage.setItem('rmasc_vault_files', JSON.stringify(raw))
+        }
         setVaultFiles(raw)
+        showFeedback(true, `✅ Fichier "${file.name}" enregistré`)
       } catch {}
     }
     reader.readAsDataURL(file)
@@ -238,24 +245,45 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                         </div>
                         {isExpanded && (
                           <div className="px-5 pb-5 border-t border-slate-100 pt-4 space-y-2.5">
+                            {/* Files currently uploaded */}
+                            {orderFiles.length > 0 && (
+                              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">📎 Fichiers enregistrés ({orderFiles.length})</p>
+                                <div className="space-y-1.5">
+                                  {orderFiles.map((f, fi) => (
+                                    <div key={f.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-slate-100 hover:shadow-sm transition-all">
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <span>{f.type.includes('pdf') ? '📄' : (f.type.includes('dwg') || f.type.includes('image') ? '📐' : '📎')}</span>
+                                        <span className="text-xs font-medium text-slate-700 truncate">{f.fileName}</span>
+                                        <span className="text-[9px] text-slate-400">{f.size}</span>
+                                      </div>
+                                      <button onClick={(e) => { e.stopPropagation(); setFileIndex(fi); setShowFile(true) }}
+                                        className="px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-600 text-[10px] font-semibold transition-all">⬇️ Voir</button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             {/* Drop zone */}
                             <div onDragOver={e => e.preventDefault()}
                               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFileDrop(order.id, f) }}
                               onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '*/*'; i.onchange = (ev: any) => { const f = ev.target?.files?.[0]; if (f) handleFileDrop(order.id, f) }; i.click() }}
                               className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${fileDropped[order.id] ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-300 bg-surface-50 hover:border-slate-400 hover:bg-slate-100'}`}>
-                              {fileDropped[order.id] ? <p className="text-sm text-emerald-600 font-semibold">✅ {fileDropped[order.id].name}</p>
-                                : <><p className="text-sm font-semibold text-slate-600 mb-1">📂 Déposer le fichier</p><p className="text-xs text-slate-400">PDF, DWG, images — glissez ou cliquez</p></>}
+                              {fileDropped[order.id] ? <p className="text-sm text-emerald-600 font-semibold">✅ Prêt: {fileDropped[order.id].name}</p>
+                                : <><p className="text-sm font-semibold text-slate-600 mb-1">📂 Ajouter un fichier</p><p className="text-xs text-slate-400">Cliquez ou glissez-déposez</p></>}
                             </div>
+
                             {/* Advance button */}
                             <button onClick={() => advanceStatus(order.id, config.nextStatus, '✅ ' + config.nextLabel.replace(/^[^\s]+\s/, ''))}
                               disabled={uploading}
                               className="w-full py-2.5 rounded-lg text-sm font-bold text-white bg-slate-800 hover:bg-slate-700 shadow-sm disabled:opacity-50 transition-all">
                               {config.nextLabel}
                             </button>
-                            {/* View files */}
+                            {/* View all files */}
                             <button onClick={() => { setFileIndex(0); setShowFile(true) }}
                               className="w-full py-2 rounded-lg text-xs font-semibold bg-surface-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">
-                              👁️ Voir les fichiers uploadés ({orderFiles.length})
+                              👁️ Voir tous les fichiers ({orderFiles.length})
                             </button>
                             {/* Fiche technique */}
                             <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }}
@@ -405,16 +433,24 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                               <p className="text-xs font-semibold text-slate-600 mb-2">📋 Fichiers ({orderFiles.length})</p>
                               <div className="space-y-1.5">
                                 {orderFiles.map(f => (
-                                  <div key={f.id} className="flex items-center justify-between bg-surface-50 rounded-lg px-3 py-2.5 border border-slate-200 hover:border-red-200 group transition-all">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <span>{f.type.includes('pdf') ? '📄' : '📐'}</span>
+                                  <div key={f.id} className="flex items-center justify-between bg-surface-50 rounded-lg px-3 py-2.5 border border-slate-200 hover:border-slate-300 group transition-all">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                      <span>{f.type.includes('pdf') ? '📄' : (f.type.includes('dwg') || f.type.includes('image') ? '📐' : '📎')}</span>
                                       <div className="min-w-0">
                                         <p className="text-sm font-medium text-slate-700 truncate">{f.fileName}</p>
                                         <p className="text-[10px] text-slate-400">{f.engineer} • {f.size} • {fmtDate(f.uploadedAt)}</p>
                                       </div>
                                     </div>
-                                    <button onClick={() => deleteVaultFile(f.id)}
-                                      className="opacity-0 group-hover:opacity-100 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold transition-all">🗑️ Supprimer</button>
+                                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                                      <button onClick={() => {
+                                        const all = getUploads(order.id)
+                                        const idx = all.findIndex(u => u.name === f.fileName)
+                                        setFileIndex(idx >= 0 ? idx : 0); setShowFile(true)
+                                      }}
+                                        className="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 text-xs font-semibold transition-all">⬇️</button>
+                                      <button onClick={() => deleteVaultFile(f.id)}
+                                        className="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold transition-all">🗑️</button>
+                                    </div>
                                   </div>
                                 ))}
                               </div>

@@ -198,6 +198,24 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
                     </button>
                     {isExpanded && (
                       <div className="mt-2 pt-2 border-t border-slate-100 space-y-2">
+                        {/* Files list */}
+                        {(() => {
+                          const files = getUploads(order.id)
+                          return files.length > 0 ? (
+                            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">📎 Documents ({files.length})</p>
+                              <div className="space-y-1">
+                                {files.map((f, fi) => (
+                                  <div key={fi} className="flex items-center justify-between bg-white rounded-lg px-2.5 py-1.5 border border-slate-100">
+                                    <span className="text-xs text-slate-700 truncate flex-1">{f.name}</span>
+                                    <button onClick={() => { setSelectedOrder(order); setFileIndex(fi); setShowFile(true) }}
+                                      className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all flex-shrink-0 ml-2">⬇️</button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null
+                        })()}
                         {isInThisPhase && phaseIdx < PHASES.length - 1 && (
                           <button onClick={() => advancePhase(order.id)}
                             className="w-full py-2 rounded-lg text-xs font-bold bg-slate-800 text-white hover:bg-slate-700 shadow-md transition-all">

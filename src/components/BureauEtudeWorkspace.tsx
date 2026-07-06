@@ -118,12 +118,17 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
     setFileDropped(prev => ({ ...prev, [orderId]: { name: file.name, size: file.size } }))
     const reader = new FileReader()
     reader.onload = () => {
-      addUpload(orderId, { data: reader.result as string, name: file.name, type: file.type, uploadedAt: new Date().toISOString() })
+      const b64 = reader.result as string
+      addUpload(orderId, { data: b64, name: file.name, type: file.type, uploadedAt: new Date().toISOString() })
       try {
         const raw = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
-        raw.push({ id: 'f_' + Date.now(), orderId, fileName: file.name, engineer: session?.name || 'Ingénieur', uploadedAt: new Date().toISOString(), size: (file.size / 1024).toFixed(1) + ' KB', type: file.type })
-        localStorage.setItem('rmasc_vault_files', JSON.stringify(raw))
+        const existing = raw.findIndex((x: any) => x.fileName === file.name && x.orderId === orderId)
+        if (existing === -1) {
+          raw.push({ id: 'f_' + Date.now(), orderId, fileName: file.name, engineer: session?.name || 'Ingénieur', uploadedAt: new Date().toISOString(), size: (file.size / 1024).toFixed(1) + ' KB', type: file.type })
+          localStorage.setItem('rmasc_vault_files', JSON.stringify(raw))
+        }
         setVaultFiles(raw)
+        showFeedback(true, `✅ Fichier "${file.name}" enregistré`)
       } catch {}
     }
     reader.readAsDataURL(file)
