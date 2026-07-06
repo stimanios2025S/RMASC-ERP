@@ -113,6 +113,9 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   const [sortField, setSortField] = useState<'createdAt' | 'serialNumber'>('createdAt')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null)
+  const [editingOrder, setEditingOrder] = useState<any>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<OrderRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadOrders = useCallback(async () => {
     try {
@@ -145,12 +148,57 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
 
   const uniqueStatuses = [...new Set(orders.map(o => o.status))]
 
+  // ── Full Edit mode → opens AddElevator with pre-filled data ──
+  if (editingOrder) {
+    return <AddElevator onBack={() => setEditingOrder(null)} editOrder={editingOrder} />
+  }
+
+  // ── Delete confirmation modal ──
+  if (deleteConfirm) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-surface-50 rounded-2xl shadow-2xl p-6 w-[420px]">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-2xl">⚠️</div>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">Supprimer la commande</h3>
+              <p className="text-xs text-slate-500">Cette action est irréversible.</p>
+            </div>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
+            <p className="text-sm font-bold text-slate-800 font-mono">{deleteConfirm.serialNumber}</p>
+            <p className="text-xs text-slate-500">{deleteConfirm.clientName} — {deleteConfirm.clientCity}</p>
+          </div>
+          <p className="text-xs text-slate-600 mb-4">Tous les documents et soumissions CAD liés seront également supprimés.</p>
+          <div className="flex items-center gap-2 justify-end">
+            <button onClick={() => setDeleteConfirm(null)}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 transition-all">Annuler</button>
+            <button onClick={async () => {
+              setDeleting(true)
+              try {
+                await apiFetch(`/orders/${deleteConfirm.id}`, { method: 'DELETE' })
+                setDeleteConfirm(null)
+                loadOrders()
+              } catch { setDeleteConfirm(null) }
+              setDeleting(false)
+            }} disabled={deleting}
+              className="px-4 py-2 rounded-xl text-sm font-bold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-all flex items-center gap-2">
+              {deleting ? '⏳...' : '🗑️ Confirmer la suppression'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (selectedOrder) {
     return (
       <OrderDetailView
         order={selectedOrder}
         onBack={() => setSelectedOrder(null)}
         onFiche={onFiche ? () => onFiche(selectedOrder.id) : undefined}
+        onEdit={async () => { try { const d = await apiFetch(`/orders/${selectedOrder.id}`); setEditingOrder(d) } catch {} }}
+        onDelete={() => setDeleteConfirm(selectedOrder)}
       />
     )
   }
@@ -263,6 +311,20 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
                           className="px-3 py-1 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">
                           Détails
                         </button>
+                        <button onClick={async (e) => {
+                          e.stopPropagation()
+                          try {
+                            const d = await apiFetch(`/orders/${order.id}`)
+                            setEditingOrder(d)
+                          } catch {}
+                        }}
+                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all">
+                          ✏️
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(order) }}
+                          className="px-2 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-500 hover:bg-red-100 transition-all">
+                          🗑️
+                        </button>
                         {onFiche && (
                           <button onClick={(e) => { e.stopPropagation(); onFiche(order.id) }}
                             className="px-3 py-1 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">📄</button>
@@ -340,8 +402,8 @@ function formatBytes(bytes: number): string {
 //  ORDER DETAIL VIEW — with Archive Tab
 // ═════════════════════════════════════════════════════════════════════════════
 
-function OrderDetailView({ order, onBack, onFiche }: {
-  order: OrderRow; onBack: () => void; onFiche?: () => void
+function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
+  order: OrderRow; onBack: () => void; onFiche?: () => void; onEdit?: () => void; onDelete?: () => void
 }) {
   const [tab, setTab] = useState<'info' | 'edit' | 'production' | 'archive'>('info')
   const [noteText, setNoteText] = useState('')
@@ -435,6 +497,16 @@ function OrderDetailView({ order, onBack, onFiche }: {
           <StatusBadge status={order.status} />
         </div>
         <div className="flex items-center gap-2">
+          {onEdit && (
+            <button onClick={onEdit} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all">
+              ✏️ Modifier
+            </button>
+          )}
+          {onDelete && (
+            <button onClick={onDelete} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-500 hover:bg-red-100 transition-all">
+              🗑️ Supprimer
+            </button>
+          )}
           {onFiche && (
             <button onClick={onFiche} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">
               📄 Fiche Technique
