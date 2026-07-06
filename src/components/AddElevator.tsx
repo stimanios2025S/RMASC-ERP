@@ -342,6 +342,17 @@ function StepMotorisation({ data, setData }: any) {
         <FormSelectRich label="Type de porte palière" value={data.typePorte} onChange={s('typePorte')} options={TYPE_PORTE_INSTALLATION_OPTIONS} />
       </div>
     </div>
+
+    <hr className="border-gray-100" />
+    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-white text-[10px] font-bold">⚙</div><p className="text-sm font-semibold text-gray-700">Spécifications Mécaniques</p></div>
+    <div className="grid grid-cols-2 gap-4">
+      <FormSelectNum label="Largeur passage libre (PL)" value={data.largeurPassageLibre} onChange={s('largeurPassageLibre')} options={PASSAGE_LIBRE_OPTIONS} suffix="mm" />
+      <FormSelectNum label="Hauteur utile cabine" value={data.hauteurUtileCabine} onChange={s('hauteurUtileCabine')} options={HAUTEUR_UTILE_OPTIONS} suffix="mm" />
+    </div>
+    <div className="grid grid-cols-2 gap-4">
+      <FormSelectRich label="Type suspension / guidage" value={data.typeSuspensionGuidage} onChange={s('typeSuspensionGuidage')} options={TYPE_SUSPENSION_OPTIONS} />
+      <FormSelectRich label="Système de surcharge" value={data.systemeSurcharge} onChange={s('systemeSurcharge')} options={SYSTEME_SURCHARGE_OPTIONS} />
+    </div>
   </div>
 }
 
@@ -416,17 +427,6 @@ function StepDimensions({ data, setData }: any) {
         {tW && <div className="flex items-start gap-1.5 px-3 py-2 bg-red-50 border border-red-200 rounded-xl"><span className="text-red-500 text-xs mt-0.5">⚠️</span><p className="text-[11px] text-red-700 leading-tight">Hauteur sous dalle insuffisante</p></div>}
         {data.topFloorHeight !== '' && !isNaN(tN) && tN < 3800 && <div className="flex items-start gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl"><span className="text-amber-500 text-xs mt-0.5">📋</span><div><p className="text-[11px] font-semibold text-amber-800">Hauteur sous dalle non conforme (Standard ≥ 3800 mm)</p><p className="text-[10px] text-amber-700">Une remarque sera inscrite dans la Fiche Technique.</p></div></div>}
       </div>
-    </div>
-
-    <hr className="border-gray-100" />
-    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-white text-[10px] font-bold">⚙</div><p className="text-sm font-semibold text-gray-700">Spécifications Mécaniques</p></div>
-    <div className="grid grid-cols-2 gap-4">
-      <FormSelectNum label="Largeur passage libre (PL)" value={data.largeurPassageLibre} onChange={s('largeurPassageLibre')} options={PASSAGE_LIBRE_OPTIONS} suffix="mm" />
-      <FormSelectNum label="Hauteur utile cabine" value={data.hauteurUtileCabine} onChange={s('hauteurUtileCabine')} options={HAUTEUR_UTILE_OPTIONS} suffix="mm" />
-    </div>
-    <div className="grid grid-cols-2 gap-4">
-      <FormSelectRich label="Type suspension / guidage" value={data.typeSuspensionGuidage} onChange={s('typeSuspensionGuidage')} options={TYPE_SUSPENSION_OPTIONS} />
-      <FormSelectRich label="Système de surcharge" value={data.systemeSurcharge} onChange={s('systemeSurcharge')} options={SYSTEME_SURCHARGE_OPTIONS} />
     </div>
   </div>
 }
