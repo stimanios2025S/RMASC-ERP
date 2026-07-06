@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '../config/api'
 import { addNotice, getNotices, addUpload, getUploads } from '../config/runtime-store'
+import AddElevator from './AddElevator'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 interface OrderRow {
@@ -349,6 +350,8 @@ function OrderDetailView({ order, onBack, onFiche }: {
   const [editName, setEditName] = useState(order.clientName)
   const [editCity, setEditCity] = useState(order.clientCity)
   const [editSaving, setEditSaving] = useState(false)
+  const [showFullEdit, setShowFullEdit] = useState(false)
+  const [fullEditOrder, setFullEditOrder] = useState<any>(null)
 
   // Archive state
   const [archive, setArchive] = useState<ArchiveData | null>(null)
@@ -527,8 +530,30 @@ function OrderDetailView({ order, onBack, onFiche }: {
       )}
 
       {/* ═══ TAB 2: Edit ═══ */}
-      {tab === 'edit' && (
+      {tab === 'edit' && showFullEdit && fullEditOrder ? (
+        <AddElevator onBack={() => { setShowFullEdit(false); setFullEditOrder(null) }} editOrder={fullEditOrder} />
+      ) : tab === 'edit' ? (
         <div className="max-w-3xl mx-auto p-6 space-y-5">
+          {/* Bouton Modifier la commande complète */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-lg">✏️</div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">Modification complète</h3>
+                  <p className="text-xs text-slate-500">Modifiez toutes les informations de la commande en utilisant l'assistant complet.</p>
+                </div>
+              </div>
+              <button onClick={async () => {
+                try { const d = await apiFetch(`/orders/${order.id}`); setFullEditOrder(d); setShowFullEdit(true) }
+                catch { setNoteSent(true); setTimeout(() => setNoteSent(false), 3000) }
+              }}
+                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-all shadow-sm flex items-center gap-2">
+                ✏️ Modifier la commande
+              </button>
+            </div>
+          </div>
+
           <div className="bg-surface-50 rounded-xl border border-slate-200 p-5 shadow-sm">
             <h3 className="text-sm font-bold text-slate-800 mb-3">✏️ Modifier les informations client</h3>
             <div className="grid grid-cols-2 gap-3">

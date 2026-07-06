@@ -551,12 +551,58 @@ function StepFinalisation({ data, setData }: any) {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────
-interface Props { onBack: () => void }
+interface Props { onBack: () => void; editOrder?: any }
 
-export default function AddElevator({ onBack }: Props) {
+export default function AddElevator({ onBack, editOrder }: Props) {
   const h = hydrate()
-  const [step, setStep] = useState(h.step)
-  const [data, setData] = useState<FormData>(h.data)
+  const initialStep = editOrder ? 5 : h.step // If editing, go to recapitulatif by default
+  const [step, setStep] = useState(initialStep)
+  const [data, setData] = useState<FormData>(() => {
+    if (editOrder) {
+      // Pre-fill form with existing order data
+      return {
+        serialNumber: editOrder.serialNumber || '',
+        projectName: editOrder.projectName || '',
+        priority: editOrder.priority || 'NORMAL',
+        clientName: editOrder.clientName || '',
+        clientEmail: editOrder.clientEmail || '',
+        clientPhone: editOrder.clientPhone || '',
+        clientPhone2: editOrder.clientPhone2 || '',
+        clientCity: editOrder.clientCity || '',
+        motorType: editOrder.typeMotorisation || 'ÉLECTRIQUE',
+        motorSubtype: editOrder.sousTypeElectrique || '',
+        motorSpeed: editOrder.vitesseMs || '',
+        motorFloors: editOrder.nombreEtages || '',
+        dimWidth: editOrder.largeurGaineMm || '',
+        dimDepth: editOrder.profondeurGaineMm || '',
+        dimHeight: editOrder.hauteurGaineMm || '',
+        pitDepth: editOrder.profondeurCuvetteMm || '',
+        topFloorHeight: editOrder.hauteurDernierEtageMm || '',
+        contrepoidsPosition: editOrder.contrepoidsPosition || 'Fond',
+        largeurPassageLibre: editOrder.largeurPassageLibreMm || '',
+        hauteurUtileCabine: editOrder.hauteurUtileCabineMm || '',
+        typeSuspensionGuidage: editOrder.typeSuspensionGuidage || '',
+        systemeSurcharge: editOrder.systemeSurcharge || '',
+        matCabin: editOrder.materiauCabine || '',
+        matDoors: editOrder.materiauPortes || '',
+        matWalls: editOrder.materiauParois || '',
+        typeCabine: editOrder.typeCabine || '',
+        typePorte: editOrder.typePorte || '',
+        finitionPorteCabine: editOrder.finitionPorteCabine || '',
+        typeChassisArcade: editOrder.typeChassisArcade || '',
+        finitionInterieurCabine: editOrder.finitionInterieurCabine || '',
+        revetementSol: editOrder.revetementSol || '',
+        optPanoramic: !!editOrder.optPanoramique, optBackupPower: !!editOrder.optSecours,
+        optVoiceAnnounce: !!editOrder.optAnnoncesVocales, optCctv: !!editOrder.optCctv,
+        optFireDoors: !!editOrder.optPortesCoupeFeu, optTouchPanel: !!editOrder.optPanneauTactile,
+        optVentilation: !!editOrder.optVentilation, optBarreaudage: !!editOrder.optBarreaudage,
+        optAlarme: !!editOrder.optAlarme,
+        notes: editOrder.notes || '',
+        agreed: true, // Already confirmed since it exists
+      }
+    }
+    return h.data
+  })
   const [saved, setSaved] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -597,7 +643,13 @@ export default function AddElevator({ onBack }: Props) {
       optVentilation: data.optVentilation, optBarreaudage: data.optBarreaudage, optAlarme: data.optAlarme,
     }
     try {
-      await apiFetch('/orders/create-and-sync', { method: 'POST', body: JSON.stringify(payload) })
+      if (editOrder) {
+        // Update existing order
+        await apiFetch(`/orders/${editOrder.id}`, { method: 'PATCH', body: JSON.stringify(payload) })
+      } else {
+        // Create new order
+        await apiFetch('/orders/create-and-sync', { method: 'POST', body: JSON.stringify(payload) })
+      }
       setSaved(true)
     } catch (err: any) {
       await new Promise(r => setTimeout(r, 50))

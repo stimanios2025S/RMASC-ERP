@@ -93,31 +93,31 @@ function FicheDocument({ data }: { data: OrderFull }) {
 
       <div className="fiche-date">{fmtDate(data.createdAt)}</div>
 
-      {/* ─── 1. CLIENT ─── */}
+      {/* ─── 1. CLIENT — Professional Card Layout ─── */}
       <div className="fiche-section">1. INFORMATIONS CLIENT</div>
-      <table className="fiche-table">
-        <tr className="fiche-row-bold"><td className="fiche-label">Nom du client</td><td className="fiche-value">{data.clientName}</td></tr>
-        <tr><td className="fiche-label">Email</td><td className="fiche-value">{data.clientEmail || '(Optionnel — non renseigné)'}</td></tr>
-        <tr><td className="fiche-label">Téléphone</td><td className="fiche-value">{data.clientPhone}</td></tr>
-        <tr className="fiche-row-highlight"><td className="fiche-label">Ville</td><td className="fiche-value">{data.clientCity}</td></tr>
-      </table>
+      <div className="fiche-card-grid">
+        <div className="fiche-card"><div className="fiche-card-icon">👤</div><div className="fiche-card-content"><div className="fiche-card-label">Nom</div><div className="fiche-card-value">{data.clientName}</div></div></div>
+        <div className="fiche-card"><div className="fiche-card-icon">📍</div><div className="fiche-card-content"><div className="fiche-card-label">Ville</div><div className="fiche-card-value">{data.clientCity}</div></div></div>
+        <div className="fiche-card"><div className="fiche-card-icon">📧</div><div className="fiche-card-content"><div className="fiche-card-label">Email</div><div className="fiche-card-value">{data.clientEmail || '—'}</div></div></div>
+        <div className="fiche-card"><div className="fiche-card-icon">📞</div><div className="fiche-card-content"><div className="fiche-card-label">Téléphone</div><div className="fiche-card-value">{data.clientPhone}</div></div></div>
+      </div>
 
-      {/* ─── 2. MOTORISATION ─── */}
+      {/* ─── 2. MOTORISATION — Card Layout ─── */}
       <div className="fiche-section">2. MOTORISATION</div>
-      <table className="fiche-table">
-        <tr className="fiche-row-bold"><td className="fiche-label">Type de motorisation</td><td className="fiche-value">{data.typeMotorisation}</td></tr>
-        <tr><td className="fiche-label">Sous-type</td><td className="fiche-value">{data.sousTypeElectrique || '—'}</td></tr>
-        <tr><td className="fiche-label">Vitesse</td><td className="fiche-value">{vitesse > 0 ? `${vitesse} m/s` : '—'}</td></tr>
-        <tr className="fiche-row-highlight"><td className="fiche-label">Nombre d'étages</td><td className="fiche-value">{data.nombreEtages || '—'}</td></tr>
-      </table>
+      <div className="fiche-card-grid">
+        <div className="fiche-card bg-amber-50/30"><div className="fiche-card-icon">⚡</div><div className="fiche-card-content"><div className="fiche-card-label">Type</div><div className="fiche-card-value">{data.typeMotorisation}</div></div></div>
+        <div className="fiche-card bg-amber-50/30"><div className="fiche-card-icon">🔧</div><div className="fiche-card-content"><div className="fiche-card-label">Sous-type</div><div className="fiche-card-value">{data.sousTypeElectrique || '—'}</div></div></div>
+        <div className="fiche-card bg-amber-50/30"><div className="fiche-card-icon">🚀</div><div className="fiche-card-content"><div className="fiche-card-label">Vitesse</div><div className="fiche-card-value">{vitesse > 0 ? `${vitesse} m/s` : '—'}</div></div></div>
+        <div className="fiche-card bg-amber-50/30"><div className="fiche-card-icon">🏢</div><div className="fiche-card-content"><div className="fiche-card-label">Étages</div><div className="fiche-card-value">{nbreEtages}</div></div></div>
+      </div>
 
-      {/* ─── 3. DIMENSIONS ─── */}
+      {/* ─── 3. DIMENSIONS — Card Layout ─── */}
       <div className="fiche-section">3. DIMENSIONS (GAINE TECHNIQUE)</div>
-      <table className="fiche-table">
-        <tr className="fiche-row-bold"><td className="fiche-label">Largeur gaine</td><td className="fiche-value">{data.largeurGaineMm} mm</td></tr>
-        <tr><td className="fiche-label">Profondeur gaine</td><td className="fiche-value">{data.profondeurGaineMm} mm</td></tr>
-        <tr className="fiche-row-highlight"><td className="fiche-label">Hauteur de la gaine</td><td className="fiche-value">{data.hauteurGaineMm} mm</td></tr>
-      </table>
+      <div className="fiche-card-grid">
+        <div className="fiche-card"><div className="fiche-card-icon">↔️</div><div className="fiche-card-content"><div className="fiche-card-label">Largeur</div><div className="fiche-card-value">{data.largeurGaineMm} mm</div></div></div>
+        <div className="fiche-card"><div className="fiche-card-icon">↕️</div><div className="fiche-card-content"><div className="fiche-card-label">Profondeur</div><div className="fiche-card-value">{data.profondeurGaineMm} mm</div></div></div>
+        <div className="fiche-card"><div className="fiche-card-icon">📏</div><div className="fiche-card-content"><div className="fiche-card-label">Hauteur</div><div className="fiche-card-value">{data.hauteurGaineMm} mm</div></div></div>
+      </div>
 
       {/* ─── 4. MATÉRIAUX & FINITIONS — Professional Card Layout ─── */}
       <div className="fiche-section">4. MATÉRIAUX & FINITIONS</div>
