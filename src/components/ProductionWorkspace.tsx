@@ -5,6 +5,7 @@ import type { PortalSession } from '../data/portalUsers'
 import { apiFetch } from '../config/api'
 import { getProductionPhase, setProductionPhase, getUploads } from '../config/runtime-store'
 import { PageBackground } from './PageBackground'
+import InstallPWA from './InstallPWA'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -275,6 +276,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         <span>RMASC Factory — Production & Atelier v2.5.2</span>
         <span>{orders.length} commandes en production</span>
       </footer>
+      <InstallPWA variant="compact" />
     </PageBackground>
   )
 }

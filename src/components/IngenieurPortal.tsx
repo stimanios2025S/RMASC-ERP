@@ -13,6 +13,7 @@ import type { PortalSession } from '../data/portalUsers'
 import { apiFetch } from '../config/api'
 import { addUpload, getUploads } from '../config/runtime-store'
 import { PageBackground } from './PageBackground'
+import InstallPWA from './InstallPWA'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -446,6 +447,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
           )
         })()}
 
+        <InstallPWA variant="compact" />
         {/* ═══ FOOTER ═══ */}
         <footer className="flex-shrink-0 bg-surface-50 border-t border-slate-200 px-6 py-2 flex items-center justify-between text-[10px] text-slate-400">
           <span>RMASC — {config.title} v2.5.3</span>

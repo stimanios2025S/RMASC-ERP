@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import type { PortalSession } from '../data/portalUsers'
 import { apiFetch, apiPath } from '../config/api'
 import { PageBackground } from './PageBackground'
+import InstallPWA from './InstallPWA'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface StockItem {
@@ -203,6 +204,7 @@ export default function StockWorkspace({ onBack, session }: Props) {
       <div className="flex-1 overflow-y-auto p-6">
         {renderContent()}
       </div>
+      <InstallPWA variant="compact" />
     </PageBackground>
   )
 }

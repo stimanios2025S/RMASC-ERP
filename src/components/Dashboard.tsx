@@ -10,6 +10,7 @@ import SettingsPage from './SettingsPage'
 import RoadmapPage from './RoadmapPage'
 import LifecyclePipeline from './LifecyclePipeline'
 import HelpPage from './HelpPage'
+import InstallPWA from './InstallPWA'
 import { apiFetch } from '../config/api'
 import type { PortalSession } from '../data/portalUsers'
 
@@ -250,6 +251,7 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
         </nav>
       </div>
 
+      <InstallPWA variant="sidebar" />
     </aside>
   )
 }

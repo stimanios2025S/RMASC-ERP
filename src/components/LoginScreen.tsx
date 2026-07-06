@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { login, initPortalUsers } from '../data/portalUsers'
 import type { PortalSession } from '../data/portalUsers'
+import InstallPWA from './InstallPWA'
 
 // ─── Props ─────────────────────────────────────────────────────────────────
 interface Props {
@@ -232,6 +233,7 @@ export default function LoginScreen({ onLogin }: Props) {
           </div>
         </div>
       </div>
+      <InstallPWA />
     </div>
   )
 }
