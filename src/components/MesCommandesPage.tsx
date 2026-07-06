@@ -606,7 +606,6 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
         <AddElevator onBack={() => { setShowFullEdit(false); setFullEditOrder(null) }} editOrder={fullEditOrder} />
       ) : tab === 'edit' ? (
         <div className="max-w-3xl mx-auto p-6 space-y-5">
-          {/* Bouton Modifier la commande complète */}
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -681,7 +680,7 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
             </button>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* ═══ TAB 3: Production & Notifications ═══ */}
       {tab === 'production' && (
