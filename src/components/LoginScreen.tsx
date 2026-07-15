@@ -72,7 +72,7 @@ export default function LoginScreen({ onLogin }: Props) {
   }
 
   return (
-    <div className="h-screen flex relative overflow-hidden">
+    <div className="h-screen flex flex-col md:flex-row relative overflow-hidden">
       {/* Full background image with overlay */}
       <div className="absolute inset-0 z-0">
         <img
@@ -81,95 +81,95 @@ export default function LoginScreen({ onLogin }: Props) {
           className="w-full h-full object-cover"
         />
         {/* Dark gradient overlay pour lisibilité */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/60 to-slate-950/85 md:bg-gradient-to-r md:from-slate-950/85 md:via-slate-950/55 md:to-slate-950/15" />
         {/* Lueur ambiante orange RMASC */}
         <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
       </div>
 
       {/* ── Left Panel: Branding + Info ── */}
-      <div className="flex-1 flex flex-col justify-center px-16 relative z-10">
+      <div className="flex-1 flex flex-col justify-center px-6 md:px-16 relative z-10">
         <div className="max-w-lg">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25 overflow-hidden">
-              <img src="/images/rmasc-logo.png" alt="RMASC" className="w-11 h-11 object-contain" />
+          <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25 overflow-hidden">
+              <img src="/images/rmasc-logo.png" alt="RMASC" className="w-8 h-8 md:w-11 md:h-11 object-contain" />
             </div>
             <div>
-              <h1 className="text-4xl font-extrabold tracking-tight">
+              <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight">
                 <span className="text-amber-400 drop-shadow-[0_0_10px_rgba(251,146,60,0.7)]">RM</span>
                 <span className="text-orange-400 drop-shadow-[0_0_10px_rgba(249,115,22,0.7)]">ASC</span>
                 <span className="text-amber-400"> FACTORY</span>
               </h1>
-              <p className="text-sm text-slate-400 font-medium tracking-widest uppercase mt-1">
+              <p className="text-[10px] md:text-sm text-white/90 font-semibold tracking-widest uppercase mt-0.5 md:mt-1 drop-shadow-sm">
                 Progiciel de Gestion Intégré
               </p>
             </div>
           </div>
 
-          <p className="text-slate-400 text-lg leading-relaxed mb-4">
+          <p className="text-slate-200 text-sm md:text-lg leading-relaxed mb-3 md:mb-4 font-medium drop-shadow-sm hidden md:block">
             Système de gestion des commandes, Bureau d'Études intégré,<br />
             et suivi de production ascenseur.
           </p>
 
           {/* Portal indicator cards */}
-          <div className="grid grid-cols-3 gap-2.5 mt-6">
+          <div className="grid grid-cols-3 gap-2 mt-4 md:mt-6 hidden md:grid">
             {PORTAL_CARDS.map(card => (
               <div
                 key={card.role}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-50/[0.03] border border-white/10"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/20 backdrop-blur-sm"
               >
                 <span className="text-base">{card.icon}</span>
-                <span className="text-[10px] font-bold text-slate-400 leading-tight">{card.title}</span>
+                <span className="text-[10px] md:text-[11px] font-bold text-white/90 leading-tight drop-shadow-sm">{card.title}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-[10px] text-slate-600 mt-10">
+        <p className="text-[10px] md:text-[11px] text-slate-500 mt-4 md:mt-10 font-medium">
           RMASC FACTORY v2.5.2 — Plateforme unifiée. Tous droits réservés © 2026.
         </p>
       </div>
 
       {/* ── Right Panel: Login Form ── */}
-      <div className="w-[440px] flex flex-col justify-center px-10 relative z-10">
-        <div className="bg-surface-50/[0.04] backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-          <div className="mb-6">
+      <div className="w-full md:w-[440px] flex flex-col justify-center px-4 md:px-10 relative z-10">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl">
+          <div className="mb-4 md:mb-6">
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">Système sécurisé</span>
+              <span className="text-[10px] font-semibold text-emerald-300 uppercase tracking-wider">Système sécurisé</span>
             </div>
-            <h2 className="text-xl font-bold text-white">Connexion</h2>
-            <p className="text-sm text-slate-400 mt-1">Identifiez-vous pour accéder à votre espace de travail.</p>
+            <h2 className="text-lg md:text-xl font-bold text-white">Connexion</h2>
+            <p className="text-xs md:text-sm text-slate-300 mt-1">Identifiez-vous pour accéder à votre espace de travail.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* ID field */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Identifiant</label>
+              <label className="text-xs font-semibold text-white/80 uppercase tracking-wider">Identifiant</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-lg">👤</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">👤</span>
                 <input
                   type="text"
                   value={loginId}
                   onChange={e => { setLoginId(e.target.value); setError(null) }}
                   placeholder="Saisir votre identifiant..."
                   autoFocus
-                  className="w-full h-12 pl-10 pr-4 rounded-xl bg-surface-50/5 border border-white/10 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all"
+                  className="w-full h-12 pl-10 pr-4 rounded-xl bg-white/5 border border-white/20 text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all"
                 />
               </div>
             </div>
 
             {/* Password field */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Mot de passe</label>
+              <label className="text-xs font-semibold text-white/80 uppercase tracking-wider">Mot de passe</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-lg">🔑</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔑</span>
                 <input
                   type="password"
                   value={password}
                   onChange={e => { setPassword(e.target.value); setError(null) }}
                   placeholder="••••••••"
-                  className="w-full h-12 pl-10 pr-4 rounded-xl bg-surface-50/5 border border-white/10 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all"
+                  className="w-full h-12 pl-10 pr-4 rounded-xl bg-white/5 border border-white/20 text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all"
                 />
               </div>
             </div>
@@ -178,22 +178,22 @@ export default function LoginScreen({ onLogin }: Props) {
             <button
               type="button"
               onClick={() => setShowHint(p => !p)}
-              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-all"
+              className="flex items-center gap-1.5 text-xs text-white-400 hover:text-white/80 transition-all"
             >
               <span>💡</span>
               <span>{showHint ? 'Masquer les identifiants' : 'Afficher les identifiants de test'}</span>
             </button>
 
             {showHint && (
-              <div className="bg-surface-50/5 border border-white/10 rounded-xl p-3 space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Comptes disponibles</p>
-                <div className="text-[11px] text-slate-400 space-y-0.5 font-mono">
-                  <p>👑 <span className="text-amber-400 font-semibold">admin</span> / admin123 — Direction</p>
-                  <p>📐 <span className="text-sky-400 font-semibold">ingenieur1</span> / ingenieur1 — BE Dessin 1</p>
-                  <p>✏️ <span className="text-violet-400 font-semibold">ingenieur2</span> / ingenieur2 — BE Dessin 2</p>
-                  <p>🔍 <span className="text-rose-400 font-semibold">verificateur</span> / verificateur — BE Vérif.</p>
-                  <p>🏭 <span className="text-emerald-400 font-semibold">production</span> / production — Atelier</p>
-                  <p>📦 <span className="text-cyan-400 font-semibold">magasinier</span> / magasinier — Stocks & Logistique</p>
+              <div className="bg-white/5 border border-white/20 rounded-xl p-3 space-y-1 backdrop-blur-sm">
+                <p className="text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1.5">Comptes disponibles</p>
+                <div className="text-[12px] text-slate-300 space-y-0.5 font-mono">
+                  <p>👑 <span className="text-amber-300 font-bold">admin</span> / admin123 — Direction</p>
+                  <p>📐 <span className="text-sky-300 font-bold">ingenieur1</span> / ingenieur1 — BE Dessin 1</p>
+                  <p>✏️ <span className="text-violet-300 font-bold">ingenieur2</span> / ingenieur2 — BE Dessin 2</p>
+                  <p>🔍 <span className="text-rose-300 font-bold">verificateur</span> / verificateur — BE Vérif.</p>
+                  <p>🏭 <span className="text-emerald-300 font-bold">production</span> / production — Atelier</p>
+                  <p>📦 <span className="text-cyan-300 font-bold">magasinier</span> / magasinier — Stocks & Logistique</p>
                 </div>
               </div>
             )}
@@ -227,7 +227,7 @@ export default function LoginScreen({ onLogin }: Props) {
           </form>
 
           {/* Footer */}
-          <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-600">
+          <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-white-400 font-medium">
             <span>🔒 Connexion locale sécurisée</span>
             <span>RMASC ERP v2.5.2</span>
           </div>

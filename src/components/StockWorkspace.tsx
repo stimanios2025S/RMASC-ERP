@@ -3,6 +3,8 @@ import type { PortalSession } from '../data/portalUsers'
 import { apiFetch, apiPath } from '../config/api'
 import { PageBackground } from './PageBackground'
 import InstallPWA from './InstallPWA'
+import AgentPanel from './agent/AgentPanel'
+import SmartSearch from './smart/SmartSearch'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface StockItem {
@@ -56,6 +58,7 @@ const TABS = [
   { id: 'suppliers', icon: '🏢', label: 'Fournisseurs' },
   { id: 'movements', icon: '📋', label: 'Mouvements' },
   { id: 'documents', icon: '📄', label: 'Documents' },
+  { id: 'orders', icon: '📋', label: 'Commandes' },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -69,8 +72,8 @@ function formatDate(iso: string | null | undefined) {
 function movementLabel(t: string) { return { ENTRY: '📥 Entrée', EXIT: '📤 Sortie', ADJUSTMENT: '🔧 Ajustement', TRANSFER: '🔄 Transfert' }[t] || t }
 function docTypeLabel(t: string) { return { BON_COMMANDE: '📝 Bon de Commande', BON_LIVRAISON: '📦 Bon de Livraison', FACTURE: '🧾 Facture', BON_SORTIE: '📤 Bon de Sortie', INVENTAIRE: '📋 Inventaire' }[t] || t }
 function docStatusBadge(s: string) {
-  const colors: Record<string, string> = { BROUILLON: 'bg-slate-100 text-slate-600', EN_ATTENTE: 'bg-amber-100 text-amber-700', VALIDE: 'bg-emerald-100 text-emerald-700', ANNULE: 'bg-red-100 text-red-700' }
-  return colors[s] || 'bg-slate-100 text-slate-600'
+  const colors: Record<string, string> = { BROUILLON: 'bg-white/10 text-gray-400', EN_ATTENTE: 'bg-amber-500/15 text-amber-400', VALIDE: 'bg-emerald-500/15 text-emerald-400', ANNULE: 'bg-red-500/15 text-red-400' }
+  return colors[s] || 'bg-white/10 text-gray-400'
 }
 function PdfLink({ mType, mId }: { mType: string; mId: string }) {
   const suffix = ({ ENTRY: 'entree', EXIT: 'sortie', ADJUSTMENT: 'ajustement', TRANSFER: 'transfert' } as any)[mType] || 'mouvement'
@@ -95,6 +98,18 @@ export default function StockWorkspace({ onBack, session }: Props) {
   const [showSupplierForm, setShowSupplierForm] = useState(false)
   const [showMovementForm, setShowMovementForm] = useState(false)
   const [showDocForm, setShowDocForm] = useState(false)
+  const [showAgent, setShowAgent] = useState(false)
+  const [showSmartSearch, setShowSmartSearch] = useState(false)
+
+  // ── Keyboard shortcuts ──────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setShowSmartSearch(p => !p) }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'i') { e.preventDefault(); setShowAgent(p => !p) }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
   const [showDocView, setShowDocView] = useState<StockDocument | null>(null)
 
   const loadData = useCallback(async () => {
@@ -142,51 +157,58 @@ export default function StockWorkspace({ onBack, session }: Props) {
       case 'suppliers': return <SuppliersTab suppliers={suppliers} showForm={showSupplierForm} setShowForm={setShowSupplierForm} onRefresh={loadData} feedback={showFeedback} session={session} />
       case 'movements': return <MovementsTab movements={movements} showForm={showMovementForm} setShowForm={setShowMovementForm} items={items} suppliers={suppliers} onRefresh={loadData} feedback={showFeedback} session={session} />
       case 'documents': return <DocumentsTab documents={documents} showForm={showDocForm} setShowForm={setShowDocForm} suppliers={suppliers} showView={showDocView} setShowView={setShowDocView} onRefresh={loadData} feedback={showFeedback} />
+      case 'orders': return <OrdersArchiveTab />
     }
   }
 
   return (
     <PageBackground className="h-full flex flex-col">
       {/* ── Header ── */}
-      <header className="flex-shrink-0 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-slate-100 text-slate-500"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-gray-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">📦</span></div>
           <div>
-            <h1 className="text-lg font-extrabold text-slate-800">Gestion des Stocks</h1>
-            <p className="text-[11px] text-slate-400 font-medium">Suivi des articles, fournisseurs et mouvements</p>
+            <h1 className="text-lg font-extrabold text-gray-200">Gestion des Stocks</h1>
+            <p className="text-[11px] text-gray-400 font-semibold">Suivi des articles, fournisseurs et mouvements</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Agent IA Button */}
+          <button onClick={() => setShowAgent(p => !p)}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-gray-400'}`}
+            title="Assistant IA Salim (⌘I)">
+            <span className="text-base">🤖</span>
+          </button>
           {lowStockItems.length > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[11px] font-bold text-red-600">{lowStockItems.length} alerte{lowStockItems.length > 1 ? 's' : ''}</span>
+              <span className="text-[11px] font-bold text-red-400">{lowStockItems.length} alerte{lowStockItems.length > 1 ? 's' : ''}</span>
             </div>
           )}
           {session && (
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-100">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/10">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="text-[10px] font-semibold text-slate-600">{session.name}</span>
+              <span className="text-[10px] font-semibold text-gray-400">{session.name}</span>
             </div>
           )}
-          <button onClick={loadData} className="p-2 rounded-xl hover:bg-slate-100 text-slate-500">
+          <button onClick={loadData} className="p-2 rounded-xl hover:bg-white/[0.06] text-gray-400">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
           </button>
         </div>
       </header>
 
       {/* ── Tabs ── */}
-      <div className="flex-shrink-0 bg-surface-50 border-b border-slate-200 px-6 flex gap-0">
+      <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/10 px-6 flex gap-0">
         {TABS.map(tab => {
           const isActive = activeTab === tab.id
           const alertCount = tab.id === 'items' ? lowStockItems.length : tab.id === 'dashboard' ? lowStockItems.length : 0
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${isActive ? 'border-cyan-600 text-cyan-700 bg-cyan-50/50' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+              className={`flex items-center gap-2 px-5 py-3 text-base font-bold border-b-2 transition-all whitespace-nowrap ${isActive ? 'border-amber-400 text-white bg-amber-500/10' : 'border-transparent text-white/60 hover:text-white'}`}>
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
-              {alertCount > 0 && <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-600">{alertCount}</span>}
+              {alertCount > 0 && <span className="px-1.5 py-0.5 rounded-full text-[11px] font-bold bg-red-400/20 text-red-300">{alertCount}</span>}
             </button>
           )
         })}
@@ -205,6 +227,8 @@ export default function StockWorkspace({ onBack, session }: Props) {
         {renderContent()}
       </div>
       <InstallPWA variant="compact" />
+      {showAgent && <AgentPanel onClose={() => setShowAgent(false)} />}
+      {showSmartSearch && <SmartSearch onNavigate={(view) => { setShowSmartSearch(false) }} />}
     </PageBackground>
   )
 }
@@ -223,40 +247,40 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
     <div className="max-w-5xl mx-auto space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-slate-400">Articles en stock</p>
             <span className="text-lg">📦</span>
           </div>
-          <p className="text-3xl font-bold text-slate-800">{stats?.totalItems || 0}</p>
+          <p className="text-3xl font-bold text-gray-200">{stats?.totalItems || 0}</p>
           <p className="text-[11px] text-slate-400 mt-1">
             {items.reduce((s, i) => s + i.quantity, 0)} unités totales
           </p>
         </div>
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-slate-400">Alertes stock</p>
             <span className="text-lg">🔴</span>
           </div>
-          <p className={`text-3xl font-bold ${lowStockItems.length > 0 ? 'text-red-500' : 'text-slate-800'}`}>
+          <p className={`text-3xl font-bold ${lowStockItems.length > 0 ? 'text-red-500' : 'text-gray-200'}`}>
             {lowStockItems.length}
           </p>
           <p className="text-[11px] text-slate-400 mt-1">Articles sous seuil critique</p>
         </div>
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-slate-400">Fournisseurs</p>
             <span className="text-lg">🏢</span>
           </div>
-          <p className="text-3xl font-bold text-slate-800">{stats?.totalSuppliers || 0}</p>
+          <p className="text-3xl font-bold text-gray-200">{stats?.totalSuppliers || 0}</p>
           <p className="text-[11px] text-slate-400 mt-1">Partenaires enregistrés</p>
         </div>
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-slate-400">Valeur du stock</p>
             <span className="text-lg">💰</span>
           </div>
-          <p className="text-3xl font-bold text-slate-800">{totalValue.toLocaleString()} DA</p>
+          <p className="text-3xl font-bold text-gray-200">{totalValue.toLocaleString()} DA</p>
           <p className="text-[11px] text-slate-400 mt-1">Valeur totale estimée</p>
         </div>
       </div>
@@ -264,9 +288,9 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
       {/* Alerts + Recent Movements */}
       <div className="grid grid-cols-2 gap-4">
         {/* Low Stock Alerts */}
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-800">🔴 Alertes Stock</h3>
+            <h3 className="text-sm font-bold text-gray-200">🔴 Alertes Stock</h3>
             <span className="text-xs text-slate-400">{lowStockItems.length} article{lowStockItems.length > 1 ? 's' : ''}</span>
           </div>
           {lowStockItems.length === 0 ? (
@@ -282,7 +306,7 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="text-lg">📦</span>
                     <div className="text-left min-w-0">
-                      <p className="text-xs font-bold text-slate-800 truncate">{item.name}</p>
+                      <p className="text-xs font-bold text-gray-200 truncate">{item.name}</p>
                       <p className="text-[10px] text-slate-400">{item.reference}</p>
                     </div>
                   </div>
@@ -297,9 +321,9 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
         </div>
 
         {/* Recent Movements */}
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-800">📋 Mouvements Récents</h3>
+            <h3 className="text-sm font-bold text-gray-200">📋 Mouvements Récents</h3>
             <span className="text-xs text-slate-400">{movements.length} total</span>
           </div>
           {movements.length === 0 ? (
@@ -307,11 +331,11 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
           ) : (
             <div className="space-y-2">
               {movements.slice(0, 8).map(m => (
-                <div key={m.id} className="flex items-center justify-between p-2.5 rounded-xl bg-surface-50 border border-slate-100">
+                <div key={m.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="text-base">{m.type === 'ENTRY' ? '📥' : m.type === 'EXIT' ? '📤' : '🔧'}</span>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-slate-800 truncate">{m.item?.name || 'Article'}</p>
+                      <p className="text-xs font-semibold text-gray-200 truncate">{m.item?.name || 'Article'}</p>
                       <p className="text-[10px] text-slate-400">{formatDate(m.createdAt)}</p>
                     </div>
                   </div>
@@ -329,8 +353,8 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
       </div>
 
       {/* Stock locations breakdown */}
-      <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-800 mb-4">📍 Répartition par Stock</h3>
+      <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+        <h3 className="text-sm font-bold text-gray-200 mb-4">📍 Répartition par Stock</h3>
         <div className="grid grid-cols-2 gap-3">
           {['Stock 1', 'Stock 2'].map(loc => {
             const locItems = items.filter(i => i.location === loc)
@@ -338,9 +362,9 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
             const alerts = locItems.filter(i => i.quantity <= i.alertThreshold).length
             return (
               <div key={loc} className={`rounded-xl border px-4 py-3 ${loc === 'Stock 2' ? 'bg-violet-50 border-violet-200' : 'bg-cyan-50 border-cyan-200'}`}>
-                <p className="text-xs font-bold text-slate-800">{loc}</p>
-                <p className="text-lg font-bold text-slate-800">{total}</p>
-                <p className="text-[10px] text-slate-500">{locItems.length} articles</p>
+                <p className="text-xs font-bold text-gray-200">{loc}</p>
+                <p className="text-lg font-bold text-gray-200">{total}</p>
+                <p className="text-[10px] text-gray-400">{locItems.length} articles</p>
                 {alerts > 0 && <p className="text-[10px] text-red-500 font-semibold mt-1">🔴 {alerts} alerte{alerts > 1 ? 's' : ''}</p>}
               </div>
             )
@@ -349,15 +373,15 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
       </div>
 
       {/* Categories breakdown */}
-      <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-800 mb-4">📊 Répartition par Catégorie</h3>
+      <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+        <h3 className="text-sm font-bold text-gray-200 mb-4">📊 Répartition par Catégorie</h3>
         <div className="grid grid-cols-3 gap-3">
           {Array.from(new Set(items.map(i => i.category))).map(cat => {
             const catItems = items.filter(i => i.category === cat)
             const total = catItems.reduce((s, i) => s + i.quantity, 0)
             return (
-              <div key={cat} className="bg-surface-50 rounded-xl border border-slate-100 px-4 py-3">
-                <p className="text-xs font-bold text-slate-800">{cat}</p>
+              <div key={cat} className="bg-white/[0.04] rounded-xl border border-white/10 px-4 py-3">
+                <p className="text-xs font-bold text-gray-200">{cat}</p>
                 <p className="text-lg font-bold text-cyan-600">{total}</p>
                 <p className="text-[10px] text-slate-400">{catItems.length} article{catItems.length > 1 ? 's' : ''}</p>
               </div>
@@ -458,14 +482,14 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
         <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
           <span className="text-4xl">✅</span>
         </div>
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Bon de Commande Créé</h2>
-        <p className="text-sm text-slate-400 mb-2">N° <span className="font-mono font-bold text-slate-600">{generatedDoc.docNumber}</span></p>
+        <h2 className="text-xl font-bold text-gray-200 mb-2">Bon de Commande Créé</h2>
+        <p className="text-sm text-slate-400 mb-2">N° <span className="font-mono font-bold text-gray-400">{generatedDoc.docNumber}</span></p>
         <a href={apiPath(generatedDoc.pdfUrl)} target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 transition-all shadow-sm mb-4">
           📄 Télécharger le PDF
         </a>
         <div>
-          <button onClick={resetForm} className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-surface-50 transition-all">
+          <button onClick={resetForm} className="px-4 py-2 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.04] transition-all">
             ➕ Nouveau bon de commande
           </button>
         </div>
@@ -476,32 +500,32 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-slate-800">📝 Nouveau Bon de Commande</h2>
+        <h2 className="text-lg font-bold text-gray-200">📝 Nouveau Bon de Commande</h2>
         <span className="text-xs text-slate-400">{selectedLines.length} article{selectedLines.length > 1 ? 's' : ''} sélectionné{selectedLines.length > 1 ? 's' : ''}</span>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Supplier & Info */}
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="grid grid-cols-2 gap-4">
             <SelectField label="Fournisseur" value={supplierId} onChange={setSupplierId}
               options={[{ value: '', label: '— Sélectionner —' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]} />
             <InputField label="Titre du bon" value={title} onChange={setTitle} placeholder="Ex: Achat tôle acier avril" />
           </div>
           <div className="mt-3">
-            <label className="text-xs font-semibold text-slate-600">Description</label>
+            <label className="text-xs font-semibold text-gray-400">Description</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}
-              className="w-full mt-1 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Notes ou instructions..." />
+              className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Notes ou instructions..." />
           </div>
         </div>
 
         {/* Search Items */}
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-slate-600 mb-3">🔍 Rechercher des articles à commander</p>
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+          <p className="text-xs font-semibold text-gray-400 mb-3">🔍 Rechercher des articles à commander</p>
           <div className="flex items-center gap-3 mb-3">
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par nom ou référence..." className="h-9 flex-1 px-3.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-cyan-200" />
-            <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)} className="h-9 px-3 rounded-xl border border-slate-200 text-xs"><option value="">Tous stocks</option><option value="Stock 1">Stock 1</option><option value="Stock 2">Stock 2</option></select>
-            <select value={filterCat} onChange={e => setFilterCat(e.target.value)} className="h-9 px-3 rounded-xl border border-slate-200 text-xs"><option value="">Toutes catégories</option>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par nom ou référence..." className="h-9 flex-1 px-3.5 rounded-xl border border-white/10 text-xs focus:ring-2 focus:ring-cyan-200" />
+            <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)} className="h-9 px-3 rounded-xl border border-white/10 text-xs"><option value="">Tous stocks</option><option value="Stock 1">Stock 1</option><option value="Stock 2">Stock 2</option></select>
+            <select value={filterCat} onChange={e => setFilterCat(e.target.value)} className="h-9 px-3 rounded-xl border border-white/10 text-xs"><option value="">Toutes catégories</option>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
           </div>
 
           {/* Search results grid */}
@@ -512,8 +536,8 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
               return (
                 <button key={item.id} type="button" onClick={() => !alreadySelected && addLine(item)}
                   disabled={alreadySelected}
-                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${alreadySelected ? 'bg-surface-50 border-slate-200 opacity-50 cursor-not-allowed' : 'border-slate-200 hover:border-cyan-300 hover:bg-cyan-50'}`}>
-                  <p className="font-bold text-slate-800 truncate">{item.name}</p>
+                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${alreadySelected ? 'bg-white/[0.04] border-white/10 opacity-50 cursor-not-allowed' : 'border-white/10 hover:border-cyan-300 hover:bg-cyan-50'}`}>
+                  <p className="font-bold text-gray-200 truncate">{item.name}</p>
                   <p className="text-[10px] text-slate-400 font-mono">{item.reference}</p>
                   <p className="text-[10px] text-slate-400">
                     <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span>
@@ -526,34 +550,34 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
         </div>
 
         {/* Selected Items */}
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-slate-600 mb-3">📋 Articles sélectionnés ({selectedLines.length})</p>
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+          <p className="text-xs font-semibold text-gray-400 mb-3">📋 Articles sélectionnés ({selectedLines.length})</p>
           {selectedLines.length === 0 ? (
             <p className="text-xs text-slate-400 italic">Recherchez et cliquez sur des articles pour les ajouter.</p>
           ) : (
             <div className="space-y-2">
               {selectedLines.map(line => (
-                <div key={line.item.id} className="flex items-center gap-3 bg-surface-50 rounded-xl px-3 py-2 border border-slate-100">
+                <div key={line.item.id} className="flex items-center gap-3 bg-white/[0.04] rounded-xl px-3 py-2 border border-white/10">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-800 truncate">{line.item.name}</p>
+                    <p className="text-xs font-bold text-gray-200 truncate">{line.item.name}</p>
                     <p className="text-[10px] text-slate-400 font-mono">{line.item.reference}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-slate-400">Qté:</span>
                     <input type="number" min="1" value={line.qty}
                       onChange={e => updateQty(line.item.id, parseInt(e.target.value) || 1)}
-                      className="w-16 h-8 px-2 rounded-lg border border-slate-200 text-xs text-center font-semibold" />
+                      className="w-16 h-8 px-2 rounded-lg border border-white/10 text-xs text-center font-semibold" />
                   </div>
                   <div className="text-right min-w-[80px]">
-                    <p className="text-xs font-bold text-slate-800">{((line.item.unitPrice || 0) * line.qty).toLocaleString()} DA</p>
+                    <p className="text-xs font-bold text-gray-200">{((line.item.unitPrice || 0) * line.qty).toLocaleString()} DA</p>
                     <p className="text-[9px] text-slate-400">{line.item.unitPrice?.toLocaleString() || '0'} DA/unité</p>
                   </div>
                   <button type="button" onClick={() => removeLine(line.item.id)} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
                 </div>
               ))}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-200 mt-2">
-                <p className="text-xs text-slate-500">Total HT estimé</p>
-                <p className="text-sm font-bold text-slate-800">{totalHT.toLocaleString()} DA</p>
+              <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
+                <p className="text-xs text-gray-400">Total HT estimé</p>
+                <p className="text-sm font-bold text-gray-200">{totalHT.toLocaleString()} DA</p>
               </div>
             </div>
           )}
@@ -565,7 +589,7 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold hover:from-cyan-400 hover:to-teal-500 transition-all shadow-sm disabled:opacity-60 flex items-center gap-2">
             {saving ? '⏳...' : '📄 Générer le Bon de Commande'}
           </button>
-          <button type="button" onClick={resetForm} className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-surface-50">Réinitialiser</button>
+          <button type="button" onClick={resetForm} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.04]">Réinitialiser</button>
         </div>
       </form>
     </div>
@@ -642,10 +666,10 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
   if (showForm) return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-slate-100"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-slate-800">📦 Nouvel Article</h2>
+        <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <h2 className="text-lg font-bold text-gray-200">📦 Nouvel Article</h2>
       </div>
-      <form onSubmit={handleSubmit} className="bg-surface-50 rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <InputField label="Référence *" value={form.reference} onChange={v => setForm({ ...form, reference: v })} required />
           <InputField label="Nom *" value={form.name} onChange={v => setForm({ ...form, name: v })} required />
@@ -656,20 +680,20 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
           <SelectField label="Stock" value={form.location} onChange={v => setForm({ ...form, location: v })} options={['Stock 1', 'Stock 2']} />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-600">Description</label>
-          <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Description optionnelle..." />
+          <label className="text-xs font-semibold text-gray-400">Description</label>
+          <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Description optionnelle..." />
         </div>
         {/* Image upload */}
         <div>
-          <label className="text-xs font-semibold text-slate-600 mb-1 block">Photo du produit</label>
+          <label className="text-xs font-semibold text-gray-400 mb-1 block">Photo du produit</label>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 bg-surface-50 cursor-pointer hover:bg-slate-100 transition-all text-sm text-slate-500 hover:text-slate-700">
+            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-white/10 bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition-all text-sm text-gray-400 hover:text-gray-200">
               <span>📷</span>
               <span>{imageFile ? imageFile.name : 'Ajouter une photo'}</span>
               <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
             </label>
             {imagePreview && (
-              <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200">
+              <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-white/10">
                 <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
                 <button onClick={() => { setImageFile(null); setImagePreview(null) }} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow">✕</button>
               </div>
@@ -684,7 +708,7 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
         <SelectField label="Fournisseur" value={form.supplierId} onChange={v => setForm({ ...form, supplierId: v })} options={[{ value: '', label: 'Aucun' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]} />
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold hover:from-cyan-400 hover:to-teal-500 transition-all shadow-sm disabled:opacity-60">{saving ? '⏳...' : '💾 Créer l\'article'}</button>
-          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-surface-50">Annuler</button>
+          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.04]">Annuler</button>
         </div>
       </form>
     </div>
@@ -694,17 +718,17 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-slate-800">📦 Articles en Stock</h2>
-          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{items.length} articles</span>
+          <h2 className="text-lg font-bold text-gray-200">📦 Articles en Stock</h2>
+          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{items.length} articles</span>
         </div>
         <button onClick={() => setShowForm(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-xs font-bold hover:from-cyan-400 hover:to-teal-500 transition-all shadow-sm">➕ Nouvel article</button>
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4">
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Rechercher..." className="h-9 px-3.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-cyan-200 w-56" />
-        <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)} className="h-9 px-3 rounded-xl border border-slate-200 text-xs"><option value="">Tous les stocks</option><option value="Stock 1">Stock 1</option><option value="Stock 2">Stock 2</option></select>
-        <select value={filterCat} onChange={e => setFilterCat(e.target.value)} className="h-9 px-3 rounded-xl border border-slate-200 text-xs"><option value="">Toutes catégories</option>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Rechercher..." className="h-9 px-3.5 rounded-xl border border-white/10 text-xs focus:ring-2 focus:ring-cyan-200 w-56" />
+        <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)} className="h-9 px-3 rounded-xl border border-white/10 text-xs"><option value="">Tous les stocks</option><option value="Stock 1">Stock 1</option><option value="Stock 2">Stock 2</option></select>
+        <select value={filterCat} onChange={e => setFilterCat(e.target.value)} className="h-9 px-3 rounded-xl border border-white/10 text-xs"><option value="">Toutes catégories</option>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -712,10 +736,10 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
           const isLow = item.quantity <= item.alertThreshold
           return (
             <button key={item.id} onClick={() => setSelectedItem(item)}
-              className={`text-left bg-surface-50 rounded-xl border-2 p-4 transition-all hover:shadow-md ${isLow ? 'border-red-200 hover:border-red-400' : 'border-slate-200 hover:border-cyan-300'}`}>
+              className={`text-left bg-white/[0.04] rounded-xl border-2 p-4 transition-all hover:shadow-md ${isLow ? 'border-red-200 hover:border-red-400' : 'border-white/10 hover:border-cyan-300'}`}>
               <div className="flex items-start gap-3">
                 {item.imageUrl && (
-                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-100 flex-shrink-0">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
                     <img src={apiPath(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                 )}
@@ -724,11 +748,11 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
                     <div className="flex items-center gap-1.5">
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-800 truncate">{item.name}</p>
+                        <p className="text-sm font-bold text-gray-200 truncate">{item.name}</p>
                         <p className="text-[10px] text-slate-400 font-mono">{item.reference}</p>
                       </div>
                     </div>
-                    <span className={`ml-2 px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${isLow ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`ml-2 px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${isLow ? 'bg-red-100 text-red-600' : 'bg-white/[0.06] text-gray-400'}`}>
                       {item.quantity} {item.unit}
                     </span>
                   </div>
@@ -772,59 +796,59 @@ function ItemDetailView({ item, onBack, feedback }: { item: StockItem; onBack: (
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-start gap-3 mb-4">
-        <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 mt-0.5"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] mt-0.5"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
         {item.imageUrl && (
-          <div className="w-20 h-20 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 shadow-sm">
+          <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 shadow-sm">
             <img src={apiPath(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" />
           </div>
         )}
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-800">{item.name}</h2>
-            <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{item.reference}</span>
+            <h2 className="text-lg font-bold text-gray-200">{item.name}</h2>
+            <span className="text-xs font-mono text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{item.reference}</span>
           </div>
           {!item.imageUrl && <p className="text-[10px] text-slate-400 mt-1">📷 Aucune photo</p>}
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-surface-50 rounded-xl border border-slate-200 p-4">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Quantité</p>
+        <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Quantité</p>
           <p className={`text-2xl font-bold mt-1 ${item.quantity <= item.alertThreshold ? 'text-red-500' : 'text-emerald-600'}`}>{item.quantity} {item.unit}</p>
         </div>
-        <div className="bg-surface-50 rounded-xl border border-slate-200 p-4">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Seuil d'alerte</p>
-          <p className="text-2xl font-bold mt-1 text-slate-800">{item.alertThreshold} {item.unit}</p>
+        <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Seuil d'alerte</p>
+          <p className="text-2xl font-bold mt-1 text-gray-200">{item.alertThreshold} {item.unit}</p>
         </div>
-        <div className="bg-surface-50 rounded-xl border border-slate-200 p-4">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Prix unitaire</p>
-          <p className="text-2xl font-bold mt-1 text-slate-800">{item.unitPrice?.toLocaleString() || '—'} DA</p>
+        <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Prix unitaire</p>
+          <p className="text-2xl font-bold mt-1 text-gray-200">{item.unitPrice?.toLocaleString() || '—'} DA</p>
         </div>
       </div>
 
-      <div className="bg-surface-50 rounded-xl border border-slate-200 p-4 mb-6">
+      <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 mb-6">
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-slate-400">Catégorie</span><p className="font-semibold text-slate-800">{item.category}</p></div>
-          <div><span className="text-slate-400">Emplacement</span><p className="font-semibold text-slate-800"><span className={`px-2 py-0.5 rounded text-xs font-bold ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span></p></div>
-          <div><span className="text-slate-400">Fournisseur</span><p className="font-semibold text-slate-800">{item.supplier?.name || '—'}</p></div>
-          {item.description && <div className="col-span-2"><span className="text-slate-400">Description</span><p className="font-semibold text-slate-800">{item.description}</p></div>}
+          <div><span className="text-gray-400">Catégorie</span><p className="font-semibold text-gray-200">{item.category}</p></div>
+          <div><span className="text-gray-400">Emplacement</span><p className="font-semibold text-gray-200"><span className={`px-2 py-0.5 rounded text-xs font-bold ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span></p></div>
+          <div><span className="text-gray-400">Fournisseur</span><p className="font-semibold text-gray-200">{item.supplier?.name || '—'}</p></div>
+          {item.description && <div className="col-span-2"><span className="text-gray-400">Description</span><p className="font-semibold text-gray-200">{item.description}</p></div>}
         </div>
       </div>
 
       {/* Movements history */}
-      <h3 className="text-sm font-bold text-slate-800 mb-3">📋 Historique des Mouvements</h3>
-      <div className="bg-surface-50 rounded-xl border border-slate-200 overflow-hidden">
+      <h3 className="text-sm font-bold text-gray-200 mb-3">📋 Historique des Mouvements</h3>
+      <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
         {loading ? <p className="text-sm text-slate-400 italic text-center py-6">Chargement...</p> : movements.length === 0 ? <p className="text-sm text-slate-400 italic text-center py-6">Aucun mouvement.</p> : (
           <table className="w-full text-xs">
-            <thead><tr className="bg-surface-50 border-b border-slate-200"><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Date</th><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Type</th><th className="text-right px-4 py-2.5 font-semibold text-slate-500">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-slate-500">Prix</th><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Doc.</th><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Notes</th></tr></thead>
+            <thead><tr className="bg-white/[0.04] border-b border-white/10"><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Date</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Type</th><th className="text-right px-4 py-2.5 font-semibold text-gray-400">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-gray-400">Prix</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Doc.</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Notes</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
               {movements.map(m => (
-                <tr key={m.id} className="hover:bg-surface-50">
+                <tr key={m.id} className="hover:bg-white/[0.04]">
                   <td className="px-4 py-2.5 text-slate-400">{formatDate(m.createdAt)}</td>
                   <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${m.type === 'ENTRY' ? 'bg-emerald-100 text-emerald-700' : m.type === 'EXIT' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{movementLabel(m.type)}</span></td>
                   <td className={`px-4 py-2.5 text-right font-bold ${m.type === 'ENTRY' ? 'text-emerald-600' : 'text-red-600'}`}>{m.type === 'ENTRY' ? '+' : '-'}{m.quantity}</td>
-                  <td className="px-4 py-2.5 text-right text-slate-600">{m.totalPrice?.toLocaleString() || '—'} DA</td>
-                  <td className="px-4 py-2.5 text-slate-500">{m.reference || m.order?.serialNumber || '—'}</td>
+                  <td className="px-4 py-2.5 text-right text-gray-400">{m.totalPrice?.toLocaleString() || '—'} DA</td>
+                  <td className="px-4 py-2.5 text-gray-400">{m.reference || m.order?.serialNumber || '—'}</td>
                   <td className="px-4 py-2.5">
                     {m.id ? <PdfLink mType={m.type} mId={m.id} /> : '—'}
                   </td>
@@ -888,40 +912,40 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
     return (
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => { setSelectedSupplier(null) }} className="p-2 rounded-lg hover:bg-slate-100"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-          <h2 className="text-lg font-bold text-slate-800">{selectedSupplier.name}</h2>
+          <button onClick={() => { setSelectedSupplier(null) }} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+          <h2 className="text-lg font-bold text-gray-200">{selectedSupplier.name}</h2>
           {isAdmin && <button onClick={() => editSupplier(selectedSupplier)} className="text-xs text-cyan-600 hover:text-cyan-800 font-semibold">✏️ Modifier</button>}
         </div>
 
         {/* Supplier info card */}
-        <div className="bg-surface-50 rounded-xl border border-slate-200 p-5 mb-6">
+        <div className="bg-white/[0.04] rounded-xl border border-white/10 p-5 mb-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
-            {selectedSupplier.contactName && <div><span className="text-xs text-slate-400">Contact</span><p className="font-semibold text-slate-800">{selectedSupplier.contactName}</p></div>}
-            {selectedSupplier.email && <div><span className="text-xs text-slate-400">Email</span><p className="font-semibold text-slate-800">{selectedSupplier.email}</p></div>}
-            {selectedSupplier.phone && <div><span className="text-xs text-slate-400">Téléphone</span><p className="font-semibold text-slate-800">{selectedSupplier.phone}</p></div>}
-            {selectedSupplier.address && <div><span className="text-xs text-slate-400">Adresse</span><p className="font-semibold text-slate-800">{selectedSupplier.address}</p></div>}
-            {selectedSupplier.notes && <div className="col-span-2"><span className="text-xs text-slate-400">Notes</span><p className="font-semibold text-slate-800">{selectedSupplier.notes}</p></div>}
+            {selectedSupplier.contactName && <div><span className="text-xs text-gray-400 font-semibold">Contact</span><p className="font-semibold text-gray-200">{selectedSupplier.contactName}</p></div>}
+            {selectedSupplier.email && <div><span className="text-xs text-gray-400 font-semibold">Email</span><p className="font-semibold text-gray-200">{selectedSupplier.email}</p></div>}
+            {selectedSupplier.phone && <div><span className="text-xs text-gray-400 font-semibold">Téléphone</span><p className="font-semibold text-gray-200">{selectedSupplier.phone}</p></div>}
+            {selectedSupplier.address && <div><span className="text-xs text-gray-400 font-semibold">Adresse</span><p className="font-semibold text-gray-200">{selectedSupplier.address}</p></div>}
+            {selectedSupplier.notes && <div className="col-span-2"><span className="text-xs text-gray-400 font-semibold">Notes</span><p className="font-semibold text-gray-200">{selectedSupplier.notes}</p></div>}
           </div>
         </div>
 
         {/* Products supplied */}
-        <h3 className="text-sm font-bold text-slate-800 mb-3">📦 Produits fournis ({supplierItems.length})</h3>
+        <h3 className="text-sm font-bold text-gray-200 mb-3">📦 Produits fournis ({supplierItems.length})</h3>
         {supplierItems.length === 0 ? (
-          <div className="bg-surface-50 rounded-xl border border-slate-200 p-6 text-center">
+          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-6 text-center">
             <p className="text-sm text-slate-400">Aucun article lié à ce fournisseur.</p>
             <p className="text-xs text-slate-400 mt-1">Associez des articles lors de leur création ou modification.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {supplierItems.map(item => (
-              <div key={item.id} className="bg-surface-50 rounded-xl border border-slate-200 p-4 flex items-center gap-3 hover:shadow-sm transition-all">
+              <div key={item.id} className="bg-white/[0.04] rounded-xl border border-white/10 p-4 flex items-center gap-3 hover:shadow-sm transition-all">
                 {item.imageUrl && (
-                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-100 flex-shrink-0">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
                     <img src={apiPath(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-800 truncate">{item.name}</p>
+                  <p className="text-sm font-bold text-gray-200 truncate">{item.name}</p>
                   <p className="text-[10px] text-slate-400 font-mono">{item.reference}</p>
                   <div className="flex items-center gap-2 mt-1 text-[10px]">
                     <span className={`px-1.5 py-0.5 rounded font-bold ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span>
@@ -930,7 +954,7 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xs font-bold text-slate-800">{item.unitPrice?.toLocaleString() || '—'} DA</p>
+                  <p className="text-xs font-bold text-gray-200">{item.unitPrice?.toLocaleString() || '—'} DA</p>
                 </div>
               </div>
             ))}
@@ -944,10 +968,10 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
   if (showForm) return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => { setShowForm(false); setEditingId(null) }} className="p-2 rounded-lg hover:bg-slate-100"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-slate-800">{editingId ? '✏️ Modifier' : '🏢 Nouveau'} Fournisseur</h2>
+        <button onClick={() => { setShowForm(false); setEditingId(null) }} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <h2 className="text-lg font-bold text-gray-200">{editingId ? '✏️ Modifier' : '🏢 Nouveau'} Fournisseur</h2>
       </div>
-      <form onSubmit={handleSubmit} className="bg-surface-50 rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <InputField label="Nom du fournisseur *" value={form.name} onChange={v => setForm({ ...form, name: v })} required />
         <div className="grid grid-cols-2 gap-4">
           <InputField label="Personne contact" value={form.contactName} onChange={v => setForm({ ...form, contactName: v })} />
@@ -957,10 +981,10 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
           <InputField label="Téléphone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} />
           <InputField label="Adresse" value={form.address} onChange={v => setForm({ ...form, address: v })} />
         </div>
-        <div><label className="text-xs font-semibold text-slate-600">Notes / Produits proposés</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Ex: Fournit des tôles inox, des vérins hydrauliques, et des composants électriques..." /></div>
+        <div><label className="text-xs font-semibold text-gray-400">Notes / Produits proposés</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Ex: Fournit des tôles inox, des vérins hydrauliques, et des composants électriques..." /></div>
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold disabled:opacity-60">{saving ? '⏳...' : '💾 Enregistrer'}</button>
-          <button type="button" onClick={() => { setShowForm(false); setEditingId(null) }} className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold">Annuler</button>
+          <button type="button" onClick={() => { setShowForm(false); setEditingId(null) }} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold">Annuler</button>
         </div>
       </form>
     </div>
@@ -971,8 +995,8 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-slate-800">🏢 Fournisseurs</h2>
-          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{suppliers.length} fournisseurs</span>
+          <h2 className="text-lg font-bold text-gray-200">🏢 Fournisseurs</h2>
+          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{suppliers.length} fournisseurs</span>
         </div>
         {isAdmin && <button onClick={() => setShowForm(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-xs font-bold transition-all shadow-sm">➕ Ajouter un fournisseur</button>}
       </div>
@@ -980,14 +1004,14 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-3">
         {suppliers.map(s => (
           <button key={s.id} onClick={() => setSelectedSupplier(s)}
-            className="text-left bg-surface-50 rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all cursor-pointer">
+            className="text-left bg-white/[0.04] rounded-xl border border-white/10 p-4 hover:shadow-md transition-all cursor-pointer">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-sm font-bold text-slate-800">{s.name}</p>
+                <p className="text-sm font-bold text-gray-200">{s.name}</p>
                 {s.contactName && <p className="text-[10px] text-slate-400">{s.contactName}</p>}
               </div>
               <div className="flex items-center gap-2">
-                {isAdmin && <button onClick={(e) => { e.stopPropagation(); editSupplier(s) }} className="text-slate-400 hover:text-slate-600 text-xs p-1">✏️</button>}
+                {isAdmin && <button onClick={(e) => { e.stopPropagation(); editSupplier(s) }} className="text-slate-400 hover:text-gray-400 text-xs p-1">✏️</button>}
                 <span className="text-slate-300">→</span>
               </div>
             </div>
@@ -997,8 +1021,8 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
               {s.address && <p>📍 {s.address}</p>}
               {s._count && (
                 <p className="mt-1.5 text-[10px] font-semibold">
-                  <span className="text-slate-500">📦 {s._count.items} article{s._count.items > 1 ? 's' : ''}</span>
-                  {s._count.movements > 0 && <span className="text-slate-500 ml-2">· 📋 {s._count.movements} mouvement{s._count.movements > 1 ? 's' : ''}</span>}
+                  <span className="text-gray-400">📦 {s._count.items} article{s._count.items > 1 ? 's' : ''}</span>
+                  {s._count.movements > 0 && <span className="text-gray-400 ml-2">· 📋 {s._count.movements} mouvement{s._count.movements > 1 ? 's' : ''}</span>}
                 </p>
               )}
             </div>
@@ -1049,10 +1073,10 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
   if (showForm) return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-slate-100"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-slate-800">📋 Nouveau Mouvement</h2>
+        <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <h2 className="text-lg font-bold text-gray-200">📋 Nouveau Mouvement</h2>
       </div>
-      <form onSubmit={handleSubmit} className="bg-surface-50 rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <SelectField label="Type *" value={form.type} onChange={v => setForm({ ...form, type: v })} options={[{ value: 'ENTRY', label: '📥 Entrée en stock' }, { value: 'EXIT', label: '📤 Sortie de stock' }, { value: 'ADJUSTMENT', label: '🔧 Ajustement' }]} />
           <InputField label="Quantité *" value={String(form.quantity)} onChange={v => setForm({ ...form, quantity: parseInt(v) || 0 })} type="number" />
@@ -1066,10 +1090,10 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
           <SelectField label="Fournisseur" value={form.supplierId} onChange={v => setForm({ ...form, supplierId: v })} options={[{ value: '', label: '—' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]} />
           <InputField label="Référence" value={form.reference} onChange={v => setForm({ ...form, reference: v })} placeholder="N° BL, N° Facture..." />
         </div>
-        <div><label className="text-xs font-semibold text-slate-600">Notes</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Motif, destination production..." /></div>
+        <div><label className="text-xs font-semibold text-gray-400">Notes</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Motif, destination production..." /></div>
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold disabled:opacity-60">{saving ? '⏳...' : '💾 Enregistrer le mouvement'}</button>
-          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold">Annuler</button>
+          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold">Annuler</button>
         </div>
       </form>
     </div>
@@ -1079,8 +1103,8 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-slate-800">📋 Mouvements de Stock</h2>
-          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{movements.length} mouvements</span>
+          <h2 className="text-lg font-bold text-gray-200">📋 Mouvements de Stock</h2>
+          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{movements.length} mouvements</span>
         </div>
         <button onClick={() => setShowForm(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-xs font-bold transition-all shadow-sm">➕ Nouveau mouvement</button>
       </div>
@@ -1088,23 +1112,23 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
         {['', 'ENTRY', 'EXIT', 'ADJUSTMENT'].map(t => (
           <button key={t}
             onClick={() => setFilterType(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === t ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === t ? 'bg-slate-800 text-white' : 'bg-white/[0.06] text-gray-400 hover:bg-white/[0.10]'}`}
           >{t ? movementLabel(t) : '📋 Tous'}</button>
         ))}
       </div>
-      <div className="bg-surface-50 rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
         {filtered.length === 0 ? <p className="text-sm text-slate-400 italic text-center py-6">Aucun mouvement.</p> : (
           <table className="w-full text-xs">
-            <thead><tr className="bg-surface-50 border-b border-slate-200"><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Date</th><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Article</th><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Type</th><th className="text-right px-4 py-2.5 font-semibold text-slate-500">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-slate-500">Total</th><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-slate-500">Par</th></tr></thead>
+            <thead><tr className="bg-white/[0.04] border-b border-white/10"><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Date</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Article</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Type</th><th className="text-right px-4 py-2.5 font-semibold text-gray-400">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-gray-400">Total</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Par</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map(m => (
-                <tr key={m.id} className="hover:bg-surface-50">
+                <tr key={m.id} className="hover:bg-white/[0.04]">
                   <td className="px-4 py-2.5 text-slate-400 whitespace-nowrap">{formatDate(m.createdAt)}</td>
-                  <td className="px-4 py-2.5 font-semibold text-slate-800">{m.item?.name || '—'}</td>
+                  <td className="px-4 py-2.5 font-semibold text-gray-200">{m.item?.name || '—'}</td>
                   <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${m.type === 'ENTRY' ? 'bg-emerald-100 text-emerald-700' : m.type === 'EXIT' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{movementLabel(m.type)}</span></td>
                   <td className={`px-4 py-2.5 text-right font-bold ${m.type === 'ENTRY' ? 'text-emerald-600' : 'text-red-600'}`}>{m.type === 'ENTRY' ? '+' : '-'}{m.quantity}</td>
-                  <td className="px-4 py-2.5 text-right text-slate-600">{m.totalPrice?.toLocaleString() || '—'} DA</td>
-                  <td className="px-4 py-2.5 text-slate-500">{m.reference || m.order?.serialNumber || '—'}</td>
+                  <td className="px-4 py-2.5 text-right text-gray-400">{m.totalPrice?.toLocaleString() || '—'} DA</td>
+                  <td className="px-4 py-2.5 text-gray-400">{m.reference || m.order?.serialNumber || '—'}</td>
                   <td className="px-4 py-2.5 text-slate-400">{m.performedBy || '—'}</td>
                 </tr>
               ))}
@@ -1153,16 +1177,16 @@ function DocumentsTab({ documents, showForm, setShowForm, suppliers, showView, s
   if (showForm) return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-slate-100"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-slate-800">📄 Nouveau Document</h2>
+        <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <h2 className="text-lg font-bold text-gray-200">📄 Nouveau Document</h2>
       </div>
-      <form onSubmit={handleSubmit} className="bg-surface-50 rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <SelectField label="Type *" value={form.documentType} onChange={v => { setForm({ ...form, documentType: v, documentNumber: generateDocNumber(v) }) }} options={[{ value: 'BON_COMMANDE', label: '📝 Bon de Commande' }, { value: 'BON_LIVRAISON', label: '📦 Bon de Livraison' }, { value: 'FACTURE', label: '🧾 Facture' }, { value: 'BON_SORTIE', label: '📤 Bon de Sortie' }]} />
           <InputField label="N° Document" value={form.documentNumber} onChange={v => setForm({ ...form, documentNumber: v })} required />
         </div>
         <InputField label="Titre *" value={form.title} onChange={v => setForm({ ...form, title: v })} placeholder="Ex: Achat tôle inox avril 2026" required />
-        <div><label className="text-xs font-semibold text-slate-600">Description</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-cyan-200" /></div>
+        <div><label className="text-xs font-semibold text-gray-400">Description</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" /></div>
         <SelectField label="Fournisseur" value={form.supplierId} onChange={v => setForm({ ...form, supplierId: v })} options={[{ value: '', label: '—' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]} />
         <div className="grid grid-cols-3 gap-4">
           <InputField label="Total HT (DA)" value={String(form.totalHT)} onChange={v => { const ht = parseFloat(v) || 0; setForm({ ...form, totalHT: ht, totalTTC: ht + form.totalTVA }) }} type="number" />
@@ -1171,7 +1195,7 @@ function DocumentsTab({ documents, showForm, setShowForm, suppliers, showView, s
         </div>
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold disabled:opacity-60">{saving ? '⏳...' : '💾 Créer le document'}</button>
-          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold">Annuler</button>
+          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold">Annuler</button>
         </div>
       </form>
     </div>
@@ -1181,25 +1205,25 @@ function DocumentsTab({ documents, showForm, setShowForm, suppliers, showView, s
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-slate-800">📄 Documents</h2>
-          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{documents.length} documents</span>
+          <h2 className="text-lg font-bold text-gray-200">📄 Documents</h2>
+          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{documents.length} documents</span>
         </div>
         <button onClick={() => setShowForm(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-xs font-bold transition-all shadow-sm">➕ Nouveau document</button>
       </div>
       <div className="mb-4 flex items-center gap-2 flex-wrap">
         {['', 'BON_COMMANDE', 'BON_LIVRAISON', 'FACTURE', 'BON_SORTIE', 'INVENTAIRE'].map(t => (
           <button key={t} onClick={() => setFilterType(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === t ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === t ? 'bg-slate-800 text-white' : 'bg-white/[0.06] text-gray-400 hover:bg-white/[0.10]'}`}
           >{t ? docTypeLabel(t) : '📄 Tous'}</button>
         ))}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filtered.map(doc => (
           <button key={doc.id} onClick={() => setShowView(doc)}
-            className="text-left bg-surface-50 rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
+            className="text-left bg-white/[0.04] rounded-xl border border-white/10 p-4 hover:shadow-md transition-all">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-xs font-bold text-slate-800">{doc.title}</p>
+                <p className="text-xs font-bold text-gray-200">{doc.title}</p>
                 <p className="text-[10px] font-mono text-slate-400">{doc.documentNumber}</p>
               </div>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${docStatusBadge(doc.status)}`}>{doc.status === 'VALIDE' ? '✅ Validé' : doc.status === 'EN_ATTENTE' ? '⏳ En attente' : doc.status === 'ANNULE' ? '❌ Annulé' : '📝 Brouillon'}</span>
@@ -1226,59 +1250,152 @@ function DocumentViewer({ doc, onBack }: { doc: StockDocument; onBack: () => voi
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-slate-800">{docTypeLabel(doc.documentType)}</h2>
-        <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{doc.documentNumber}</span>
+        <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+        <h2 className="text-lg font-bold text-gray-200">{docTypeLabel(doc.documentType)}</h2>
+        <span className="text-xs font-mono text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{doc.documentNumber}</span>
         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${docStatusBadge(doc.status)}`}>{doc.status}</span>
       </div>
 
-      <div className="bg-surface-50 rounded-2xl border border-slate-200 p-6 shadow-sm print:shadow-none" id="document-print">
+      <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm print:shadow-none" id="document-print">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
           <div>
-            <h1 className="text-xl font-bold text-slate-800"><span className="text-cyan-600">RM</span><span className="text-orange-600">ASC</span> FACTORY</h1>
+            <h1 className="text-xl font-bold text-gray-200"><span className="text-cyan-600">RM</span><span className="text-orange-600">ASC</span> FACTORY</h1>
             <p className="text-[10px] text-slate-400">Gestion des Stocks</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold text-slate-800">{docTypeLabel(doc.documentType)}</p>
+            <p className="text-sm font-bold text-gray-200">{docTypeLabel(doc.documentType)}</p>
             <p className="text-[10px] text-slate-400">N° {doc.documentNumber}</p>
             <p className="text-[10px] text-slate-400">{formatDate(doc.createdAt)}</p>
           </div>
         </div>
 
-        <h2 className="text-base font-bold text-slate-800 mb-4">{doc.title}</h2>
+        <h2 className="text-base font-bold text-gray-200 mb-4">{doc.title}</h2>
 
         <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
           <div>
-            <p className="text-[10px] font-semibold text-slate-400 uppercase">Fournisseur</p>
-            <p className="font-semibold text-slate-800">{doc.supplier?.name || '—'}</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase">Fournisseur</p>
+            <p className="font-semibold text-gray-200">{doc.supplier?.name || '—'}</p>
             {doc.supplier?.email && <p className="text-xs text-slate-400">{doc.supplier.email}</p>}
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase">Statut</p>
-            <p className="font-semibold text-slate-800">{doc.status === 'VALIDE' ? '✅ Validé' : doc.status === 'EN_ATTENTE' ? '⏳ En attente' : '📝 Brouillon'}</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase">Statut</p>
+            <p className="font-semibold text-gray-200">{doc.status === 'VALIDE' ? '✅ Validé' : doc.status === 'EN_ATTENTE' ? '⏳ En attente' : '📝 Brouillon'}</p>
           </div>
         </div>
 
-        {doc.description && <div className="mb-4 p-3 bg-surface-50 rounded-xl text-sm text-slate-600">{doc.description}</div>}
+        {doc.description && <div className="mb-4 p-3 bg-white/[0.04] rounded-xl text-sm text-gray-400">{doc.description}</div>}
 
         {/* Totaux */}
         {(doc.totalHT || doc.totalTTC) && (
-          <div className="border-t border-slate-200 pt-4 mt-4">
+          <div className="border-t border-white/10 pt-4 mt-4">
             <div className="ml-auto w-64 space-y-1">
-              <div className="flex justify-between text-sm"><span className="text-slate-500">Total HT</span><span className="font-semibold">{doc.totalHT?.toLocaleString() || '0'} DA</span></div>
-              <div className="flex justify-between text-sm"><span className="text-slate-500">TVA</span><span className="font-semibold">{doc.totalTVA?.toLocaleString() || '0'} DA</span></div>
-              <div className="flex justify-between text-base font-bold border-t border-slate-200 pt-1"><span>Total TTC</span><span className="text-cyan-600">{doc.totalTTC?.toLocaleString() || '0'} DA</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-400">Total HT</span><span className="font-semibold">{doc.totalHT?.toLocaleString() || '0'} DA</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-400">TVA</span><span className="font-semibold">{doc.totalTVA?.toLocaleString() || '0'} DA</span></div>
+              <div className="flex justify-between text-base font-bold border-t border-white/10 pt-1"><span>Total TTC</span><span className="text-cyan-600">{doc.totalTTC?.toLocaleString() || '0'} DA</span></div>
             </div>
           </div>
         )}
 
         {/* Print button */}
-        <div className="mt-6 pt-4 border-t border-slate-200 print:hidden">
+        <div className="mt-6 pt-4 border-t border-white/10 print:hidden">
           <button onClick={() => window.print()} className="px-4 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-700 transition-all">
             🖨️ Imprimer / PDF
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  ORDERS ARCHIVE TAB — Uses shared ArchiveOrders + server file API
+// ═════════════════════════════════════════════════════════════════════════════
+
+function OrdersArchiveTab() {
+  const [orders, setOrders] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [expandedFiles, setExpandedFiles] = useState<Record<string, any[]>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const data: any[] = await apiFetch('/orders')
+        if (!cancelled) setOrders(data)
+      } catch {}
+      if (!cancelled) setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Load server files for expanded orders
+  const toggleExpand = async (orderId: string) => {
+    if (expanded === orderId) { setExpanded(null); return }
+    setExpanded(orderId)
+    if (!expandedFiles[orderId]) {
+      try {
+        const data = await apiFetch(`/orders/${orderId}/files`)
+        setExpandedFiles(prev => ({ ...prev, [orderId]: data.files || [] }))
+      } catch { setExpandedFiles(prev => ({ ...prev, [orderId]: [] })) }
+    }
+  }
+
+  if (loading) return <div className="p-6 text-center text-sm text-gray-500">Chargement des commandes...</div>
+
+  return (
+    <div className="p-6">
+      <div className="mb-4">
+        <h2 className="text-lg font-extrabold text-gray-200">📋 Archive des commandes</h2>
+        <p className="text-xs text-gray-500 mt-0.5">Consultez les documents joints à chaque commande (stockés sur le serveur).</p>
+      </div>
+      <div className="space-y-3 max-w-4xl">
+        {orders.length === 0 ? (
+          <div className="text-center py-12 text-sm text-gray-500">Aucune commande trouvée.</div>
+        ) : orders.map(order => {
+          const isExpanded = expanded === order.id
+          const files = expandedFiles[order.id] || []
+          return (
+            <div key={order.id} className="bg-white/[0.04] rounded-xl border border-white/5 overflow-hidden">
+              <div onClick={() => toggleExpand(order.id)}
+                className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <div>
+                    <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
+                    <p className="text-xs text-gray-400">{order.clientName} — {order.clientCity}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-400">{order.status}</span>
+                  {files.length > 0 && <span className="text-xs text-gray-500">📎 {files.length}</span>}
+                  <svg className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                </div>
+              </div>
+              {isExpanded && (
+                <div className="px-5 pb-4 border-t border-white/5 pt-3">
+                  {files.length === 0 ? (
+                    <p className="text-xs text-gray-500 italic">Aucun fichier attaché à cette commande.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {files.map((f: any, i: number) => (
+                        <a key={i} href={`/api/orders/${order.id}/files/${f._id || f.id}`} download={f.originalname}
+                          className="flex items-center gap-2 text-xs text-gray-400 bg-white/[0.04] rounded-lg px-3 py-2 hover:bg-white/[0.06] transition-all cursor-pointer">
+                          <span>📄</span>
+                          <span className="font-medium truncate flex-1">{f.originalname}</span>
+                          <span className="text-gray-500">{f.uploadedBy}</span>
+                          {f.uploadedAt && <span className="text-gray-500">{new Date(f.uploadedAt).toLocaleDateString('fr-FR')}</span>}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -1291,9 +1408,9 @@ function DocumentViewer({ doc, onBack }: { doc: StockDocument; onBack: () => voi
 function InputField({ label, value, onChange, type = 'text', placeholder, required, readOnly }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; required?: boolean; readOnly?: boolean }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold text-slate-600">{label}</label>
+      <label className="text-xs font-semibold text-gray-400">{label}</label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} required={required} readOnly={readOnly}
-        className={`w-full h-9 px-3.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-200 transition-all ${readOnly ? 'bg-surface-50 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-200 bg-surface-50 text-slate-800'}`} />
+        className={`w-full h-9 px-3.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-200 transition-all ${readOnly ? 'bg-white/[0.04] border-white/10 text-gray-400 cursor-not-allowed' : 'border-white/10 bg-white/[0.04] text-gray-200'}`} />
     </div>
   )
 }
@@ -1305,9 +1422,9 @@ function SelectField({ label, value, onChange, options }: { label: string; value
   )
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold text-slate-600">{label}</label>
+      <label className="text-xs font-semibold text-gray-400">{label}</label>
       <select value={value} onChange={e => onChange(e.target.value)}
-        className="w-full h-9 px-3.5 rounded-xl border border-slate-200 bg-surface-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-200">
+        className="w-full h-9 px-3.5 rounded-xl border border-white/10 bg-white/[0.04] text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-200">
         {normalized.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>

@@ -38,33 +38,32 @@ export default {
           900: '#78350F',
           950: '#451A03',
         },
-        // ── Surface: Cool Monochrome Slate ─────────────────────────────────
-        // Architectural gray matrix for backgrounds, cards, and panels.
+        // ── Surface: Dark Glass ──────────────────────────────────────────────
         surface: {
-          50: '#F1F5F9',
-          100: '#E2E8F0',
-          200: '#CBD5E1',
-          300: '#94A3B8',
-          400: '#64748B',
+          50: '#1a1d29',
+          100: '#1e2230',
+          200: '#242838',
+          300: '#2a2f40',
+          400: '#363b4d',
           500: '#475569',
-          600: '#334155',
-          700: '#1E293B',
-          800: '#0F172A',
-          900: '#020617',
-          950: '#020617',
+          600: '#64748b',
+          700: '#94a3b8',
+          800: '#cbd5e1',
+          900: '#e2e8f0',
+          950: '#f1f5f9',
         },
         // ── Sidebar tokens ─────────────────────────────────────────────────
         sidebar: {
-          bg: '#FFF7ED',
-          hover: '#FFEDD5',
-          active: '#FFEDD5',
-          text: '#64748B',
-          'text-active': '#EA580C',
+          bg: 'rgba(255,255,255,0.03)',
+          hover: 'rgba(255,255,255,0.06)',
+          active: 'rgba(251,146,60,0.15)',
+          text: '#94a3b8',
+          'text-active': '#fb923c',
         },
         // ── Card tokens ────────────────────────────────────────────────────
         card: {
-          bg: '#F1F5F9',
-          border: '#CBD5E1',
+          bg: 'rgba(255,255,255,0.06)',
+          border: 'rgba(255,255,255,0.1)',
         },
         // ── Override default Tailwind gray with cool slate ─────────────────
         // This cascades to ALL `bg-gray-*`, `text-gray-*`, `border-gray-*`

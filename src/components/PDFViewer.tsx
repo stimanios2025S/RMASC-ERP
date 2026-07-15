@@ -1,0 +1,140 @@
+// ─── RMASC FACTORY — Professional PDF Viewer ────────────────────────────
+// Dedicated PDF viewer integrated into the platform for admin use.
+// Supports base64 data URLs and external URLs.
+
+import { useState, useRef, useEffect } from 'react'
+
+interface Props {
+  data: string          // base64 data URL or regular URL
+  fileName?: string
+  onClose?: () => void
+}
+
+export default function PDFViewer({ data, fileName, onClose }: Props) {
+  const [zoom, setZoom] = useState(1)
+  const [fullscreen, setFullscreen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handler = () => setFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  }, [])
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-64 bg-slate-800/60 rounded-xl border border-slate-700/50">
+        <p className="text-gray-400 text-sm">Aucun PDF à afficher.</p>
+      </div>
+    )
+  }
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen?.().catch(() => {})
+    } else {
+      document.exitFullscreen?.().catch(() => {})
+    }
+  }
+
+  const handleDownload = () => {
+    const a = document.createElement('a')
+    a.href = data
+    a.download = fileName || 'document.pdf'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
+  const isBase64PDF = data.startsWith('data:application/pdf')
+  const isValid = isBase64PDF || data.endsWith('.pdf') || data.includes('/pdf')
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative bg-[#0a0f1a] rounded-xl border border-slate-700 overflow-hidden select-none flex flex-col ${
+        fullscreen ? 'fixed inset-0 z-[100] rounded-none border-0' : ''
+      }`}
+      style={{ height: fullscreen ? '100vh' : '100%', minHeight: fullscreen ? undefined : 400 }}
+    >
+      {/* ─── Toolbar ─── */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-[#1a2332] to-[#111827] border-b border-slate-700 flex-shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-slate-700/50 flex items-center justify-center text-sm flex-shrink-0">📄</div>
+          <div className="min-w-0">
+            <p className="text-[12px] font-bold text-white truncate max-w-[200px]">{fileName || 'Document PDF'}</p>
+            <p className="text-[9px] text-slate-400">PDF • {isValid ? 'Prêt' : 'Format inconnu'}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {/* Zoom controls */}
+          <button onClick={() => setZoom(z => Math.min(z + 0.25, 3))}
+            className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom avant">+</button>
+          <button onClick={() => setZoom(z => Math.max(z - 0.25, 0.25))}
+            className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom arrière">−</button>
+          <span className="text-[10px] text-slate-400 font-mono min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
+
+          <div className="w-px h-6 bg-slate-600 mx-1" />
+
+          {/* Fullscreen */}
+          <button onClick={toggleFullscreen}
+            className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-xs flex items-center justify-center transition-colors" title="Plein écran">⛶</button>
+
+          {/* Download */}
+          <button onClick={handleDownload}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm">
+            ⬇️ Télécharger
+          </button>
+
+          {onClose && (
+            <>
+              <div className="w-px h-6 bg-slate-600 mx-1" />
+              <button onClick={onClose}
+                className="w-7 h-7 rounded-md bg-slate-700 hover:bg-red-600 text-white text-xs flex items-center justify-center transition-colors" title="Fermer">✕</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ─── PDF Content ─── */}
+      <div className="flex-1 overflow-auto flex items-start justify-center p-4 bg-[#0b1120] relative">
+        {isValid ? (
+          <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', transition: 'transform 0.15s ease-out' }}>
+            <embed
+              src={data}
+              type="application/pdf"
+              className="rounded-lg shadow-2xl"
+              style={{ width: fullscreen ? '85vw' : '100%', minWidth: zoom > 1 ? 800 : 600, height: fullscreen ? '85vh' : '70vh' }}
+              onError={() => setError('Impossible de charger le PDF.')}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-12 text-slate-400">
+            <span className="text-6xl mb-4">📄</span>
+            <p className="text-sm font-medium text-slate-300">{fileName || 'Document'}</p>
+            <p className="text-xs mt-1 mb-4">Ce fichier ne peut pas être affiché directement.</p>
+            <button onClick={handleDownload}
+              className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
+              ⬇️ Télécharger
+            </button>
+          </div>
+        )}
+        {error && (
+          <div className="absolute bottom-4 left-4 right-4 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-2 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* ─── Footer ─── */}
+      <div className="flex-shrink-0 px-4 py-2 bg-[#0d1520] border-t border-slate-700 flex items-center justify-between text-[10px]">
+        <span className="text-slate-500 font-medium">📄 {fileName || 'Document PDF'}</span>
+        <button onClick={handleDownload} className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+          ⬇️ Télécharger
+        </button>
+      </div>
+    </div>
+  )
+}

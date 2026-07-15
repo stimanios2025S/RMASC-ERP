@@ -25,12 +25,12 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
       status === 'LIVREE' || status === 'VALIDEE'
-        ? 'bg-emerald-100 text-emerald-700'
+        ? 'bg-emerald-500/15 text-emerald-400'
         : status === 'EN_LIVRAISON'
-          ? 'bg-cyan-100 text-cyan-700'
+          ? 'bg-cyan-500/15 text-cyan-400'
           : status === 'ANNULEE'
-            ? 'bg-red-100 text-red-700'
-            : 'bg-amber-100 text-amber-700'
+            ? 'bg-red-500/15 text-red-400'
+            : 'bg-amber-500/15 text-amber-400'
     }`}>
       {s?.label || status}
     </span>
@@ -61,29 +61,29 @@ export default function RoadmapPage({ orders, onBack }: Props) {
   const enAttente = orders.filter(o => ['BROUILLON', 'ATTENTE_APPROBATION_ADMIN'].includes(o.status)).length
 
   return (
-    <div className="flex-1 overflow-y-auto bg-surface-50">
+    <div className="flex-1 overflow-y-auto bg-white/[0.04]">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-20 bg-white/[0.04] border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
             <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
             </button>
           )}
-          <h1 className="text-lg font-extrabold text-slate-800">🚀 Roadmap Production</h1>
+          <h1 className="text-lg font-extrabold text-gray-200">🚀 Roadmap Production</h1>
           <span className="text-xs text-slate-400 font-mono">{orders.length} commandes</span>
         </div>
         <div className="relative">
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Rechercher par série ou client..."
-            className="w-60 px-3.5 py-2 rounded-xl bg-surface-50 border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-200" />
+            className="w-60 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-sm text-gray-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-200" />
         </div>
       </div>
 
       {/* KPI */}
       <div className="px-6 py-4 grid grid-cols-4 gap-4">
         {[
-          { label: 'Total', value: total, color: 'text-slate-800', bg: 'bg-surface-50 border border-slate-200' },
+          { label: 'Total', value: total, color: 'text-gray-200', bg: 'bg-white/[0.04] border border-white/10' },
           { label: 'En cours', value: enCours, color: 'text-cyan-700', bg: 'bg-cyan-50 border border-cyan-100' },
           { label: 'En attente', value: enAttente, color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-100' },
           { label: 'Terminées', value: termines, color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-100' },
@@ -98,14 +98,14 @@ export default function RoadmapPage({ orders, onBack }: Props) {
       {/* Filter pills */}
       <div className="px-6 pb-3 flex items-center gap-2 flex-wrap">
         <button onClick={() => setFilterStatus('all')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === 'all' ? 'bg-slate-800 text-white' : 'bg-surface-50 border border-slate-200 text-slate-500 hover:bg-surface-50'}`}>
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === 'all' ? 'bg-slate-800 text-white' : 'bg-white/[0.04] border border-white/10 text-slate-500 hover:bg-white/[0.04]'}`}>
           Tous
         </button>
         {uniqueStatuses.map(s => {
           const st = STATUS_STEPS.find(x => x.key === s)
           return (
             <button key={s} onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === s ? 'bg-slate-800 text-white' : 'bg-surface-50 border border-slate-200 text-slate-500 hover:bg-surface-50'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === s ? 'bg-slate-800 text-white' : 'bg-white/[0.04] border border-white/10 text-slate-500 hover:bg-white/[0.04]'}`}>
               {st?.icon} {st?.label || s}
             </button>
           )
@@ -124,11 +124,11 @@ export default function RoadmapPage({ orders, onBack }: Props) {
             const isExpanded = expanded === order.id
 
             return (
-              <div key={order.id} className="bg-surface-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all">
+              <div key={order.id} className="bg-white/[0.04] rounded-2xl border border-white/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
                 {/* Order header — clickable to expand */}
                 <div
                   onClick={() => setExpanded(isExpanded ? null : order.id)}
-                  className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-50 transition-all"
+                  className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.04] transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-3 h-3 rounded-full ${
@@ -137,13 +137,13 @@ export default function RoadmapPage({ orders, onBack }: Props) {
                       : 'bg-cyan-500'
                     }`} />
                     <div>
-                      <p className="text-sm font-bold text-slate-800 font-mono">{order.serialNumber}</p>
+                      <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
                       <p className="text-xs text-slate-500">{order.clientName} — {order.clientCity}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="text-xs font-semibold text-slate-600">{order.typeMotorisation}</p>
+                      <p className="text-xs font-semibold text-gray-400">{order.typeMotorisation}</p>
                       <p className="text-[10px] text-slate-400">Gaine: {order.largeurGaineMm}×{order.profondeurGaineMm} mm</p>
                     </div>
                     <StatusBadge status={order.status} />
@@ -166,7 +166,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
                           <div key={step.key} className="flex gap-3 pb-4 last:pb-0">
                             <div className="flex flex-col items-center">
                               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                                isPast ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'
+                                isPast ? 'bg-emerald-500 text-white' : 'bg-white/[0.08] text-gray-400'
                               }`}>
                                 {isPast ? '✓' : i + 1}
                               </div>
@@ -176,7 +176,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
                             </div>
                             <div className="flex-1 pb-1">
                               <div className="flex items-center justify-between">
-                                <p className={`text-sm font-bold ${isCurrent ? 'text-slate-800' : isPast ? 'text-slate-600' : 'text-slate-400'}`}>
+                                <p className={`text-sm font-bold ${isCurrent ? 'text-gray-200' : isPast ? 'text-gray-400' : 'text-slate-400'}`}>
                                   {step.icon} {step.label}
                                 </p>
                                 {isCurrent && step.hours > 0 && (
@@ -209,16 +209,16 @@ export default function RoadmapPage({ orders, onBack }: Props) {
                     <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-3 text-xs">
                       <div>
                         <p className="font-bold text-slate-500 uppercase tracking-wider text-[10px] mb-1">Matériaux</p>
-                        <p className="text-slate-700">Cabine: {order.materiauCabine || '—'}</p>
-                        <p className="text-slate-700">Portes: {order.materiauPortes || '—'}</p>
-                        <p className="text-slate-700">Parois: {order.materiauParois || '—'}</p>
-                        <p className="text-slate-700">Sol: {order.materiauSol || '—'}</p>
+                        <p className="text-gray-200">Cabine: {order.materiauCabine || '—'}</p>
+                        <p className="text-gray-200">Portes: {order.materiauPortes || '—'}</p>
+                        <p className="text-gray-200">Parois: {order.materiauParois || '—'}</p>
+                        <p className="text-gray-200">Sol: {order.materiauSol || '—'}</p>
                       </div>
                       <div>
                         <p className="font-bold text-slate-500 uppercase tracking-wider text-[10px] mb-1">Motorisation</p>
-                        <p className="text-slate-700">Type: {order.typeMotorisation}</p>
-                        <p className="text-slate-700">Dimensions: {order.largeurGaineMm}×{order.profondeurGaineMm}×{order.hauteurGaineMm} mm</p>
-                        <p className="text-slate-700">Soumissions CAD: {order._count?.cadSubmissions || 0}</p>
+                        <p className="text-gray-200">Type: {order.typeMotorisation}</p>
+                        <p className="text-gray-200">Dimensions: {order.largeurGaineMm}×{order.profondeurGaineMm}×{order.hauteurGaineMm} mm</p>
+                        <p className="text-gray-200">Soumissions CAD: {order._count?.cadSubmissions || 0}</p>
                       </div>
                     </div>
                   </div>

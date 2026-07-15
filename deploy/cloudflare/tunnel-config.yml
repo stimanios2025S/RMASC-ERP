@@ -1,0 +1,73 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+#  RMASC FACTORY — Cloudflare Tunnel Configuration
+#  Tunnel : rmasc-factory
+#  ID     : aef1e8a1-f335-4530-83bf-d4ba13c23785
+#  Serveur: 192.168.1.95 (rmasc-local)
+#
+#  Installation :
+#    1. Copier ce fichier sur le serveur
+#       sudo mkdir -p /etc/cloudflared
+#       sudo cp tunnel-config.yml /etc/cloudflared/config.yml
+#
+#    2. Authentifier le tunnel (une seule fois) :
+#       cloudflared tunnel login
+#
+#    3. Démarrer le tunnel :
+#       sudo cloudflared tunnel run rmasc-factory
+#
+#    Ou avec systemd :
+#       sudo cloudflared service install
+#       sudo systemctl start cloudflared
+#       sudo systemctl enable cloudflared
+# ═══════════════════════════════════════════════════════════════════════════════
+
+tunnel: aef1e8a1-f335-4530-83bf-d4ba13c23785
+credentials-file: /etc/cloudflared/aef1e8a1-f335-4530-83bf-d4ba13c23785.json
+
+# ═══ Options du tunnel ═══════════════════════════════════════════════════════
+originRequest:
+  # Timeout pour les connexions vers le serveur local
+  connectTimeout: 10s
+  # Timeout pour les requêtes TLS
+  tlsTimeout: 10s
+  # Temps maximum pour une requête
+  requestTimeout: 120s
+  # Keep-alive
+  noHappyEyeballs: false
+  # Taille max du corps de requête (10MB)
+  maxRequestBodySize: 10485760
+
+# ═══ Règles de routage ══════════════════════════════════════════════════════
+ingress:
+  # ── Application principale ───────────────────────────────────────────
+  - hostname: sarl-rmasc.com
+    service: http://localhost:80
+    originRequest:
+      originServerName: "localhost"
+
+  # ── www ──────────────────────────────────────────────────────────────
+  - hostname: www.sarl-rmasc.com
+    service: http://localhost:80
+    originRequest:
+      originServerName: "localhost"
+
+  # ── Factory (alias) ──────────────────────────────────────────────────
+  - hostname: factory.sarl-rmasc.com
+    service: http://localhost:80
+    originRequest:
+      originServerName: "localhost"
+
+  # ── ERP (nouveau domaine) ────────────────────────────────────────────
+  - hostname: erp.rmasc-dz.com
+    service: http://localhost:80
+    originRequest:
+      originServerName: "localhost"
+
+  # ── SSH Access (optionnel) ───────────────────────────────────────────
+  - hostname: ssh.sarl-rmasc.com
+    service: ssh://localhost:22
+    originRequest:
+      originServerName: "localhost"
+
+  # ── Fallback ─────────────────────────────────────────────────────────
+  - service: http_status:404

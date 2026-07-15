@@ -68,7 +68,7 @@ export async function connectDB() {
       maxPoolSize: 5,
       minPoolSize: 1,
       maxIdleTimeMS: 60000,
-      bufferCommands: false,
+      bufferCommands: true,
     })
   }
 

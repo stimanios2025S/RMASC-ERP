@@ -1,0 +1,465 @@
+// ─── RMASC ERP — Database Schema ───────────────────────────────────────────
+// PostgreSQL provider with strict relational integrity.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // Pooled — for runtime queries
+  directUrl = env("DIRECT_URL") // Direct — for Prisma Migrate / db push
+}
+
+// ─── Order / Commande d'ascenseur ──────────────────────────────────────────
+model Order {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Client info
+  clientName   String  @map("client_name")
+  clientEmail  String? @map("client_email")
+  clientPhone  String  @map("client_phone")
+  clientPhone2 String? @map("client_phone2")
+  clientCity   String  @map("client_city")
+
+  // ── Project & Admin
+  projectName String? @map("project_name")
+  priority    String  @default("NORMAL") @map("priority")
+  notes       String? @map("notes")
+
+  // ── Serials & status
+  serialNumber String      @unique @map("serial_number")
+  status       OrderStatus @default(BROUILLON)
+
+  // ── Motorisation
+  typeMotorisation   String  @map("type_motorisation") // ÉLECTRIQUE | HYDRAULIQUE
+  sousTypeElectrique String? @map("sous_type_electrique")
+  vitesseMs          String? @map("vitesse_ms")
+  nombreEtages       String? @map("nombre_etages")
+
+  // ── Dimensions (mm)
+  largeurGaineMm    String @map("largeur_gaine_mm")
+  profondeurGaineMm String @map("profondeur_gaine_mm")
+  hauteurGaineMm    String @map("hauteur_gaine_mm")
+
+  // ── Matériaux
+  materiauCabine String? @map("materiau_cabine")
+  materiauPortes String? @map("materiau_portes")
+  materiauParois String? @map("materiau_parois")
+  materiauSol    String? @map("materiau_sol")
+
+  // ── Mekisan Catalog — Type de Cabine
+  typeCabine              TypeCabine?          @map("type_cabine")
+  // ── Mekisan Catalog — Type de Porte
+  typePorte               TypePorte?           @map("type_porte")
+  // ── Mekisan Catalog — Finition Porte Cabine
+  finitionPorteCabine     FinitionPorteCabine? @map("finition_porte_cabine")
+  // ── Mekisan Catalog — Type Châssis / Arcade (Car Frame Layout)
+  typeChassisArcade       TypeChassisArcade?   @map("type_chassis_arcade")
+  // ── Mekisan Catalog — Finition Intérieur Cabine
+  finitionInterieurCabine String?              @map("finition_interieur_cabine")
+  // ── Mekisan Catalog — Revêtement de Sol
+  revetementSol           String?              @map("revetement_sol")
+
+  // ── Nouvelles dimensions cuvette & dernier étage
+  profondeurCuvetteMm   String? @map("profondeur_cuvette_mm")
+  hauteurDernierEtageMm String? @map("hauteur_dernier_etage_mm")
+
+  // ── Configuration contrepoids & dimensions calculées
+  contrepoidsPosition        String? @map("contrepoids_position")
+  positionContrepoids        String? @map("position_contrepoids")
+  largeurCabineCalculeeMm    String? @map("largeur_cabine_calculee_mm")
+  profondeurCabineCalculeeMm String? @map("profondeur_cabine_calculee_mm")
+
+  // ── Cycle de vie & traçabilité financière
+  lifecycleStage String?   @map("lifecycle_stage")
+  engineeredBy   String?   @map("engineered_by")
+  totalCostDZD   Float?    @map("total_cost_dzd")
+  salePriceDZD   Float?    @map("sale_price_dzd")
+  marginPct      Float?    @map("margin_pct")
+  completedAt    DateTime? @map("completed_at")
+
+  // ── Mécanique — Passage Libre & Hauteur Utile
+  largeurPassageLibreMm String? @map("largeur_passage_libre_mm")
+  hauteurUtileCabineMm  String? @map("hauteur_utile_cabine_mm")
+
+  // ── Mécanique — Suspension / Guidage
+  typeSuspensionGuidage TypeSuspension?   @map("type_suspension_guidage")
+  // ── Mécanique — Système de Surcharge
+  systemeSurcharge      SystemeSurcharge? @map("systeme_surcharge")
+
+  // ── Options (checkboxes)
+  optPanoramique     Boolean @default(false) @map("opt_panoramique")
+  optSecours         Boolean @default(false) @map("opt_secours")
+  optAnnoncesVocales Boolean @default(false) @map("opt_annonces_vocales")
+  optCctv            Boolean @default(false) @map("opt_cctv")
+  optPortesCoupeFeu  Boolean @default(false) @map("opt_portes_coupe_feu")
+  optPanneauTactile  Boolean @default(false) @map("opt_panneau_tactile")
+  optVentilation     Boolean @default(false) @map("opt_ventilation")
+  optBarreaudage     Boolean @default(false) @map("opt_barreaudage")
+  optAlarme          Boolean @default(false) @map("opt_alarme")
+
+  // ── Approval / Rejection tracking
+  approvedBy      String?   @map("approved_by")
+  approvedAt      DateTime? @map("approved_at")
+  rejectionReason String?   @map("rejection_reason")
+  rejectedBy      String?   @map("rejected_by")
+  rejectedAt      DateTime? @map("rejected_at")
+
+  // ── PDF Electronic Stamp tracking
+  isStamped   Boolean    @default(false) @map("is_stamped")
+  stampedAt   DateTime?  @map("stamped_at")
+  stampedBy   String?    @map("stamped_by")
+
+  // ── Production tracking
+  productionPhase ProductionPhase? @map("production_phase")
+
+  // ── Relations
+  cadSubmissions CAD_Submission[]
+  stockMovements StockMovement[]
+  stockDocuments StockDocument[]
+
+  @@map("orders")
+}
+
+// ─── Stock Management ──────────────────────────────────────────────────────
+model StockItem {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reference   String  @unique @map("reference")
+  name        String  @map("name")
+  description String? @map("description")
+  category    String  @map("category")
+  unit        String  @default("Unité") @map("unit")
+
+  quantity       Int     @default(0) @map("quantity")
+  alertThreshold Int     @default(5) @map("alert_threshold")
+  unitPrice      Float?  @map("unit_price")
+  imageUrl       String? @map("image_url")
+  location       String  @default("Stock 1") @map("location")
+
+  supplierId String?   @map("supplier_id")
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  movements        StockMovement[]
+  bonCommandeLines BonCommandeLine[]
+
+  @@index([category])
+  @@index([supplierId])
+  @@map("stock_items")
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String  @map("name")
+  contactName String? @map("contact_name")
+  email       String? @map("email")
+  phone       String? @map("phone")
+  address     String? @map("address")
+  notes       String? @map("notes")
+
+  items     StockItem[]
+  documents StockDocument[]
+  movements StockMovement[]
+
+  @@map("suppliers")
+}
+
+model StockMovement {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type       MovementType @map("type")
+  quantity   Int          @map("quantity")
+  unitPrice  Float?       @map("unit_price")
+  totalPrice Float?       @map("total_price")
+
+  itemId String    @map("item_id")
+  item   StockItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  orderId String? @map("order_id")
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  supplierId String?   @map("supplier_id")
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  documentId String?        @unique @map("document_id")
+  document   StockDocument? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  reference   String? @map("reference")
+  notes       String? @map("notes")
+  performedBy String? @map("performed_by")
+
+  @@index([itemId])
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("stock_movements")
+}
+
+model StockDocument {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  documentType   DocumentType @map("document_type")
+  documentNumber String       @unique @map("document_number")
+  title          String       @map("title")
+  description    String?      @map("description")
+
+  supplierId String?   @map("supplier_id")
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  orderId    String?   @map("order_id")
+  order      Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  totalHT  Float?         @map("total_ht")
+  totalTVA Float?         @map("total_tva")
+  totalTTC Float?         @map("total_ttc")
+  status   DocumentStatus @default(EN_ATTENTE) @map("status")
+
+  movement StockMovement?
+  lines    BonCommandeLine[]
+
+  @@index([documentType])
+  @@index([documentNumber])
+  @@map("stock_documents")
+}
+
+model BonCommandeLine {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  documentId String        @map("document_id")
+  document   StockDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  itemId String    @map("item_id")
+  item   StockItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  quantity   Int    @map("quantity")
+  unitPrice  Float? @map("unit_price")
+  totalPrice Float? @map("total_price")
+
+  @@index([documentId])
+  @@map("bon_commande_lines")
+}
+
+// ─── CAD Submissions (Bureau d'étude) ──────────────────────────────────────
+model CAD_Submission {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Link to order
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // ── Engineer track identification
+  engineeringType EngineeringType @map("engineering_type")
+  engineerName    String          @map("engineer_name")
+
+  // ── File metadata (secure pointer, NOT a public path)
+  fileHash      String @unique @map("file_hash")
+  fileMimeType  String @map("file_mime_type")
+  fileSizeBytes Int    @map("file_size_bytes")
+  storageKey    String @unique @map("storage_key")
+
+  // ── Status & admin review
+  status          CADStatus @default(EN_ATTENTE)
+  rejectionReason String?   @map("rejection_reason")
+  approvedAt      DateTime? @map("approved_at")
+  approvalToken   String?   @map("approval_token")
+  approvedBy      String?   @map("approved_by")
+
+  // ── Rejection history log
+  rejectionLog Json? @map("rejection_log")
+
+  // ── External sync
+  externalNotifiedAt DateTime? @map("external_notified_at")
+
+  @@unique([orderId, engineeringType])
+  @@index([engineeringType])
+  @@index([status])
+  @@map("cad_submissions")
+}
+
+// ─── Pièces Solo (Standalone Parts) ──────────────────────────────────────────
+model StandalonePart {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  partNumber  String   @unique @map("part_number")                            // Auto-generated: PART-XXX-MM-YY
+  projectName String   @map("project_name")
+  quantity    Int      @default(1) @map("quantity")
+  material    String?  @map("material")
+  thickness   String?  @map("thickness")
+  cadFileUrl  String?  @map("cad_file_url")                                   // Disk path to uploaded drawing
+
+  status      StandalonePartStatus @default(EN_ATTENTE)
+
+  // File metadata
+  fileOriginalName String? @map("file_original_name")
+  fileMimeType     String? @map("file_mime_type")
+  fileFilename     String? @map("file_filename")
+  filePath         String? @map("file_path")
+  fileSize         Int?    @map("file_size")
+
+  createdBy   String?  @map("created_by")
+
+  @@index([status])
+  @@map("standalone_parts")
+}
+
+// ─── Portal Users ─────────────────────────────────────────────────────────
+model PortalUser {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  loginId           String  @unique @map("login_id")
+  password          String  @map("password")
+  name              String  @map("name")
+  role              String  @map("role")
+  canChangePassword Boolean @default(false) @map("can_change_password")
+
+  @@map("portal_users")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ENUMS
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum OrderStatus {
+  BROUILLON
+  ATTENTE_DESSIN_TECH
+  ATTENTE_APPROBATION_ADMIN
+  ATTENTE_DESSIN_2D
+  ATTENTE_VERIFICATION
+  PRET_POUR_PRODUCTION
+  VALIDEE
+  ANNULEE
+
+  @@map("order_status")
+}
+
+enum EngineeringType {
+  DESSIN_TECH_1
+  DESSIN_TECH_2
+  MODEL_2D
+  MODEL_3D
+
+  @@map("engineering_type")
+}
+
+enum CADStatus {
+  EN_ATTENTE
+  APPROUVE
+  REJETE
+
+  @@map("cad_status")
+}
+
+// ─── Mekisan Catalog Enums ─────────────────────────────────────────────────
+
+enum TypeCabine {
+  PASSAGER
+  PANORAMIQUE
+  CHARGES_LOURDES
+  SERVICE_LIFT
+
+  @@map("type_cabine")
+}
+
+enum TypePorte {
+  AUTOMATIQUE_CENTRALE
+  AUTOMATIQUE_TELESCOPIQUE
+  BATTANTE_MANUELLE
+
+  @@map("type_porte")
+}
+
+enum FinitionPorteCabine {
+  INOX_BROSSE
+  INOX_MIROIR
+  INOX_TEXTURE
+  VITREE_PANORAMIQUE
+
+  @@map("finition_porte_cabine")
+}
+
+enum TypeChassisArcade {
+  TRACTION_ELECTRIQUE_2_1
+  TRACTION_ELECTRIQUE_1_1
+  HYDRAULIQUE_DIRECT
+  HYDRAULIQUE_INDIRECT_RUCKSACK
+
+  @@map("type_chassis_arcade")
+}
+
+enum TypeSuspension {
+  PATINS_COULISSANTS
+  GALETS_ROULANTS
+
+  @@map("type_suspension")
+}
+
+enum SystemeSurcharge {
+  CELLULES_SOUS_CABINE
+  CAPTEUR_SUR_CABLE
+
+  @@map("systeme_surcharge")
+}
+
+enum MovementType {
+  ENTRY
+  EXIT
+  ADJUSTMENT
+  TRANSFER
+
+  @@map("movement_type")
+}
+
+enum DocumentType {
+  BON_COMMANDE
+  BON_LIVRAISON
+  FACTURE
+  BON_SORTIE
+  INVENTAIRE
+
+  @@map("document_type")
+}
+
+enum DocumentStatus {
+  BROUILLON
+  EN_ATTENTE
+  VALIDE
+  ANNULE
+
+  @@map("document_status")
+}
+
+enum ProductionPhase {
+  decoupe
+  pliage
+  soudeur
+  peinture
+  assemblage
+  emballage
+  livraison
+
+  @@map("production_phase")
+}
+
+enum StandalonePartStatus {
+  EN_ATTENTE
+  EN_PRODUCTION
+  TERMINE
+
+  @@map("standalone_part_status")
+}

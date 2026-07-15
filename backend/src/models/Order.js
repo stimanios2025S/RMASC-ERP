@@ -64,6 +64,35 @@ const orderSchema = new mongoose.Schema({
   priority:           { type: String, default: 'NORMAL', enum: ['URGENT','HAUTE','NORMAL','BASSE'] },
   notes:              String,
   serialNumberLocked: { type: Boolean, default: false },
+  // ── Approval / Rejection tracking ─────────────────────────────────────
+  approvedBy:         String,   // Admin name who approved the tech draw
+  approvedAt:         Date,     // When the plan was approved
+  rejectionReason:    String,   // Why the plan was rejected (shown to engineers)
+  rejectedBy:         String,   // Who rejected
+  rejectedAt:         Date,     // When rejected
+
+  // ── PDF Electronic Stamp tracking ─────────────────────────────────────
+  isStamped:          { type: Boolean, default: false }, // All PDFs stamped with electronic seal
+  stampedAt:          Date,     // When the stamp was applied
+  stampedBy:          String,   // Who applied the electronic stamp
+  stampResults:       [mongoose.Schema.Types.Mixed], // Per-file stamp results [{fileId, filename, success, pagesStamped}]
+
+  // ── Production tracking (persisted to DB, syncs across all browsers) ───
+  productionPhase:    { type: String, default: 'decoupe', enum: ['decoupe','pliage','soudeur','peinture','assemblage','emballage','livraison'] },
+
+  // ── Server-disk file storage ──────────────────────────────────────────
+  files: [{
+    fieldname:   String,
+    originalname:String,
+    encoding:    String,
+    mimetype:    String,
+    destination: String,
+    filename:    String,
+    path:        String,
+    size:        Number,
+    uploadedBy:  String,
+    uploadedAt:  { type: Date, default: Date.now },
+  }],
 }, { timestamps: true })
 
 orderSchema.virtual('cadSubmissions', {

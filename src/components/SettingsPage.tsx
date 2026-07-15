@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { PortalSession, PortalUser } from '../data/portalUsers'
 import { getSession, changeAdminCredentials, changeUserPassword, updateUserDisplayName, fetchAllUsers } from '../data/portalUsers'
+import CatalogSettings from './CatalogSettings'
 
 interface Props {
   onBack?: () => void
@@ -119,26 +120,43 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
   }
 
   const sorted = ROLE_ORDER.map(role => users.find(u => u.role === role)).filter(Boolean) as PortalUser[]
+  const [settingsTab, setSettingsTab] = useState<'team' | 'catalog'>('team')
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gradient-to-br from-primary-50/60 via-surface-50 to-surface-50">
-      <div className="sticky top-0 z-10 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+    <div className="flex-1 overflow-y-auto">
+      <div className="sticky top-0 z-10 bg-white/[0.04] backdrop-blur-xl border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-lg font-extrabold text-slate-800">⚙️ Paramètres</h1>
+          <h1 className="text-lg font-extrabold text-gray-200">⚙️ Paramètres</h1>
         </div>
       </div>
 
-      <div className="p-6 max-w-3xl mx-auto space-y-6">
+      {/* ── Settings Tabs ── */}
+      <div className="bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 flex gap-0">
+        <button onClick={() => setSettingsTab('team')}
+          className={`px-5 py-3 text-base font-bold border-b-2 transition-all ${
+            settingsTab === 'team' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'
+          }`}>
+          👥 Équipe
+        </button>
+        <button onClick={() => setSettingsTab('catalog')}
+          className={`px-5 py-3 text-base font-bold border-b-2 transition-all ${
+            settingsTab === 'catalog' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'
+          }`}>
+          📋 Catalogue
+        </button>
+      </div>
+
+      <div className="p-6 max-w-4xl mx-auto space-y-6">
 
         {/* Feedback toast */}
         {feedback && (
           <div className={`rounded-2xl px-5 py-3.5 border flex items-center gap-3 text-sm font-medium ${
-            feedback.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'
+            feedback.ok ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'
           }`}>
             <span>{feedback.ok ? '✅' : '⚠️'}</span>
             <span>{feedback.msg}</span>
@@ -146,13 +164,17 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
           </div>
         )}
 
-        {/* ── Team Management ── */}
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+        {settingsTab === 'catalog' ? (
+          <CatalogSettings />
+        ) : (
+          <div>
+          {/* ── Team Management ── */}
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-slate-800">👥 Équipe — Gestion des noms</h2>
-            {!isAdmin && <span className="text-xs text-amber-600 font-medium">Lecture seule</span>}
+            <h2 className="text-base font-bold text-gray-200">👥 Équipe — Gestion des noms</h2>
+            {!isAdmin && <span className="text-xs text-amber-400 font-medium">Lecture seule</span>}
           </div>
-          <p className="text-[11px] text-slate-400 mb-4">
+          <p className="text-[11px] text-gray-400 mb-4">
             {isAdmin
               ? 'Cliquez sur ✏️ pour modifier le nom d\'un membre de l\'équipe.'
               : 'Seul l\'administrateur peut modifier les noms.'}
@@ -166,7 +188,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
 
               return (
                 <div key={u.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                  isEditing ? 'border-amber-300 bg-amber-50/50' : 'border-slate-100 bg-surface-50'
+                  isEditing ? 'border-amber-500/40 bg-amber-500/10' : 'border-white/5 bg-white/[0.04]'
                 }`}>
                   {/* Avatar */}
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 ${
@@ -189,7 +211,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
                           value={editName}
                           onChange={e => setEditName(e.target.value)}
                           autoFocus
-                          className="flex-1 h-9 px-3 rounded-lg border border-amber-300 bg-surface-50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                          className="flex-1 h-9 px-3 rounded-lg border border-amber-300 bg-white/[0.04] text-sm font-semibold text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-300"
                           onKeyDown={e => { if (e.key === 'Enter') saveName(u.id); if (e.key === 'Escape') cancelEdit() }}
                         />
                         <button onClick={() => saveName(u.id)} disabled={isSaving}
@@ -197,24 +219,24 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
                           {isSaving ? '⏳' : '💾'}
                         </button>
                         <button onClick={cancelEdit}
-                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 text-xs font-semibold hover:bg-slate-100">
+                          className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-semibold hover:bg-white/[0.06]">
                           ✕
                         </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-slate-800">{u.name}</p>
-                        {u.role === 'ADMIN' && <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Admin</span>}
-                        {isCurrentUser && !isEditing && <span className="text-[9px] text-slate-400">— Vous</span>}
+                        <p className="text-sm font-bold text-gray-200">{u.name}</p>
+                        {u.role === 'ADMIN' && <span className="text-[9px] font-bold text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded">Admin</span>}
+                        {isCurrentUser && !isEditing && <span className="text-[9px] text-gray-400">— Vous</span>}
                       </div>
                     )}
-                    <p className="text-[10px] text-slate-400">{ROLE_LABELS[u.role] || u.role}</p>
+                    <p className="text-[10px] text-gray-400">{ROLE_LABELS[u.role] || u.role}</p>
                   </div>
 
                   {/* Edit button */}
                   {isAdmin && !isEditing && (
                     <button onClick={() => startEdit(u)}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-xs font-semibold transition-all">
+                      className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-gray-400 hover:bg-white/[0.06] text-xs font-semibold transition-all">
                       ✏️
                     </button>
                   )}
@@ -226,9 +248,9 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
 
         {/* ── Admin Credentials ── */}
         {isAdmin && (
-          <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+          <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-800">🔐 Identifiants Administrateur</h2>
+              <h2 className="text-base font-bold text-gray-200">🔐 Identifiants Administrateur</h2>
               {!showAdminForm && (
                 <button onClick={() => setShowAdminForm(true)}
                   className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-sm">
@@ -241,31 +263,31 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
               <form onSubmit={handleAdminCredentialChange} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600">Identifiant</label>
+                    <label className="text-xs font-semibold text-gray-400">Identifiant</label>
                     <input type="text" value={newId} onChange={e => setNewId(e.target.value)}
                       placeholder={users.find(u => u.role === 'ADMIN')?.loginId || 'admin'}
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-surface-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                      className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.04] text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-200" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600">Mot de passe actuel *</label>
+                    <label className="text-xs font-semibold text-gray-400">Mot de passe actuel *</label>
                     <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
                       placeholder="Saisir le mot de passe actuel" required
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-surface-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                      className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.04] text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-200" />
                   </div>
                 </div>
-                <hr className="border-slate-100" />
+                <hr className="border-white/5" />
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600">Nouveau mot de passe *</label>
+                    <label className="text-xs font-semibold text-gray-400">Nouveau mot de passe *</label>
                     <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
                       placeholder="Min. 4 caractères" required
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-surface-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                      className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.04] text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-200" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600">Confirmer *</label>
+                    <label className="text-xs font-semibold text-gray-400">Confirmer *</label>
                     <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                       placeholder="Confirmer le mot de passe" required
-                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-surface-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-200" />
+                      className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.04] text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-200" />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pt-2">
@@ -274,7 +296,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
                     {adminSaving ? '⏳...' : '💾 Mettre à jour'}
                   </button>
                   <button type="button" onClick={() => setShowAdminForm(false)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-surface-50">
+                    className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.04]">
                     Annuler
                   </button>
                 </div>
@@ -282,8 +304,8 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
             )}
 
             {!showAdminForm && (
-              <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-                <p className="text-xs text-amber-700">
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3">
+                <p className="text-xs text-amber-400">
                   🔒 L'administrateur peut modifier son identifiant et mot de passe.
                   Les autres comptes ont des identifiants fixes (seuls les noms sont modifiables ci-dessus).
                 </p>
@@ -299,10 +321,10 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
 
         {/* ── Not-admin notice ── */}
         {!isAdmin && (
-          <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h2 className="text-base font-bold text-slate-800 mb-4">🔒 Vos informations</h2>
-            <div className="bg-surface-50 border border-slate-100 rounded-xl px-4 py-3">
-              <p className="text-xs text-slate-500">
+          <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+            <h2 className="text-base font-bold text-gray-200 mb-4">🔒 Vos informations</h2>
+            <div className="bg-white/[0.04] border border-white/5 rounded-xl px-4 py-3">
+              <p className="text-xs text-gray-400">
                 Votre nom et identifiant sont gérés par l'administrateur système.
                 Contactez l'administration pour toute modification.
               </p>
@@ -311,26 +333,28 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
         )}
 
         {/* ── Connexions système ── */}
-        <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <h2 className="text-base font-bold text-slate-800 mb-4">🔌 Connexions système</h2>
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+          <h2 className="text-base font-bold text-gray-200 mb-4">🔌 Connexions système</h2>
           <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-100">
+            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
               <div>
-                <p className="text-sm font-semibold text-slate-700">Base de données Neon PostgreSQL</p>
-                <p className="text-xs text-slate-400">Cloud — Production</p>
+                <p className="text-sm font-semibold text-gray-200">Base de données MongoDB</p>
+                <p className="text-xs text-gray-400">Production</p>
               </div>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-surface-50 border border-slate-100">
+            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-white/[0.04] border border-white/5">
               <div>
-                <p className="text-sm font-semibold text-slate-700">Bureau d'étude #1 (192.168.0.189:30000)</p>
-                <p className="text-xs text-slate-400">Synchronisation directe — Réseau local</p>
+                <p className="text-sm font-semibold text-gray-200">Cloudflare Tunnel — sarl-rmasc.com</p>
+                <p className="text-xs text-gray-400">Connexion sécurisée — Production</p>
               </div>
-              <span className="text-xs text-slate-400">⚠️ Hors ligne</span>
+              <span className="text-xs text-gray-400">⚠️ Hors ligne</span>
             </div>
           </div>
         </div>
 
+        </div>
+        )}
       </div>
     </div>
   )
@@ -346,11 +370,11 @@ function UserPasswordManager({ users, roleLabels, showFeedback }: {
   showFeedback: (ok: boolean, msg: string) => void
 }) {
   return (
-    <div className="bg-surface-50 rounded-2xl border border-slate-200 p-5 shadow-sm">
+    <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-bold text-slate-800">🔑 Gestion des mots de passe</h2>
+        <h2 className="text-base font-bold text-gray-200">🔑 Gestion des mots de passe</h2>
       </div>
-      <p className="text-[11px] text-slate-400 mb-4">Définissez un nouveau mot de passe pour chaque utilisateur.</p>
+      <p className="text-[11px] text-gray-400 mb-4">Définissez un nouveau mot de passe pour chaque utilisateur.</p>
       <div className="space-y-2">
         {users.map(u => (
           <PasswordRow key={u.id} user={u} roleLabels={roleLabels} showFeedback={showFeedback} />
@@ -387,25 +411,25 @@ function PasswordRow({ user, roleLabels, showFeedback }: {
   }
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-surface-50">
+    <div className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/[0.04]">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${roleColor}`}>
         {initials}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-slate-800">{user.name}</p>
-        <p className="text-[10px] text-slate-400">{user.loginId} — {roleLabels[user.role] || user.role}</p>
+        <p className="text-sm font-bold text-gray-200">{user.name}</p>
+        <p className="text-[10px] text-gray-400">{user.loginId} — {roleLabels[user.role] || user.role}</p>
       </div>
       {showPw ? (
         <div className="flex items-center gap-2">
-          <input type="text" value={pw} onChange={e => setPw(e.target.value)} placeholder="Nouveau mot de passe" className="w-40 h-9 px-3 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-amber-200" />
+          <input type="text" value={pw} onChange={e => setPw(e.target.value)} placeholder="Nouveau mot de passe" className="w-40 h-9 px-3 rounded-lg border border-white/10 text-xs focus:ring-2 focus:ring-amber-200" />
           <button onClick={handleSave} disabled={savingPw}
             className="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 disabled:opacity-60">{savingPw ? '⏳' : '💾'}</button>
           <button onClick={() => { setShowPw(false); setPw('') }}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 text-xs font-semibold">✕</button>
+            className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-semibold">✕</button>
         </div>
       ) : (
         <button onClick={() => setShowPw(true)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 text-xs font-semibold transition-all">🔑 Changer mot de passe</button>
+          className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-gray-400 text-xs font-semibold transition-all">🔑 Changer mot de passe</button>
       )}
     </div>
   )

@@ -1,40 +1,16 @@
-// ─── RMASC FACTORY — API Configuration ─────────────────────────────────
-// In production (Vercel): the API is served from the same origin at /api.
-// In development (localhost): the Vite proxy forwards /api to the backend.
-// NEVER use an absolute URL with an IP address — it won't work on Vercel.
+// ─── RMASC FACTORY — API Configuration (Production) ────────────────────
+// All API calls use relative paths (/api/...) — the Cloudflare Tunnel
+// routes requests seamlessly whether users are inside or outside the factory.
+// CORS is locked to: https://sarl-rmasc.com + localhost dev ports.
 
-let baseUrl = ''
-
-export function getApiUrl(): string {
-  if (baseUrl) return baseUrl
-
-  // On Vercel or any production domain: same-origin API
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('192.')) {
-    baseUrl = '/api'
-    return '/api'
-  }
-
-  // For dev with explicit env var (VITE_API_URL set in .env)
-  if (typeof import.meta !== 'undefined') {
-    const envUrl = (import.meta as any).env?.VITE_API_URL
-    if (envUrl && envUrl !== 'same-origin') {
-      baseUrl = envUrl
-      return baseUrl
-    }
-  }
-
-  // Default: Vite proxy on localhost
-  baseUrl = '/api'
-  return '/api'
-}
+const API_PREFIX = '/api'
 
 export function resolveUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path
-  const api = getApiUrl()
-  if (api && path.startsWith(api)) return path
-  if (!api) return path.startsWith('/') ? path : `/${path}`
-  return `${api}${path.startsWith('/') ? path : `/${path}`}`
+  if (path.startsWith(API_PREFIX)) return path
+  return `${API_PREFIX}${path.startsWith('/') ? path : `/${path}`}`
 }
+
 export const apiPath = resolveUrl
 
 export async function apiFetch<T = any>(path: string, options: RequestInit = {}, retries = 2): Promise<T> {
@@ -59,8 +35,15 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {},
       })
       clearTimeout(timeout)
 
-      if (res.status === 401 && attempt < retries) {
-        continue
+      // ── 401 → Token expired or invalid → Redirect to login ──
+      if (res.status === 401) {
+        localStorage.removeItem('rmasc_token')
+        localStorage.removeItem('rmasc_portal_session')
+        // Redirect to login (only on 401, not retryable)
+        if (typeof window !== 'undefined') {
+          window.location.reload()
+        }
+        throw new Error('Session expirée. Veuillez vous reconnecter.')
       }
 
       if (!res.ok) {
@@ -73,6 +56,7 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {},
       if (err.name === 'AbortError') {
         throw new Error('La requête a expiré. Vérifiez votre connexion au serveur.')
       }
+      if (err.message?.includes('Session expirée')) throw err
       if (attempt >= retries) throw err
       await new Promise(r => setTimeout(r, 1000))
     }

@@ -52,16 +52,16 @@ export default function InstallPWA({ variant = 'default' }: { variant?: 'default
       <div className="px-4 mb-4">
         <button
           onClick={handleInstall}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all group"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-amber-500/15 to-orange-600/10 hover:from-amber-500/25 hover:to-orange-600/20 border border-amber-500/20 transition-all group"
         >
-          <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="w-[18px] h-[18px] text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           <div className="text-left">
-            <p className="text-xs font-bold">Installer l'application</p>
-            <p className="text-[9px] text-amber-500">Ajouter au bureau</p>
+            <p className="text-xs font-bold text-amber-400">Installer l&apos;application</p>
+            <p className="text-[9px] text-amber-500/70">Ajouter au bureau</p>
           </div>
         </button>
       </div>
@@ -71,14 +71,13 @@ export default function InstallPWA({ variant = 'default' }: { variant?: 'default
   // ── Compact variant (inline bar for engineer portals) ──
   if (variant === 'compact') {
     return (
-      <div className="flex-shrink-0 px-6 py-2 bg-amber-50 border-b border-amber-200">
+      <div className="flex-shrink-0 px-6 py-2 bg-amber-500/10 border-b border-amber-500/20">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-amber-700">
-            <span>📲</span>
+          <div className="flex items-center gap-2 text-xs text-amber-300">
             <span>Installer RMASC FACTORY sur votre appareil</span>
           </div>
           <button onClick={handleInstall}
-            className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-sm">
+            className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold transition-all shadow-sm">
             Installer
           </button>
         </div>

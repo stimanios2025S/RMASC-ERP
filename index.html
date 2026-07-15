@@ -2,26 +2,43 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' ws: http://localhost:* https:; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';" />
-    <title>RMASC FACTORY — Progiciel de Gestion Intégré</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
 
-    <!-- PWA / Desktop Install Support -->
+    <!-- ─── SEO / Domain ──────────────────────────────────────────────── -->
+    <title>RMASC FACTORY — ERP Ascenseur | Progiciel de Gestion Intégré</title>
+    <meta name="description" content="Système de gestion intégré pour la fabrication d'ascenseurs. Bureau d'Études, Production, Stocks & Logistique — RMASC FACTORY ERP." />
+    <meta name="keywords" content="ascenseur, ERP, gestion, production, bureau d'études, algérie, rmasc, ascenseur industriel" />
+    <meta name="author" content="RMASC FACTORY" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://erp.rmasc-dz.com/" />
+
+    <!-- ─── Open Graph / Social ────────────────────────────────────────── -->
+    <meta property="og:title" content="RMASC FACTORY — ERP Ascenseur" />
+    <meta property="og:description" content="Système de gestion intégré pour la fabrication d'ascenseurs. Bureau d'Études intégré, Production, Stocks & Logistique." />
+    <meta property="og:url" content="https://erp.rmasc-dz.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RMASC FACTORY" />
+    <meta property="og:locale" content="fr_DZ" />
+
+    <!-- ─── Security ───────────────────────────────────────────────────── -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' ws: http://localhost:* https:; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self';" />
+
+    <!-- ─── PWA / Desktop Install ──────────────────────────────────────── -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#f97316" />
+    <meta name="theme-color" content="#0f172a" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="RMASC ERP" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/images/icon-192.svg" />
-    <link rel="icon" type="image/svg+xml" href="/images/icon-192.svg" />
+    <link rel="apple-touch-icon" href="/images/icon-192.png" />
+    <link rel="icon" type="image/png" href="/images/icon-192.png" />
 
-    <!-- Fonts -->
+    <!-- ─── Fonts ──────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <!-- Service Worker Registration -->
+    <!-- ─── Service Worker ─────────────────────────────────────────────── -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

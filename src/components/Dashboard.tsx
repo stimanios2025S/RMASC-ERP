@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import AddElevator from './AddElevator'
 import BureauEtudeWorkspace from './BureauEtudeWorkspace'
 import BureauEtudeVault from './BureauEtudeVault'
@@ -11,7 +11,14 @@ import RoadmapPage from './RoadmapPage'
 import LifecyclePipeline from './LifecyclePipeline'
 import HelpPage from './HelpPage'
 import InstallPWA from './InstallPWA'
+import AgentPanel from './agent/AgentPanel'
+import SmartSearch from './smart/SmartSearch'
+import SmartTips from './smart/SmartTips'
+import SmartNotificationCenter from './smart/SmartNotificationCenter'
+import ArchiveOrders from './ArchiveOrders'
+import PiecesSoloWorkspace from './PiecesSoloWorkspace'
 import { apiFetch } from '../config/api'
+import { triggerAlert, requestNotificationPermission } from '../config/notifications'
 import type { PortalSession } from '../data/portalUsers'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -52,6 +59,7 @@ const menuItems = [
   { icon: 'FolderOpen', label: 'Bureau d\'Étude — File Vault', view: 'vault' as const, badge: null },
   { icon: 'Clock', label: 'Roadmap Production', view: 'roadmap' as const, badge: null },
   { icon: 'HelpCircle', label: 'Aide & Catalogue', view: 'help' as const, badge: null },
+  { icon: 'Package', label: 'Archives', view: 'archives' as const, badge: null },
   { icon: 'Settings', label: 'Paramètres', view: 'settings' as const, badge: null },
 ]
 
@@ -165,20 +173,23 @@ function Icon({ name, className = 'w-5 h-5' }: { name: string; className?: strin
     case 'Warehouse': return (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"/><path d="M6 18h12"/><path d="M6 14h12"/><rect width="12" height="6" x="6" y="10"/></svg>
     )
+    case 'Wrench': return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    )
     default: return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/></svg>
   }
 }
 
 // ─── Sub-Components ─────────────────────────────────────────────────────────
 
-type ViewType = 'dashboard' | 'add-elevator' | 'be-inspect' | 'fiche' | 'commandes' | 'validations' | 'settings' | 'roadmap' | 'help' | 'invoicing' | 'lifecycle' | 'vault'
-function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => void; onLogout?: () => void }) {
+type ViewType = 'dashboard' | 'add-elevator' | 'be-inspect' | 'fiche' | 'commandes' | 'validations' | 'settings' | 'roadmap' | 'help' | 'invoicing' | 'lifecycle' | 'vault' | 'archives' | 'pieces-solo'
+function Sidebar({ onNavigate, onLogout, userRole }: { onNavigate?: (view: ViewType) => void; onLogout?: () => void; userRole?: string }) {
   const [activeView, setActiveView] = useState(() => {
     try { return localStorage.getItem('rmasc_active_tab') || 'dashboard' } catch { return 'dashboard' }
   })
 
   return (
-    <aside className="w-64 h-screen bg-sidebar-bg border-r border-gray-100 flex flex-col flex-shrink-0">
+    <aside className="hidden md:flex md:w-64 h-screen bg-white/[0.03] backdrop-blur-xl border-r border-white/5 flex-col flex-shrink-0">
       {/* Logo RMASC */}
       <div className="px-5 pt-6 pb-4">
         <div className="flex justify-center">
@@ -190,7 +201,8 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
 
       {/* MENU Section */}
       <div className="px-4 mb-4">
-        <p className="text-[11px] font-semibold tracking-widest text-gray-400 uppercase px-2 mb-2">Menu</p>
+        <p className="text-[11px] font-semibold tracking-widest text-gray-300 uppercase px-2 mb-2">Menu</p>
+        <div className="h-px bg-white/5 mb-3 mx-2" />
         <nav className="space-y-0.5">
           {menuItems.map((item) => (
             <button
@@ -203,7 +215,7 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
                 <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className="bg-accent-100 text-accent-600 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                <span className="bg-accent-200 text-accent-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
                   {item.badge}
                 </span>
               )}
@@ -214,7 +226,7 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
 
       {/* INSPECTION Section — Quick Switch */}
       <div className="px-4 mb-4">
-        <p className="text-[11px] font-semibold tracking-widest text-gray-400 uppercase px-2 mb-2">Raccourcis</p>
+        <p className="text-[11px] font-semibold tracking-widest text-gray-300 uppercase px-2 mb-2">Raccourcis</p>
         <nav className="space-y-0.5">
           <button
             onClick={() => { if (onNavigate) onNavigate('add-elevator') }}
@@ -225,12 +237,25 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
               <span>Nouvel ascenseur</span>
             </div>
           </button>
+          {/* 🔒 Pièces Solo — visible ONLY for INGENIEUR_2 and PRODUCTION */}
+          {(userRole === 'INGENIEUR_2' || userRole === 'PRODUCTION') && (
+            <button
+              onClick={() => { if (onNavigate) onNavigate('pieces-solo') }}
+              className={`sidebar-item w-full text-left group ${activeView === 'pieces-solo' ? 'active' : ''}`}
+            >
+              <div className="flex items-center gap-3">
+                <Icon name="Wrench" className="w-[18px] h-[18px]" />
+                <span>Pièces Solo</span>
+              </div>
+              <span className="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full">ATELIER</span>
+            </button>
+          )}
         </nav>
       </div>
 
       {/* GÉNÉRAL Section */}
       <div className="px-4 mb-4">
-        <p className="text-[11px] font-semibold tracking-widest text-gray-400 uppercase px-2 mb-2">Général</p>
+        <p className="text-[11px] font-semibold tracking-widest text-gray-300 uppercase px-2 mb-2">Général</p>
         <nav className="space-y-0.5">
           {generalItems.map((item) => (
             <button
@@ -256,68 +281,147 @@ function Sidebar({ onNavigate, onLogout }: { onNavigate?: (view: ViewType) => vo
   )
 }
 
-function Header({ notifCount, onNotifClick, orders, user }: { notifCount: number; onNotifClick?: () => void; orders: OrderSummary[]; user: { name: string; email: string; initials: string; role: string } }) {
+// ─── Mobile Bottom Navigation ──────────────────────────────────────────────
+const MOBILE_NAV_ITEMS = [
+  { icon: 'LayoutDashboard', label: 'Accueil', view: 'dashboard' as const },
+  { icon: 'CheckSquare', label: 'Commandes', view: 'commandes' as const },
+  { icon: 'Plus', label: 'Ajouter', view: 'add-elevator' as const },
+  { icon: 'FolderOpen', label: 'Vault', view: 'vault' as const },
+  { icon: 'Settings', label: 'Plus', view: 'settings' as const },
+]
+
+function MobileNav({ activeView, onNavigate, onLogout }: { activeView: string; onNavigate: (view: ViewType) => void; onLogout: () => void }) {
+  const [showMenu, setShowMenu] = useState(false)
+
+  return (
+    <>
+      {/* Bottom Nav Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-white/5 safe-area-bottom">
+        <div className="flex items-center justify-around h-16 px-2">
+          {MOBILE_NAV_ITEMS.map(item => (
+            <button
+              key={item.view}
+              onClick={() => {
+                if (item.view === 'settings') {
+                  setShowMenu(p => !p)
+                } else {
+                  onNavigate(item.view)
+                }
+              }}
+              className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl transition-all ${
+                activeView === item.view || (item.view === 'settings' && showMenu)
+                  ? 'text-amber-400'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <Icon name={item.icon} className={`w-5 h-5 ${activeView === item.view ? 'text-amber-400' : ''}`} />
+              <span className="text-[9px] font-semibold">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {/* Expanded Menu Overlay (for "Plus" / Settings) */}
+      {showMenu && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setShowMenu(false)}>
+          <div className="absolute bottom-20 left-4 right-4 bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 p-4 animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="space-y-1">
+              {menuItems.filter(m => !['dashboard', 'commandes', 'add-elevator', 'vault'].includes(m.view)).map(item => (
+                <button
+                  key={item.view}
+                  onClick={() => { onNavigate(item.view); setShowMenu(false) }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-amber-500/10 text-gray-300 hover:text-amber-400 transition-all text-sm font-medium"
+                >
+                  <Icon name={item.icon} className="w-5 h-5 text-gray-500" />
+                  <span>{item.label}</span>
+                  {item.badge && <span className="ml-auto bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.badge}</span>}
+                </button>
+              ))}
+              <div className="border-t border-white/5 mt-2 pt-2">
+                <button onClick={() => { onLogout(); setShowMenu(false) }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all text-sm font-medium">
+                  <Icon name="LogOut" className="w-5 h-5" />
+                  <span>Déconnexion</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentActive, onSmartSearch }: { notifCount: number; onNotifClick?: () => void; orders: OrderSummary[]; user: { name: string; email: string; initials: string; role: string }; onAgentToggle?: () => void; agentActive?: boolean; onSmartSearch?: () => void }) {
   const [showProfile, setShowProfile] = useState(false)
 
   return (
-    <header className="h-16 bg-gradient-to-r from-primary-50 to-surface-50 border-b border-surface-100 flex items-center justify-between px-6">
-      <div className="w-4" />
-      <div className="flex-1 max-w-md mx-auto">
-        <div className="relative">
-          <Icon name="Search" className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher une tâche..."
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-12 text-sm text-gray-600 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-100 focus:border-accent-300 transition-all"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] text-gray-400 bg-gray-100 rounded-md px-1.5 py-0.5 font-medium">
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4l16 16M20 4L4 20"/></svg>
-            <span>⌘F</span>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-4">
+    <header className="h-14 md:h-16 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-3 md:px-6">
+      <div className="w-1 md:w-4" />
+      <div className="hidden md:block flex-1 max-w-md mx-auto">
         <button
-          onClick={onNotifClick}
-          className="w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-all relative"
+          onClick={onSmartSearch}
+          className="w-full flex items-center gap-3 bg-white/[0.06] border border-white/10 rounded-xl py-2 px-4 text-sm text-gray-400 hover:text-gray-200 hover:border-white/20 hover:bg-white/[0.08] transition-all group text-left"
         >
-          <svg className={`w-[20px] h-[20px] ${notifCount > 0 ? 'text-amber-500' : 'text-gray-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          {notifCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5.5 h-5.5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg ring-2 ring-white">
-              {notifCount > 9 ? '9+' : notifCount}
-            </span>
-          )}
+          <span className="flex-1">Recherche intelligente...</span>
+          <div className="flex items-center gap-1 text-[10px] text-gray-500 bg-white/[0.08] rounded-md px-1.5 py-0.5 font-medium group-hover:bg-white/[0.12] transition-all">
+            <span>⌘K</span>
+          </div>
         </button>
-        <div className="w-px h-7 bg-gray-200" />
+      </div>
+      {/* Mobile search icon */}
+      <button onClick={onSmartSearch} className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-200 hover:bg-white/[0.06] transition-all">
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+      <div className="flex items-center gap-1.5 md:gap-4">
+        {/* Agent IA Button */}
+        <button
+          onClick={onAgentToggle}
+          className={`w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center transition-all shadow-sm relative ${
+            agentActive
+              ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-amber-500/25'
+              : 'bg-white/[0.06] hover:bg-white/[0.1] text-gray-400'
+          }`}
+          title="Assistant IA Salim"
+        >
+          <span className="text-base md:text-lg">🤖</span>
+        </button>
+
+        <SmartNotificationCenter onNavigate={(view) => onNotifClick?.()} orders={orders} />
+        <div className="w-px h-5 md:h-7 bg-white/[0.08]" />
         <div className="relative">
           <div
             onClick={() => setShowProfile(p => !p)}
-            className="flex items-center gap-3 cursor-pointer hover:bg-surface-100 rounded-xl p-1.5 pr-3 transition-all"
+            className="flex items-center gap-3 cursor-pointer hover:bg-white/[0.04] rounded-xl p-1.5 pr-3 transition-all"
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
               {user.initials}
             </div>
             <div className="text-left">
-              <p className="text-sm font-semibold text-gray-800 leading-tight">{user.name}</p>
-              <p className="text-[10px] text-gray-400">{user.role}</p>
+              <p className="text-sm font-bold text-gray-200 leading-tight">{user.name}</p>
+              <p className="text-[11px] text-gray-500 font-medium">{user.role}</p>
             </div>
-            <Icon name="ChevronDown" className="w-3.5 h-3.5 text-gray-400" />
+            <Icon name="ChevronDown" className="w-3.5 h-3.5 text-gray-500" />
           </div>
 
           {showProfile && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
-              <div className="absolute right-0 top-full mt-2 z-50 w-[580px] max-h-[70vh] overflow-y-auto bg-surface-50 rounded-2xl shadow-2xl border border-slate-200">
-                <div className="sticky top-0 bg-surface-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between rounded-t-2xl">
-                  <h3 className="text-sm font-bold text-slate-800">📊 Roadmap — Suivi des commandes</h3>
-                  <span className="text-xs text-slate-400">{orders.length} commande{orders.length > 1 ? 's' : ''}</span>
+              <div className="absolute right-0 top-full mt-2 z-50 w-[580px] max-h-[70vh] overflow-y-auto bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10">
+                <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl px-5 py-4 border-b border-white/5 flex items-center justify-between rounded-t-2xl">
+                  <h3 className="text-sm font-bold text-gray-200">📊 Roadmap — Suivi des commandes</h3>
+                  <span className="text-xs text-gray-500 font-medium">{orders.length} commande{orders.length > 1 ? 's' : ''}</span>
                 </div>
                 <div className="p-4 space-y-3">
                   {orders.length === 0 ? (
-                    <p className="text-sm text-slate-400 italic text-center py-4">Aucune commande enregistrée.</p>
+                    <p className="text-sm text-gray-500 italic text-center py-4">Aucune commande enregistrée.</p>
                   ) : (
                     orders.map(order => <OrderRoadmap key={order.id} order={order} />)
                   )}
@@ -349,15 +453,15 @@ function OrderRoadmap({ order }: { order: OrderSummary }) {
   const activeIdx = currentIdx >= 0 ? currentIdx : 0
 
   return (
-    <div className="bg-surface-50 rounded-xl border border-slate-100 p-4">
+    <div className="bg-white/[0.04] rounded-xl border border-white/5 p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-sm font-bold text-slate-800 font-mono">{order.serialNumber}</p>
-          <p className="text-[11px] text-slate-500">{order.clientName} — {order.clientCity}</p>
+          <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
+          <p className="text-[11px] text-gray-500">{order.clientName} — {order.clientCity}</p>
         </div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-          order.status === 'PRET_POUR_PRODUCTION' || order.status === 'VALIDEE' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+          order.status === 'PRET_POUR_PRODUCTION' || order.status === 'VALIDEE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
         }`}>
           {order.status === 'PRET_POUR_PRODUCTION' ? 'Terminée' : 'En cours'}
         </span>
@@ -376,36 +480,36 @@ function OrderRoadmap({ order }: { order: OrderSummary }) {
               {/* Timeline dot + line */}
               <div className="flex flex-col items-center">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                  isPast ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'
+                  isPast ? 'bg-emerald-500 text-white' : 'bg-white/[0.08] text-gray-500'
                 }`}>
                   {isPast ? '✓' : i + 1}
                 </div>
                 {i < statusStep.length - 1 && (
-                  <div className={`w-0.5 flex-1 min-h-[12px] ${isPast ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                  <div className={`w-0.5 flex-1 min-h-[12px] ${isPast ? 'bg-emerald-400/50' : 'bg-white/[0.06]'}`} />
                 )}
               </div>
               {/* Content */}
               <div className="flex-1 pb-1">
                 <div className="flex items-center justify-between">
-                  <p className={`text-xs font-bold ${isCurrent ? 'text-slate-800' : isPast ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <p className={`text-xs font-bold ${isCurrent ? 'text-gray-200' : isPast ? 'text-gray-300' : 'text-gray-500'}`}>
                     {step.icon} {step.label}
                   </p>
                   {isCurrent && step.hours > 0 && (
-                    <span className={`text-[10px] font-bold ${phaseProgress > 80 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    <span className={`text-[10px] font-bold ${phaseProgress > 80 ? 'text-amber-400' : 'text-emerald-400'}`}>
                       {Math.max(0, Math.round(step.hours - elapsedH))}h restantes
                     </span>
                   )}
                   {isPast && !isCurrent && step.hours > 0 && (
-                    <span className="text-[10px] text-slate-400 font-medium">✓ {step.hours}h</span>
+                    <span className="text-[10px] text-gray-500 font-medium">✓ {step.hours}h</span>
                   )}
                 </div>
                 {isCurrent && step.hours > 0 && (
-                  <div className="w-full h-1 rounded-full bg-slate-200 mt-1.5 overflow-hidden">
-                    <div className={`h-full rounded-full ${phaseProgress > 80 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                  <div className="w-full h-1 rounded-full bg-white/[0.08] mt-1.5 overflow-hidden">
+                    <div className={`h-full rounded-full ${phaseProgress > 80 ? 'bg-amber-400' : 'bg-emerald-400'}`}
                       style={{ width: `${Math.min(100, phaseProgress)}%` }} />
                   </div>
                 )}
-                <p className="text-[9px] text-slate-400 mt-0.5">
+                <p className="text-[9px] text-gray-500 mt-0.5">
                   {isCurrent ? 'En cours...' : isPast ? (step.hours > 0 ? `Durée estimée: ${step.hours}h` : '—') : 'En attente'}
                 </p>
               </div>
@@ -418,18 +522,33 @@ function OrderRoadmap({ order }: { order: OrderSummary }) {
 }
 
 function KpiCard({ title, value, subtext, dark = false, icon }: { title: string; value: string; subtext: string; dark?: boolean; icon: string }) {
+  const isDark = true // Force all cards to dark theme for consistency
+  const gradients = [
+    'from-amber-500/20 to-orange-600/5 border-amber-500/20',
+    'from-emerald-500/20 to-teal-600/5 border-emerald-500/20',
+    'from-blue-500/20 to-indigo-600/5 border-blue-500/20',
+    'from-violet-500/20 to-purple-600/5 border-violet-500/20',
+  ]
+  const iconBg = [
+    'bg-amber-500/20 text-amber-400',
+    'bg-emerald-500/20 text-emerald-400',
+    'bg-blue-500/20 text-blue-400',
+    'bg-violet-500/20 text-violet-400',
+  ]
+  // Use title to pick a consistent color
+  const idx = title.length % 4
   return (
-    <div className={`kpi-card ${dark ? 'dark' : 'bg-primary-50/60'}`}>
+    <div className={`rounded-2xl p-5 bg-white/[0.06] backdrop-blur-xl border ${gradients[idx]} shadow-lg hover:bg-white/[0.09] transition-all duration-300 group`}>
       <div className="flex items-center justify-between mb-3">
-        <span className={`text-sm font-medium ${dark ? 'text-accent-100' : 'text-gray-500'}`}>{title}</span>
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${dark ? 'bg-surface-50/10' : 'bg-accent-50'}`}>
-          <Icon name={icon} className={`w-[18px] h-[18px] ${dark ? 'text-white' : 'text-accent-500'}`} />
+        <span className="text-sm font-semibold text-gray-300">{title}</span>
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconBg[idx]}`}>
+          <Icon name={icon} className="w-[18px] h-[18px]" />
         </div>
       </div>
-      <p className={`stat-number mb-0.5 ${dark ? 'text-white' : 'text-gray-900'}`}>{value}</p>
-      <div className="flex items-center gap-1.5">
-        <Icon name="ArrowUp" className={`w-3.5 h-3.5 ${dark ? 'text-accent-300' : 'text-accent-500'}`} />
-        <span className={`text-xs ${dark ? 'text-accent-200' : 'text-gray-400'}`}>{subtext}</span>
+      <p className="text-3xl font-bold text-white mb-0.5 tracking-tight">{value}</p>
+      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Icon name="ArrowUp" className="w-3.5 h-3.5 text-amber-400" />
+        <span className="text-xs font-medium text-gray-400">{subtext}</span>
       </div>
     </div>
   )
@@ -438,50 +557,39 @@ function KpiCard({ title, value, subtext, dark = false, icon }: { title: string;
 function AnalyticsChart() {
   // Production distribution by elevator application category
   const chartData = [
-    { value: 72, label: 'Résidentiel' },
-    { value: 55, label: 'Commercial' },
-    { value: 38, label: 'Charges Lourdes' },
-    { value: 24, label: 'Sur-mesure' },
+    { value: 72, label: 'Résidentiel', color: 'from-amber-400 to-orange-500' },
+    { value: 55, label: 'Commercial', color: 'from-emerald-400 to-teal-500' },
+    { value: 38, label: 'Charges Lourdes', color: 'from-blue-400 to-indigo-500' },
+    { value: 24, label: 'Sur-mesure', color: 'from-violet-400 to-purple-500' },
   ]
   const maxValue = Math.max(...chartData.map(d => d.value), 1)
 
   return (
-    <div className="bg-surface-50 rounded-2xl p-5 shadow-card border border-gray-50">
+    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-semibold text-gray-800">Répartition par Application</h3>
-        <button className="btn-ghost text-xs flex items-center gap-1">
+        <h3 className="text-base font-semibold text-white">Répartition par Application</h3>
+        <button className="text-xs flex items-center gap-1 text-gray-400 hover:text-white transition-colors">
           Ce mois
           <Icon name="ChevronDown" className="w-3 h-3" />
         </button>
       </div>
 
-      <div className="relative h-[140px]">
-        <div className="absolute -top-2 left-[42%] bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg z-10 flex items-center gap-1.5">
-          <Icon name="ArrowUp" className="w-3 h-3 text-accent-300" />
-          72 unités
-        </div>
-
-        <div className="flex items-end justify-between gap-1.5 h-full pt-2 pb-6">
+      <div className="relative h-[160px]">
+        <div className="flex items-end justify-between gap-3 h-full pt-2 pb-6">
           {chartData.map((data, i) => (
-            <div key={i} className="flex flex-col items-center gap-1.5 flex-1 h-full justify-end">
+            <div key={i} className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
+              {/* Value label */}
+              <span className="text-xs font-bold text-white">{data.value}</span>
               {/* Bar */}
-              <div className="relative w-full max-w-[28px] rounded-md overflow-hidden" style={{ height: `${(data.value / maxValue) * 100}%` }}>
+              <div className="relative w-full max-w-[32px] rounded-lg overflow-hidden group cursor-pointer" style={{ height: `${(data.value / maxValue) * 100}%` }}>
                 <div
-                  className={`absolute bottom-0 w-full rounded-t-md transition-all duration-500 ${
-                    i % 2 === 0 ? 'bg-primary-700' : 'bg-accent-400'
-                  }`}
+                  className={`absolute bottom-0 w-full rounded-t-lg bg-gradient-to-t ${data.color} transition-all duration-500 group-hover:brightness-110`}
                   style={{ height: '100%' }}
-                >
-                  <div
-                    className="absolute inset-0 opacity-10"
-                    style={{
-                      backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.3) 3px, rgba(255,255,255,0.3) 6px)',
-                    }}
-                  />
-                </div>
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
               {/* Category label */}
-              <span className="text-[10px] font-medium text-gray-500">{data.label}</span>
+              <span className="text-[10px] font-medium text-gray-400">{data.label}</span>
             </div>
           ))}
         </div>
@@ -492,17 +600,20 @@ function AnalyticsChart() {
 
 function RemindersCard() {
   return (
-    <div className="bg-surface-50 rounded-2xl p-5 shadow-card border border-gray-50">
-      <h3 className="text-base font-semibold text-gray-800 mb-4">Rappels Atelier</h3>
-      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg">
+      <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+        Rappels Atelier
+      </h3>
+      <div className="bg-white/[0.04] rounded-xl p-4 border border-white/5">
         <div className="flex items-start gap-3 mb-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-accent-500 mt-1.5 flex-shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0 shadow-lg shadow-amber-400/30" />
           <div>
-            <p className="font-semibold text-gray-800">Contrôle Qualité Cabines — Série RMASC-2026</p>
-            <p className="text-sm text-gray-400 mt-0.5">Atelier Montage — 08h00</p>
+            <p className="font-semibold text-gray-200">Contrôle Qualité Cabines — Série RMASC-2026</p>
+            <p className="text-sm text-gray-400 mt-0.5 font-medium">Atelier Montage — 08h00</p>
           </div>
         </div>
-        <button className="w-full bg-primary-800 hover:bg-primary-900 text-white font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 shadow-sm">
+        <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 shadow-lg shadow-amber-500/25">
           <Icon name="Play" className="w-4 h-4" />
           Lancer le contrôle qualité
         </button>
@@ -514,41 +625,41 @@ function RemindersCard() {
 function ProjectList({ orders, onFiche }: { orders: OrderSummary[]; onFiche?: (id: string) => void }) {
   const recent = orders.slice(0, 5)
   const iconColors = [
-    'bg-violet-100 text-violet-600',
-    'bg-sky-100 text-sky-600',
-    'bg-emerald-100 text-emerald-600',
-    'bg-amber-100 text-amber-600',
-    'bg-rose-100 text-rose-600',
+    'bg-amber-500/20 text-amber-400',
+    'bg-emerald-500/20 text-emerald-400',
+    'bg-blue-500/20 text-blue-400',
+    'bg-violet-500/20 text-violet-400',
+    'bg-rose-500/20 text-rose-400',
   ]
 
   return (
-    <div className="bg-surface-50 rounded-2xl p-5 shadow-card border border-gray-50">
+    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-gray-800">Commandes Récentes</h3>
-        <span className="text-xs text-gray-400 font-medium">{orders.length} au total</span>
+        <h3 className="text-base font-bold text-white">Commandes Récentes</h3>
+        <span className="text-xs text-gray-400 font-semibold bg-white/[0.06] px-2.5 py-1 rounded-full">{orders.length} au total</span>
       </div>
       <div className="space-y-1">
         {recent.length === 0 ? (
-          <p className="text-sm text-gray-400 italic p-2.5">Aucune commande enregistrée.</p>
+          <p className="text-sm text-gray-500 italic p-2.5">Aucune commande enregistrée.</p>
         ) : (
           recent.map((order, i) => (
             <div key={order.id}
-              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-100 transition-all cursor-pointer group">
+              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-all cursor-pointer group">
               <div className={`w-8 h-8 rounded-xl ${iconColors[i % iconColors.length]} flex items-center justify-center flex-shrink-0`}>
                 <span className="text-xs font-bold">{order.serialNumber.slice(-2)}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">
+                <p className="text-sm font-medium text-gray-200 truncate">
                   {order.clientName} — <span className="font-mono text-xs text-gray-500">{order.serialNumber}</span>
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 font-medium">
                   {order.clientCity} • {order.typeMotorisation}
                 </p>
               </div>
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                 {onFiche && (
                   <button onClick={(e) => { e.stopPropagation(); onFiche(order.id) }}
-                    className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">
+                    className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all">
                     📄 Fiche
                   </button>
                 )}
@@ -563,10 +674,10 @@ function ProjectList({ orders, onFiche }: { orders: OrderSummary[]; onFiche?: (i
 
 function CollaborationCard() {
   const teamMembers = [
-    { id: '1', name: 'Salim RM-RE', role: 'Administrateur', module: 'Direction Générale', avatar: 'SR', avatarBg: 'bg-amber-500', status: 'termine' as const },
-    { id: '2', name: 'Karim B.', role: 'Dessinateur', module: 'Bureau d\'Études', avatar: 'KB', avatarBg: 'bg-rose-400', status: 'en-cours' as const },
-    { id: '3', name: 'Yasmine H.', role: 'Ingénieure', module: 'Validation Technique', avatar: 'YH', avatarBg: 'bg-primary-400', status: 'en-cours' as const },
-    { id: '4', name: 'Rachid I.', role: 'Modeleur 2D', module: 'Plans CAO', avatar: 'RI', avatarBg: 'bg-amber-400', status: 'en-attente' as const },
+    { id: '1', name: 'Salim RM-RE', role: 'Administrateur', module: 'Direction Générale', avatar: 'SR', avatarBg: 'bg-gradient-to-br from-amber-500 to-orange-600', status: 'termine' as const },
+    { id: '2', name: 'Karim B.', role: 'Dessinateur', module: 'Bureau d\'Études', avatar: 'KB', avatarBg: 'bg-gradient-to-br from-rose-400 to-pink-500', status: 'en-cours' as const },
+    { id: '3', name: 'Yasmine H.', role: 'Ingénieure', module: 'Validation Technique', avatar: 'YH', avatarBg: 'bg-gradient-to-br from-blue-400 to-indigo-500', status: 'en-cours' as const },
+    { id: '4', name: 'Rachid I.', role: 'Modeleur 2D', module: 'Plans CAO', avatar: 'RI', avatarBg: 'bg-gradient-to-br from-amber-400 to-yellow-500', status: 'en-attente' as const },
   ]
 
   const statusLabels = {
@@ -576,33 +687,33 @@ function CollaborationCard() {
   } as const
 
   const statusBadge = {
-    'termine': 'badge badge-success',
-    'en-cours': 'badge badge-warning',
-    'en-attente': 'badge badge-danger',
+    'termine': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20',
+    'en-cours': 'bg-amber-500/20 text-amber-400 border-amber-500/20',
+    'en-attente': 'bg-gray-500/20 text-gray-400 border-gray-500/20',
   } as const
 
   return (
-    <div className="bg-surface-50 rounded-2xl p-5 shadow-card border border-gray-50">
+    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-gray-800">Équipe Bureau d'Études</h3>
-        <button className="btn-primary !py-1.5 !px-3 !text-xs">
-          <Icon name="UserPlus" className="w-3.5 h-3.5" />
-          Ajouter un membre
+        <h3 className="text-base font-semibold text-white">Équipe Bureau d'Études</h3>
+        <button className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all border border-amber-500/20">
+          <Icon name="UserPlus" className="w-3.5 h-3.5 inline mr-1" />
+          Ajouter
         </button>
       </div>
       <div className="space-y-2">
         {teamMembers.map((member) => (
-          <div key={member.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-100 transition-all">
-            <div className={`w-9 h-9 rounded-xl ${member.avatarBg} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm`}>
+          <div key={member.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-all">
+            <div className={`w-9 h-9 rounded-xl ${member.avatarBg} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-lg`}>
               {member.avatar}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800">{member.name}</p>
-              <p className="text-xs text-gray-400">{member.module}</p>
+              <p className="text-sm font-semibold text-gray-200">{member.name}</p>
+              <p className="text-xs text-gray-500">{member.module}</p>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-xs text-gray-500 mb-1">{member.role}</p>
-              <span className={statusBadge[member.status]}>{statusLabels[member.status]}</span>
+              <p className="text-xs text-gray-400 mb-1">{member.role}</p>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusBadge[member.status]}`}>{statusLabels[member.status]}</span>
             </div>
           </div>
         ))}
@@ -625,42 +736,42 @@ function ProgressArc({ orders }: { orders: OrderSummary[] }) {
   const inProgressOffset = circumference - ((completedPct + inProgressPct) / 100) * circumference
 
   return (
-    <div className="bg-surface-50 rounded-2xl p-5 shadow-card border border-gray-50 flex flex-col items-center">
+    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg flex flex-col items-center">
       <div className="flex items-center justify-between w-full mb-3">
-        <h3 className="text-base font-semibold text-gray-800">Progression des Commandes</h3>
+        <h3 className="text-base font-semibold text-white">Progression des Commandes</h3>
       </div>
       <div className="relative w-[130px] h-[130px] mb-4">
         <svg className="w-full h-full" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="8" />
-          <circle cx="50" cy="50" r="45" fill="none" stroke="#2563eb" strokeWidth="8"
+          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#f59e0b" strokeWidth="8"
             strokeDasharray={`${(completedPct / 100) * circumference} ${circumference}`}
             strokeLinecap="round" transform="rotate(-90 50 50)" className="transition-all duration-700" />
-          <circle cx="50" cy="50" r="45" fill="none" stroke="#f59e0b" strokeWidth="8"
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" strokeWidth="8"
             strokeDasharray={`${(inProgressPct / 100) * circumference} ${circumference}`}
             strokeDashoffset={-completedOffset} strokeLinecap="round" transform="rotate(-90 50 50)"
             className="transition-all duration-700" />
-          <circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" strokeWidth="8"
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#6b7280" strokeWidth="8"
             strokeDasharray={`${(pendingPct / 100) * circumference} ${circumference}`}
             strokeDashoffset={-inProgressOffset} strokeLinecap="round" transform="rotate(-90 50 50)"
             className="transition-all duration-700" />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-gray-900">{completedPct}%</span>
+          <span className="text-2xl font-bold text-white">{completedPct}%</span>
           <span className="text-[10px] text-gray-400 font-medium">Terminés</span>
         </div>
       </div>
       <div className="flex items-center gap-4 text-xs">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-primary-700" />
-          <span className="text-gray-500">Terminé ({termines})</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+          <span className="text-gray-400">Terminé ({termines})</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-          <span className="text-gray-500">En Cours ({enCours})</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+          <span className="text-gray-400">En Cours ({enCours})</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-          <span className="text-gray-500">Attente ({enAttente})</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-gray-500" />
+          <span className="text-gray-400">Attente ({enAttente})</span>
         </div>
       </div>
     </div>
@@ -764,7 +875,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // Lazy-init from localStorage so the user stays on their last page
   const [view, setView] = useState<ViewType>(() => {
     const saved = localStorage.getItem('rmasc_active_tab')
-    return (saved && ['dashboard','add-elevator','be-inspect','fiche','commandes','validations','settings','roadmap','help','invoicing','lifecycle','vault'].includes(saved))
+    return (saved && ['dashboard','add-elevator','be-inspect','fiche','commandes','validations','settings','roadmap','help','invoicing','lifecycle','vault','archives','pieces-solo'].includes(saved))
       ? saved as ViewType
       : 'dashboard'
   })
@@ -777,8 +888,40 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   const [ficheOrderId, setFicheOrderId] = useState<string | null>(null)
   const [notifications, setNotifications] = useState<OrderSummary[]>([])
   const [showNotifPanel, setShowNotifPanel] = useState(false)
+  const [showAgent, setShowAgent] = useState(false)
+  const [showSmartSearch, setShowSmartSearch] = useState(false)
+
+  // ── AUTO-LAUNCH AGENT SALIM ──────────────────────────────────────────
+  // Après 2 secondes, Salim s'ouvre automatiquement pour accueillir l'utilisateur
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowAgent(true)
+    }, 2000)
+    // Request notification permission on mount
+    requestNotificationPermission()
+    return () => clearTimeout(timer)
+  }, [])
+
+  // ── GLOBAL KEYBOARD SHORTCUTS ────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // ⌘K / Ctrl+K → Smart Search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setShowSmartSearch(p => !p)
+      }
+      // ⌘I / Ctrl+I → Toggle Agent
+      if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+        e.preventDefault()
+        setShowAgent(p => !p)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   // ── Fetch orders from Neon backend API ──────────────────────────────
+  const prevNotifCount = useRef(0)
   useEffect(() => {
     let cancelled = false
     async function load() {
@@ -786,7 +929,18 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         const data: OrderSummary[] = await apiFetch('/orders')
         if (cancelled) return
         setOrders(data)
-        setNotifications(data.filter(o => o.status === 'ATTENTE_APPROBATION_ADMIN'))
+        const newNotifs = data.filter(o => o.status === 'ATTENTE_APPROBATION_ADMIN')
+        setNotifications(newNotifs)
+        // ── Trigger alert on NEW notifications ──
+        if (newNotifs.length > prevNotifCount.current) {
+          const newCount = newNotifs.length - prevNotifCount.current
+          triggerAlert(
+            '🚨 Nouvelle alerte RMASC',
+            `${newCount} commande${newCount > 1 ? 's' : ''} en attente d'approbation.`,
+            newNotifs[0]?.serialNumber
+          )
+        }
+        prevNotifCount.current = newNotifs.length
       } catch { /* silent */ }
     }
     load()
@@ -810,12 +964,12 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <AddElevator onBack={() => persistView('dashboard')} />
         </div>
       </div>
@@ -828,9 +982,9 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="h-screen flex flex-col relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex-1 flex flex-col">
         {/* Inspection banner bar */}
@@ -861,12 +1015,12 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <div className="flex-1 overflow-y-auto">
           <MesCommandesPage onBack={() => persistView('dashboard')} onFiche={(id) => { setFicheOrderId(id); persistView('fiche') }} />
         </div>
@@ -881,12 +1035,12 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <ValidationsPage
           onBack={() => persistView('dashboard')}
           onFiche={(id) => { setFicheOrderId(id); persistView('fiche') }}
@@ -902,12 +1056,12 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <HelpPage onBack={() => persistView('dashboard')} />
         </div>
       </div>
@@ -920,12 +1074,12 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <SettingsPage onBack={() => persistView('dashboard')} session={session} onSessionUpdate={onSessionUpdate} />
         </div>
       </div>
@@ -938,21 +1092,25 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <RoadmapPage orders={orders as any} onBack={() => persistView('dashboard')} />
         </div>
       </div>
     )
   }
 
-  // ── Fiche Technique view ─────────────────────────────────────────────
+  // ── Fiche Technique full-page view ───────────────────────────────────
   if (view === 'fiche' && ficheOrderId) {
-    return <FicheTechniqueView orderId={ficheOrderId} onBack={() => { persistView('dashboard'); setFicheOrderId(null) }} />
+    return (
+      <div className="h-screen flex flex-col bg-slate-950">
+        <FicheTechniqueView orderId={ficheOrderId} onBack={() => { persistView('dashboard'); setFicheOrderId(null) }} variant="full" />
+      </div>
+    )
   }
 
   // ── Salim Hamoun AI — Invoicing & Devis ─────────────────────────────
@@ -961,12 +1119,12 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <InvoicingPage onBack={() => persistView('dashboard')} />
         </div>
       </div>
@@ -979,12 +1137,12 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <BureauEtudeVault onBack={() => persistView('dashboard')} />
         </div>
       </div>
@@ -997,13 +1155,54 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
-        <Sidebar onNavigate={persistView} onLogout={onLogout} />
+        <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <LifecyclePipeline onBack={() => persistView('dashboard')} />
+        </div>
+      </div>
+    )
+  }
+
+  // ── Archives (global — all portals) ─────────────────────────────────
+  if (view === 'archives') {
+    return (
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
+          <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
+          <div className="flex-1 flex flex-col min-h-0">
+            <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={buildCurrentUser(session)} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} />
+            <main className="flex-1 overflow-y-auto">
+              <ArchiveOrders onSelectOrder={(id) => { setFicheOrderId(id); persistView('fiche') }} />
+            </main>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Pièces Solo — Atelier (Ingénieur 2 + Production only) ────────────
+  if (view === 'pieces-solo') {
+    return (
+      <div className="flex h-screen relative">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
+        </div>
+        <div className="relative z-10 flex w-full">
+          <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
+          <PiecesSoloWorkspace onBack={() => persistView('dashboard')} session={session} />
         </div>
       </div>
     )
@@ -1015,33 +1214,36 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0">
           <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
+          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
         </div>
         <div className="relative z-10 flex w-full">
       {/* Sidebar */}
-      <Sidebar onNavigate={persistView} onLogout={onLogout} />
+      <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Header */}
-        <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={currentUserData} />
+        <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={currentUserData} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} />
 
         {/* Scrollable Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">
+          {/* Smart Tips — Astuces contextuelles */}
+          <SmartTips />
+
           {/* Dashboard Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-              <p className="text-sm text-gray-400 mt-1">Vue d'ensemble de la production d'ascenseurs RMASC.</p>
+              <h1 className="text-xl md:text-2xl font-bold text-white">Tableau de bord</h1>
+              <p className="text-xs md:text-sm text-gray-300 mt-1 font-medium">Vue d'ensemble de la production d'ascenseurs RMASC.</p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="btn-primary" onClick={() => persistView('add-elevator')}>
+              <button className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/25" onClick={() => persistView('add-elevator')}>
                 <Icon name="Plus" className="w-4 h-4" />
                 Ajouter un ascenseur
               </button>
-              <button className="btn-outline">
+              <button className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/[0.06] text-gray-300 hover:bg-white/[0.1] hover:text-white transition-all border border-white/10">
                 <Icon name="Upload" className="w-4 h-4" />
                 Importer des données
               </button>
@@ -1049,7 +1251,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
           </div>
 
           {/* KPI Metrics Row */}
-          <div className="grid grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 stagger-children">
             <KpiCard
               title="Commandes Totales"
               value={String(kpis.total)}
@@ -1079,26 +1281,26 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
 
           {/* Notification Panel — Approbations en attente */}
           {showNotifPanel && notifications.length > 0 && (
-            <div className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm">
+            <div className="mb-4 bg-white/[0.06] backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 shadow-lg animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-amber-800 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                   {notifications.length} commande{notifications.length > 1 ? 's' : ''} en attente d'approbation
                 </h3>
-                <button onClick={() => setShowNotifPanel(false)} className="text-amber-400 hover:text-amber-600 text-xs font-medium">Masquer</button>
+                <button onClick={() => setShowNotifPanel(false)} className="text-amber-400 hover:text-amber-300 text-xs font-semibold">Masquer</button>
               </div>
               <div className="space-y-2">
                 {notifications.slice(0, 5).map(n => (
-                  <div key={n.id} className="flex items-center justify-between bg-surface-50 rounded-xl px-4 py-3 border border-amber-100">
+                  <div key={n.id} className="flex items-center justify-between bg-white/[0.04] rounded-xl px-4 py-3 border border-white/5 shadow-sm">
                     <div>
-                      <p className="text-sm font-bold text-slate-800 font-mono">{n.serialNumber}</p>
-                      <p className="text-xs text-slate-500">{n.clientName} — {n.clientCity}</p>
+                      <p className="text-sm font-bold text-gray-200 font-mono">{n.serialNumber}</p>
+                      <p className="text-xs text-gray-400">{n.clientName} — {n.clientCity}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-amber-600 font-semibold bg-amber-50 px-2 py-1 rounded-lg">En attente</span>
+                      <span className="text-xs text-amber-400 font-semibold bg-amber-500/10 px-2 py-1 rounded-lg">En attente</span>
                       <button
                         onClick={() => { persistView('validations'); setShowNotifPanel(false) }}
-                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-white hover:bg-amber-600 transition-all"
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-white hover:bg-amber-400 transition-all"
                       >
                         Vérifier →
                       </button>
@@ -1109,15 +1311,147 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
             </div>
           )}
 
+          {/* ═══ SMART PREDICTION & INSIGHTS ROW ═══ */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* ── Prédiction & Tendances ── */}
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 border border-slate-700 shadow-lg animate-scale-in relative overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-amber-500/5 blur-3xl" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>🔮</span> Prédictions
+                  </h3>
+                  <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full font-semibold">IA</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Commandes en cours</span>
+                    <span className="text-lg font-bold text-white">{orders.filter(o => !['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length}</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 animate-progress"
+                      style={{ width: `${orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%` }} />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-500">Progression</span>
+                    <span className="text-amber-400 font-bold">{orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%</span>
+                  </div>
+                  <div className="pt-2 border-t border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400">📅 Estimation fin</span>
+                      <span className="text-xs font-bold text-emerald-400">
+                        {(() => {
+                          const enCours = orders.filter(o => !['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length
+                          const rythme = Math.max(1, Math.round(orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / 6))
+                          const mois = Math.ceil(enCours / rythme)
+                          const d = new Date()
+                          d.setMonth(d.getMonth() + mois)
+                          return d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Score de Productivité ── */}
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 border border-slate-700 shadow-lg animate-scale-in relative overflow-hidden" style={{ animationDelay: '0.1s' }}>
+              <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-emerald-500/5 blur-3xl" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>🏆</span> Productivité
+                  </h3>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    orders.length > 0 && (orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) > 0.5
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : 'bg-amber-500/10 text-amber-400'
+                  }`}>
+                    {orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">✅ Terminées</span>
+                    <span className="text-sm font-bold text-emerald-400">{orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">🔄 En cours</span>
+                    <span className="text-sm font-bold text-amber-400">{orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION', 'ATTENTE_APPROBATION_ADMIN', 'EN_LIVRAISON'].includes(o.status)).length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">⏸️ Bloquées</span>
+                    <span className="text-sm font-bold text-red-400">{orders.filter(o => ['BROUILLON', 'PRET_POUR_PRODUCTION'].includes(o.status)).length}</span>
+                  </div>
+                  <div className="pt-2 mt-1 border-t border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-500">Diagnostic</span>
+                      <span className="text-[10px] font-semibold text-slate-300">
+                        {orders.filter(o => ['BROUILLON', 'ATTENTE_APPROBATION_ADMIN'].includes(o.status)).length > 3
+                          ? '⚠️ Goulot d\'étranglement'
+                          : orders.length === 0 ? '📭 Aucune donnée' : '✅ Bon rythme'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Alertes & Priorités ── */}
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 border border-slate-700 shadow-lg animate-scale-in relative overflow-hidden" style={{ animationDelay: '0.2s' }}>
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-red-500/5 blur-3xl" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>🚨</span> Priorités
+                  </h3>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-[10px] text-red-400 font-bold">
+                      {orders.filter(o => o.priority === 'URGENT' || o.priority === 'HAUTE').length}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">🔴 Urgent</span>
+                    <span className="text-sm font-bold text-red-400">{orders.filter(o => o.priority === 'URGENT').length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">🟠 Haute priorité</span>
+                    <span className="text-sm font-bold text-orange-400">{orders.filter(o => o.priority === 'HAUTE').length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">🔵 Normale</span>
+                    <span className="text-sm font-bold text-blue-400">{orders.filter(o => !o.priority || o.priority === 'NORMAL').length}</span>
+                  </div>
+                  <div className="pt-2 mt-1 border-t border-slate-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-500">Actions recommandées</span>
+                      <span className="text-[10px] text-amber-400 font-semibold">
+                        {orders.filter(o => o.priority === 'URGENT').length > 0
+                          ? '✅ Traiter les urgences'
+                          : orders.filter(o => o.status === 'ATTENTE_APPROBATION_ADMIN').length > 0
+                            ? '✅ Valider les approbations'
+                            : '✅ Tout est sous contrôle'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Middle Row */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 stagger-children">
             <AnalyticsChart />
             <RemindersCard />
             <ProjectList orders={orders} onFiche={(id) => { setFicheOrderId(id); persistView('fiche') }} />
           </div>
 
           {/* Bottom Row */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
             <CollaborationCard />
             <ProgressArc orders={orders} />
             <TimeTracker orders={orders} />
@@ -1125,6 +1459,10 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         </main>
       </div>
         </div>
+        {/* Mobile Navigation */}
+        <MobileNav activeView={view} onNavigate={persistView} onLogout={onLogout} />
+        {showAgent && <AgentPanel onClose={() => setShowAgent(false)} />}
+        {showSmartSearch && <SmartSearch onNavigate={(view, params) => { persistView(view as ViewType); setShowSmartSearch(false) }} />}
     </div>
   )
 }

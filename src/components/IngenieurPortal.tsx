@@ -15,12 +15,16 @@ import { addUpload, getUploads } from '../config/runtime-store'
 import { PageBackground } from './PageBackground'
 import InstallPWA from './InstallPWA'
 import FileManager from './FileManager'
+import AgentPanel from './agent/AgentPanel'
+import SmartSearch from './smart/SmartSearch'
+import ArchiveOrders from './ArchiveOrders'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
   typeMotorisation: string; status: string; createdAt: string
   largeurGaineMm: string; profondeurGaineMm: string; hauteurGaineMm: string
   materiauCabine: string | null; materiauPortes: string | null
+  rejectionReason?: string | null; rejectedBy?: string | null; rejectedAt?: string | null
   _count: { cadSubmissions: number }
 }
 
@@ -46,28 +50,29 @@ const ROLE_CONFIG: Record<string, { icon: string; title: string; subtitle: strin
   },
 }
 
-type IngenieurTab = 'dashboard' | 'archive' | 'gestion-docs'
+type IngenieurTab = 'dashboard' | 'archive' | 'gestion-docs' | 'archives'
 
 const TAB_CONFIG: { id: IngenieurTab; icon: string; label: string }[] = [
   { id: 'dashboard', icon: '📊', label: 'Tableau de Bord' },
   { id: 'archive', icon: '📦', label: 'Archive' },
   { id: 'gestion-docs', icon: '📁', label: 'Gestion des Documents' },
+  { id: 'archives', icon: '📚', label: 'Archives' },
 ]
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    BROUILLON: 'bg-slate-100 text-slate-600', ATTENTE_DESSIN_TECH: 'bg-sky-100 text-sky-700',
-    ATTENTE_APPROBATION_ADMIN: 'bg-amber-100 text-amber-700', ATTENTE_DESSIN_2D: 'bg-violet-100 text-violet-700',
-    ATTENTE_VERIFICATION: 'bg-rose-100 text-rose-700', PRET_POUR_PRODUCTION: 'bg-emerald-100 text-emerald-700',
-    EN_LIVRAISON: 'bg-cyan-100 text-cyan-700', LIVREE: 'bg-emerald-100 text-emerald-700',
-    VALIDEE: 'bg-emerald-100 text-emerald-700', ANNULEE: 'bg-red-100 text-red-700',
+    BROUILLON: 'bg-white/10 text-gray-400', ATTENTE_DESSIN_TECH: 'bg-sky-500/15 text-sky-400',
+    ATTENTE_APPROBATION_ADMIN: 'bg-amber-500/15 text-amber-400', ATTENTE_DESSIN_2D: 'bg-violet-500/15 text-violet-400',
+    ATTENTE_VERIFICATION: 'bg-rose-500/15 text-rose-400', PRET_POUR_PRODUCTION: 'bg-emerald-500/15 text-emerald-400',
+    EN_LIVRAISON: 'bg-cyan-500/15 text-cyan-400', LIVREE: 'bg-emerald-500/15 text-emerald-400',
+    VALIDEE: 'bg-emerald-500/15 text-emerald-400', ANNULEE: 'bg-red-500/15 text-red-400',
   }
   const labels: Record<string, string> = {
     BROUILLON: 'Brouillon', ATTENTE_DESSIN_TECH: 'Plan Installation', ATTENTE_APPROBATION_ADMIN: 'Approbation Admin',
     ATTENTE_DESSIN_2D: 'Dessin 2D', ATTENTE_VERIFICATION: 'Vérification', PRET_POUR_PRODUCTION: 'Prêt Production',
     EN_LIVRAISON: 'En Livraison', LIVREE: 'Livrée', VALIDEE: 'Validée', ANNULEE: 'Annulée',
   }
-  return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-500'}`}>
+  return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${colors[status] || 'bg-white/10 text-gray-400'}`}>
     <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50"/> {labels[status] || status}</span>
 }
 
@@ -91,6 +96,18 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
   const [showFiche, setShowFiche] = useState(false)
   const [showFile, setShowFile] = useState(false)
   const [fileIndex, setFileIndex] = useState(0)
+  const [showAgent, setShowAgent] = useState(false)
+  const [showSmartSearch, setShowSmartSearch] = useState(false)
+
+  // ── Keyboard shortcuts ──────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setShowSmartSearch(p => !p) }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'i') { e.preventDefault(); setShowAgent(p => !p) }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   const showFeedback = (ok: boolean, msg: string) => { setFeedback({ ok, msg }); setTimeout(() => setFeedback(null), 4000) }
 
@@ -158,37 +175,45 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
   const filteredOrders = orders.filter(o => !searchTerm || o.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) || o.clientName.toLowerCase().includes(searchTerm.toLowerCase()))
 
   if (showFiche && selectedOrder) {
-    return <div className="fixed inset-0 z-50 bg-surface-50 overflow-y-auto"><FicheTechniqueView orderId={selectedOrder.id} onBack={() => setShowFiche(false)} /></div>
+    return <div className="fixed inset-0 z-50 bg-white/[0.04] overflow-y-auto"><FicheTechniqueView orderId={selectedOrder.id} onBack={() => setShowFiche(false)} /></div>
   }
 
   // ── Header ─────────────────────────────────────────────────────────
   function renderHeader() {
     return (
-      <header className="flex-shrink-0 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <header className="flex-shrink-0 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-slate-100 text-slate-500"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-gray-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center shadow-md`}><span className="text-white text-lg">{config.icon}</span></div>
-            <div><h1 className="text-lg font-extrabold text-slate-800">{config.icon} {config.title}</h1><p className="text-[11px] text-slate-400 font-medium">{config.subtitle} — {myOrders.length} commande{myOrders.length !== 1 ? 's' : ''}</p></div>
+            <div><h1 className="text-lg font-extrabold text-gray-200">{config.icon} {config.title}</h1><p className="text-[11px] text-gray-500 font-semibold">{config.subtitle} — {myOrders.length} commande{myOrders.length !== 1 ? 's' : ''}</p></div>
           </div>
         </div>
-        <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded">{session.name}</span>
+        <div className="flex items-center gap-3">
+          {/* Agent IA Button */}
+          <button onClick={() => setShowAgent(p => !p)}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-gray-400'}`}
+            title="Assistant IA Salim (⌘I)">
+            <span className="text-base">🤖</span>
+          </button>
+          <span className="text-xs text-gray-500 bg-white/10 px-2.5 py-1 rounded">{session.name}</span>
+        </div>
       </header>
     )
   }
 
   function renderTabs() {
     return (
-      <div className="flex-shrink-0 bg-surface-50 border-b border-slate-200 px-6 flex gap-0">
+      <div className="flex-shrink-0 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 flex gap-0">
         {TAB_CONFIG.map(t => {
           const isActive = tab === t.id
           const badge = t.id === 'dashboard' ? myOrders.length : t.id === 'gestion-docs' ? vaultFiles.length : 0
           return (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${isActive ? 'border-slate-800 text-slate-800' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+              className={`flex items-center gap-2 px-5 py-3 text-base font-bold border-b-2 transition-all ${isActive ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
               <span>{t.icon}</span>
               <span>{t.label}</span>
-              {badge > 0 && <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>{badge}</span>}
+              {badge > 0 && <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${isActive ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/70'}`}>{badge}</span>}
             </button>
           )
         })}
@@ -204,7 +229,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
 
         {/* Feedback */}
         {feedback && (
-          <div className={`flex-shrink-0 px-6 py-2.5 text-sm font-medium flex items-center gap-2 ${feedback.ok ? 'bg-emerald-50 text-emerald-700 border-b border-emerald-100' : 'bg-amber-50 text-amber-700 border-b border-amber-100'}`}>
+          <div className={`flex-shrink-0 px-6 py-2.5 text-sm font-medium flex items-center gap-2 ${feedback.ok ? 'bg-emerald-500/10 text-emerald-400 border-b border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-b border-amber-500/20'}`}>
             <span>{feedback.ok ? '✅' : '⚠️'}</span> {feedback.msg}
             <button onClick={() => setFeedback(null)} className="ml-auto opacity-50 hover:opacity-100">✕</button>
           </div>
@@ -217,10 +242,10 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
           <div className="flex-1 overflow-y-auto p-6">
             <div className="max-w-5xl mx-auto">
               {myOrders.length === 0 ? (
-                <div className="bg-surface-50 rounded-2xl border border-slate-200 p-16 text-center">
+                <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 p-16 text-center">
                   <span className="text-5xl block mb-4">📭</span>
-                  <h3 className="text-base font-bold text-slate-700">Aucune commande assignée</h3>
-                  <p className="text-sm text-slate-400 mt-1">Les commandes au statut <strong>{config.status.replace(/_/g, ' ')}</strong> apparaîtront ici.</p>
+                  <h3 className="text-base font-bold text-gray-200">Aucune commande assignée</h3>
+                  <p className="text-sm text-gray-500 mt-1">Les commandes au statut <strong>{config.status.replace(/_/g, ' ')}</strong> apparaîtront ici.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -228,40 +253,53 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                     const isExpanded = selectedOrder?.id === order.id
                     const orderFiles = vaultFiles.filter(f => f.orderId === order.id)
                     return (
-                      <div key={order.id} className="bg-surface-50 rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all">
+                      <div key={order.id} className="bg-white/[0.04] backdrop-blur-xl rounded-xl border border-white/5 overflow-hidden shadow-sm hover:shadow-md transition-all">
                         <div onClick={() => setSelectedOrder(isExpanded ? null : order)}
-                          className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all">
+                          className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition-all">
                           <div className="flex items-center gap-4">
                             <div className="w-3 h-3 rounded-full bg-amber-500" />
                             <div>
-                              <p className="text-sm font-bold text-slate-800 font-mono">{order.serialNumber}</p>
-                              <p className="text-xs text-slate-500">{order.clientName} — {order.clientCity}</p>
+                              <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
+                              <p className="text-xs text-gray-400">{order.clientName} — {order.clientCity}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <StatusBadge status={order.status} />
-                            {orderFiles.length > 0 && <span className="text-xs text-slate-400">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>}
-                            <svg className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                            {orderFiles.length > 0 && <span className="text-xs text-gray-500">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>}
+                            <svg className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
                           </div>
                         </div>
+                        {/* ── Rejection banner ── */}
+                        {order.rejectionReason && (
+                          <div className="mx-5 mb-2 mt-0 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+                            <div className="flex items-start gap-2">
+                              <span className="text-red-400 text-sm mt-0.5">❌</span>
+                              <div className="flex-1">
+                                <p className="text-xs font-bold text-red-400">Plan rejeté par {order.rejectedBy || 'Administrateur'}</p>
+                                <p className="text-xs text-red-300 mt-1">{order.rejectionReason}</p>
+                                {order.rejectedAt && <p className="text-[10px] text-red-400/60 mt-1">{new Date(order.rejectedAt).toLocaleString('fr-FR')}</p>}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         {isExpanded && (
-                          <div className="px-5 pb-5 border-t border-slate-100 pt-4 space-y-2.5">
+                          <div className="px-5 pb-5 border-t border-white/5 pt-4 space-y-2.5">
                             <FileManager orderId={order.id} engineerName={session?.name || config.title} compact />
 
                             {/* Advance button */}
                             <button onClick={() => advanceStatus(order.id, config.nextStatus, '✅ ' + config.nextLabel.replace(/^[^\s]+\s/, ''))}
                               disabled={uploading}
-                              className="w-full py-2.5 rounded-lg text-sm font-bold text-white bg-slate-800 hover:bg-slate-700 shadow-sm disabled:opacity-50 transition-all">
+                              className="w-full py-2.5 rounded-lg text-sm font-bold text-white bg-white/[0.08] hover:bg-white/[0.12] shadow-sm disabled:opacity-50 transition-all">
                               {config.nextLabel}
                             </button>
                             {/* View all files */}
                             <button onClick={() => { setFileIndex(0); setShowFile(true) }}
-                              className="w-full py-2 rounded-lg text-xs font-semibold bg-surface-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">
+                              className="w-full py-2 rounded-lg text-xs font-semibold bg-white/[0.04] text-gray-400 hover:bg-white/[0.06] border border-white/10 transition-all">
                               👁️ Voir tous les fichiers ({orderFiles.length})
                             </button>
                             {/* Fiche technique */}
                             <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }}
-                              className="w-full py-2 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 border border-primary-100 transition-all">
+                              className="w-full py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.1] border border-white/10 transition-all">
                               📄 Fiche Technique
                             </button>
                           </div>
@@ -283,49 +321,49 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-extrabold text-slate-800">📦 Archive Documentaire</h2>
-                  <p className="text-sm text-slate-400 mt-0.5">Toutes les commandes — consultable en lecture</p>
+                  <h2 className="text-lg font-extrabold text-gray-200">📦 Archive Documentaire</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">Toutes les commandes — consultable en lecture</p>
                 </div>
-                <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="🔍 Rechercher..." className="w-56 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200" />
+                <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="🔍 Rechercher..." className="w-56 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200" />
               </div>
               <div className="space-y-3">
                 {filteredOrders.length === 0 ? (
-                  <div className="text-center py-12 text-sm text-slate-400">Aucune commande.</div>
+                  <div className="text-center py-12 text-sm text-gray-500">Aucune commande.</div>
                 ) : filteredOrders.map(order => {
                   const orderFiles = vaultFiles.filter(f => f.orderId === order.id)
                   const isExpanded = selectedOrder?.id === order.id
                   return (
-                    <div key={order.id} className="bg-surface-50 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+                    <div key={order.id} className="bg-white/[0.04] rounded-xl border border-white/10 shadow-sm hover:shadow-md transition-all overflow-hidden">
                       <div onClick={() => setSelectedOrder(isExpanded ? null : order)}
-                        className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50">
+                        className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03]">
                         <div className="flex items-center gap-4">
                           <div className={`w-3 h-3 rounded-full ${order.status === 'LIVREE' || order.status === 'VALIDEE' ? 'bg-emerald-500' : order.status === 'EN_LIVRAISON' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
                           <div>
-                            <p className="text-sm font-bold text-slate-800 font-mono">{order.serialNumber}</p>
-                            <p className="text-xs text-slate-500">{order.clientName} — {order.clientCity}</p>
+                            <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
+                            <p className="text-xs text-gray-400">{order.clientName} — {order.clientCity}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <StatusBadge status={order.status} />
-                          {orderFiles.length > 0 && <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>}
-                          <svg className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                          {orderFiles.length > 0 && <span className="text-xs text-gray-500 bg-white/10 px-2 py-0.5 rounded">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>}
+                          <svg className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
                         </div>
                       </div>
                       {isExpanded && orderFiles.length > 0 && (
-                        <div className="px-5 pb-5 border-t border-slate-100 pt-4">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">📎 Documents ({orderFiles.length})</p>
+                        <div className="px-5 pb-5 border-t border-white/5 pt-4">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">📎 Documents ({orderFiles.length})</p>
                           <div className="space-y-1.5">
                             {orderFiles.map((f, fi) => (
-                              <div key={f.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 hover:bg-slate-100 transition-all group">
+                              <div key={f.id} className="flex items-center justify-between bg-white/[0.04] rounded-lg px-3 py-2 border border-white/5 hover:bg-white/[0.06] transition-all group">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <span>{f.type.includes('pdf') ? '📄' : (f.type.includes('dwg') || f.type.includes('image') ? '📐' : '📎')}</span>
                                   <div className="min-w-0">
-                                    <span className="text-sm font-medium text-slate-700 truncate block">{f.fileName}</span>
-                                    <span className="text-[10px] text-slate-400">{f.size} • {f.engineer}</span>
+                                    <span className="text-sm font-medium text-gray-200 truncate block">{f.fileName}</span>
+                                    <span className="text-[10px] text-gray-500">{f.size} • {f.engineer}</span>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                  <span className="text-[10px] text-slate-400 hidden sm:inline">{fmtDate(f.uploadedAt)}</span>
+                                  <span className="text-[10px] text-gray-500 hidden sm:inline">{fmtDate(f.uploadedAt)}</span>
                                   <button onClick={(e) => {
                                     e.stopPropagation()
                                     const all = getUploads(order.id)
@@ -335,7 +373,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                                       setFileIndex(0); setShowFile(true)
                                     }
                                   }}
-                                    className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600 text-[10px] font-semibold transition-all flex items-center gap-1"
+                                    className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-gray-400 text-[10px] font-semibold transition-all flex items-center gap-1"
                                     title="Voir / Télécharger">
                                     👁️
                                   </button>
@@ -346,8 +384,8 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                         </div>
                       )}
                       {isExpanded && orderFiles.length === 0 && (
-                        <div className="px-5 pb-5 border-t border-slate-100 pt-4">
-                          <p className="text-xs text-slate-400 italic">Aucun document dans cette commande.</p>
+                        <div className="px-5 pb-5 border-t border-white/5 pt-4">
+                          <p className="text-xs text-gray-500 italic">Aucun document dans cette commande.</p>
                         </div>
                       )}
                     </div>
@@ -365,34 +403,34 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
           <div className="flex-1 overflow-y-auto p-6">
             <div className="max-w-6xl mx-auto">
               <div className="mb-4">
-                <h2 className="text-lg font-extrabold text-slate-800">📁 Gestion des Documents</h2>
-                <p className="text-sm text-slate-400 mt-0.5">Ajoutez ou supprimez des fichiers pour chaque commande</p>
+                <h2 className="text-lg font-extrabold text-gray-200">📁 Gestion des Documents</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Ajoutez ou supprimez des fichiers pour chaque commande</p>
               </div>
               <div className="space-y-3">
                 {filteredOrders.length === 0 ? (
-                  <div className="text-center py-12 text-sm text-slate-400">Aucune commande.</div>
+                  <div className="text-center py-12 text-sm text-gray-500">Aucune commande.</div>
                 ) : filteredOrders.map(order => {
                   const orderFiles = vaultFiles.filter(f => f.orderId === order.id)
                   const isExpanded = selectedOrder?.id === order.id
                   return (
-                    <div key={order.id} className="bg-surface-50 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+                    <div key={order.id} className="bg-white/[0.04] rounded-xl border border-white/10 shadow-sm hover:shadow-md transition-all overflow-hidden">
                       <div onClick={() => setSelectedOrder(isExpanded ? null : order)}
-                        className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50">
+                        className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03]">
                         <div className="flex items-center gap-4">
                           <div className="w-3 h-3 rounded-full bg-emerald-500" />
                           <div>
-                            <p className="text-sm font-bold text-slate-800 font-mono">{order.serialNumber}</p>
-                            <p className="text-xs text-slate-500">{order.clientName} — {order.clientCity}</p>
+                            <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
+                            <p className="text-xs text-gray-400">{order.clientName} — {order.clientCity}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <StatusBadge status={order.status} />
-                          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>
-                          <svg className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                          <span className="text-xs text-gray-500 bg-white/10 px-2 py-0.5 rounded">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>
+                          <svg className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
                         </div>
                       </div>
                       {isExpanded && (
-                        <div className="px-5 pb-5 border-t border-slate-100 pt-4">
+                        <div className="px-5 pb-5 border-t border-white/5 pt-4">
                           <FileManager orderId={order.id} orderSerial={order.serialNumber} engineerName={session?.name || config.title} onFileChange={() => loadVault()} />
                         </div>
                       )}
@@ -404,22 +442,31 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
           </div>
         )}
 
+        {/* ════════════════════════════════════════════════════════════ */}
+        {/* TAB: ARCHIVES GLOBALES */}
+        {/* ════════════════════════════════════════════════════════════ */}
+        {tab === 'archives' && (
+          <div className="flex-1 overflow-y-auto">
+            <ArchiveOrders onSelectOrder={(id) => { setShowFiche(true); apiFetch(`/orders/${id}`).then((o: any) => setSelectedOrder(o)).catch(() => {}) }} />
+          </div>
+        )}
+
         {/* ═══ FILE VIEWER ═══ */}
         {showFile && selectedOrder && (() => {
           const allUploads = getUploads(selectedOrder.id)
           const currentFile = allUploads[fileIndex] || null
           return (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6">
-              <div className="bg-[#0a0f1a] rounded-2xl border border-slate-700 w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-                <div className="flex items-center justify-between px-5 py-3 bg-[#111827] border-b border-slate-700 flex-shrink-0">
-                  <div><span className="text-sm font-bold text-white">{selectedOrder.serialNumber}</span><span className="text-xs text-slate-400 ml-3">| {allUploads.length} fichier{allUploads.length > 1 ? 's' : ''}</span></div>
-                  <button onClick={() => setShowFile(false)} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold">✕ Fermer</button>
+              <div className="bg-[#0a0f1a] rounded-2xl border border-white/10 w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+                <div className="flex items-center justify-between px-5 py-3 bg-[#111827] border-b border-white/10 flex-shrink-0">
+                  <div><span className="text-sm font-bold text-white">{selectedOrder.serialNumber}</span><span className="text-xs text-gray-500 ml-3">| {allUploads.length} fichier{allUploads.length > 1 ? 's' : ''}</span></div>
+                  <button onClick={() => setShowFile(false)} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-white/[0.12] text-white text-xs font-semibold">✕ Fermer</button>
                 </div>
                 {allUploads.length > 1 && (
-                  <div className="flex gap-1 px-4 pt-3 pb-0 bg-[#0d1520] border-b border-slate-700 flex-shrink-0">
+                  <div className="flex gap-1 px-4 pt-3 pb-0 bg-[#0d1520] border-b border-white/10 flex-shrink-0">
                     {allUploads.map((f, i) => (
                       <button key={i} onClick={() => setFileIndex(i)}
-                        className={`px-3 py-1.5 rounded-t-lg text-xs font-semibold transition-all ${fileIndex === i ? 'bg-[#0a0f1a] text-white border border-slate-700 border-b-transparent' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                        className={`px-3 py-1.5 rounded-t-lg text-xs font-semibold transition-all ${fileIndex === i ? 'bg-[#0a0f1a] text-white border border-white/10 border-b-transparent' : 'text-gray-500 hover:text-white bg-white/10'}`}>
                         {f.name.length > 20 ? f.name.slice(0, 18) + '…' : f.name}
                       </button>
                     ))}
@@ -427,7 +474,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                 )}
                 <div className="flex-1 overflow-hidden">
                   {currentFile ? <FileViewer fileData={currentFile.data} fileName={currentFile.name} fileType={currentFile.type} />
-                  : <div className="h-full flex flex-col items-center justify-center text-slate-400"><span className="text-5xl mb-4">📁</span><p className="text-sm font-medium">Aucun fichier</p></div>}
+                  : <div className="h-full flex flex-col items-center justify-center text-gray-500"><span className="text-5xl mb-4">📁</span><p className="text-sm font-medium">Aucun fichier</p></div>}
                 </div>
               </div>
             </div>
@@ -436,11 +483,13 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
 
         <InstallPWA variant="compact" />
         {/* ═══ FOOTER ═══ */}
-        <footer className="flex-shrink-0 bg-surface-50 border-t border-slate-200 px-6 py-2 flex items-center justify-between text-[10px] text-slate-400">
+        <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/10 px-6 py-2 flex items-center justify-between text-[10px] text-gray-500">
           <span>RMASC — {config.title} v2.5.3</span>
-          <span>{orders.length} commandes • {vaultFiles.length} fichiers</span>
+          <span>{orders.length} commandes • {vaultFiles.length} fichiers • ⌘K Recherche • ⌘I Agent</span>
         </footer>
       </PageBackground>
+      {showAgent && <AgentPanel onClose={() => setShowAgent(false)} />}
+      {showSmartSearch && <SmartSearch onNavigate={(view) => { setShowSmartSearch(false) }} />}
     </div>
   )
 }

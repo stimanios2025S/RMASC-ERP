@@ -104,9 +104,9 @@ export default function HelpPage({ onBack }: Props) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-surface-50">
+    <div className="flex-1 overflow-y-auto bg-white/[0.04]">
       {/* ── Header ── */}
-      <div className="sticky top-0 z-20 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-20 bg-white/[0.04] border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
             <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-all">
@@ -118,15 +118,15 @@ export default function HelpPage({ onBack }: Props) {
               <span className="text-white text-lg">❓</span>
             </div>
             <div>
-              <h1 className="text-lg font-extrabold text-slate-800 tracking-tight">🧭 Catalogue d'utilisation</h1>
-              <p className="text-[11px] text-slate-400 font-medium">Guide complet — RMASC FACTORY v2.5.2</p>
+              <h1 className="text-lg font-extrabold text-gray-200 tracking-tight">🧭 Catalogue d'utilisation</h1>
+              <p className="text-[11px] text-gray-400 font-semibold">Guide complet — RMASC FACTORY v2.5.2</p>
             </div>
           </div>
         </div>
         <div className="relative">
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Rechercher une fonctionnalité..."
-            className="w-64 px-3.5 py-2 pl-9 rounded-xl bg-surface-50 border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-200" />
+            className="w-64 px-3.5 py-2 pl-9 rounded-xl bg-white/[0.04] border border-white/10 text-sm text-gray-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-200" />
           <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
       </div>
@@ -150,23 +150,23 @@ export default function HelpPage({ onBack }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {HELP_SECTIONS.slice(0, 4).map(s => (
             <button key={s.id} onClick={() => setActiveSection(activeSection === s.id ? null : s.id)}
-              className={`text-left p-3.5 rounded-xl border transition-all ${activeSection === s.id ? 'bg-amber-50 border-amber-300 shadow-sm' : 'bg-surface-50 border-slate-200 hover:border-slate-300 hover:shadow-sm'}`}>
+              className={`text-left p-3.5 rounded-xl border transition-all ${activeSection === s.id ? 'bg-amber-500/10 border-amber-500/30 shadow-sm' : 'bg-white/[0.04] border-white/10 hover:border-white/10 hover:shadow-sm'}`}>
               <span className="text-xl block mb-1">{s.icon}</span>
-              <p className="text-xs font-bold text-slate-700 leading-tight">{s.title.split('—')[0].trim()}</p>
+              <p className="text-xs font-bold text-gray-200 leading-tight">{s.title.split('—')[0].trim()}</p>
             </button>
           ))}
         </div>
 
         {/* ── Sections détaillées ── */}
         {filtered.map(section => (
-          <div key={section.id} id={`section-${section.id}`} className={`bg-surface-50 rounded-2xl border overflow-hidden shadow-sm transition-all ${activeSection && activeSection !== section.id ? 'opacity-40' : ''}`}>
+          <div key={section.id} id={`section-${section.id}`} className={`bg-white/[0.04] rounded-2xl border overflow-hidden shadow-sm transition-all ${activeSection && activeSection !== section.id ? 'opacity-40' : ''}`}>
             <div
               onClick={() => setActiveSection(activeSection === section.id ? null : section.id)}
-              className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-50 transition-all border-b border-slate-100"
+              className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.04] transition-all border-b border-white/10"
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">{section.icon}</span>
-                <h3 className="text-sm font-extrabold text-slate-800">{section.title}</h3>
+                <h3 className="text-sm font-extrabold text-gray-200">{section.title}</h3>
               </div>
               <svg className={`w-4 h-4 text-slate-400 transition-transform ${activeSection === section.id ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
@@ -176,20 +176,20 @@ export default function HelpPage({ onBack }: Props) {
                   const stepKey = `${section.id}-${idx}`
                   const isOpen = expandedSteps[stepKey]
                   return (
-                    <div key={stepKey} className="border border-slate-100 rounded-xl overflow-hidden">
+                    <div key={stepKey} className="border border-white/10 rounded-xl overflow-hidden">
                       <div
                         onClick={() => toggleStep(stepKey)}
-                        className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-surface-50 transition-all"
+                        className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-white/[0.04] transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center flex-shrink-0">{idx + 1}</span>
-                          <span className="text-sm font-semibold text-slate-700">{step.label}</span>
+                          <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold flex items-center justify-center flex-shrink-0">{idx + 1}</span>
+                          <span className="text-sm font-semibold text-gray-200">{step.label}</span>
                         </div>
                         <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
                       </div>
                       {isOpen && (
-                        <div className="px-4 pb-3 pt-1 border-t border-slate-50">
-                          <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
+                        <div className="px-4 pb-3 pt-1 border-t border-white/5">
+                          <p className="text-sm text-gray-400 leading-relaxed">{step.desc}</p>
                         </div>
                       )}
                     </div>
@@ -205,8 +205,8 @@ export default function HelpPage({ onBack }: Props) {
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-xl flex-shrink-0">📧</div>
             <div>
-              <h3 className="text-sm font-extrabold text-slate-800 mb-1">📬 Support technique & signalement d'incidents</h3>
-              <p className="text-sm text-slate-600 mb-2">
+              <h3 className="text-sm font-extrabold text-gray-200 mb-1">📬 Support technique & signalement d'incidents</h3>
+              <p className="text-sm text-gray-400 mb-2">
                 Pour toute question, suggestion ou signalement d'anomalie concernant le fonctionnement du progiciel,
                 veuillez contacter l'administrateur système à l'adresse suivante :
               </p>

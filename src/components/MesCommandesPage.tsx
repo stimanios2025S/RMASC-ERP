@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { apiFetch } from '../config/api'
 import { addNotice, getNotices, addUpload, getUploads } from '../config/runtime-store'
 import AddElevator from './AddElevator'
 import FileManager from './FileManager'
+import FicheTechniqueView from './FicheTechniqueView'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 interface OrderRow {
@@ -31,6 +32,9 @@ interface OrderRow {
   optCctv: boolean
   optPortesCoupeFeu: boolean
   optPanneauTactile: boolean
+  isStamped?: boolean
+  stampedBy?: string
+  stampedAt?: string
   _count: { cadSubmissions: number }
 }
 
@@ -73,16 +77,16 @@ interface ArchiveDoc {
 
 // ─── Status helpers ───────────────────────────────────────────────────────
 const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  BROUILLON:               { label: 'Brouillon', bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' },
-  ATTENTE_DESSIN_TECH:     { label: 'Attente Plan', bg: 'bg-sky-50', text: 'text-sky-700', dot: 'bg-sky-500' },
-  ATTENTE_APPROBATION_ADMIN: { label: 'Approbation Admin', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
-  ATTENTE_DESSIN_2D:       { label: 'Attente Dessin 2D', bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
-  ATTENTE_VERIFICATION:    { label: 'Vérification', bg: 'bg-rose-50', text: 'text-rose-700', dot: 'bg-rose-500' },
-  PRET_POUR_PRODUCTION:    { label: 'Prêt Production', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  EN_LIVRAISON:            { label: 'En Livraison', bg: 'bg-cyan-50', text: 'text-cyan-700', dot: 'bg-cyan-500' },
-  LIVREE:                  { label: 'Livrée', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  VALIDEE:                 { label: 'Validée', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  ANNULEE:                 { label: 'Annulée', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
+  BROUILLON:               { label: 'Brouillon', bg: 'bg-white/[0.06]', text: 'text-gray-400', dot: 'bg-gray-500' },
+  ATTENTE_DESSIN_TECH:     { label: 'Attente Plan', bg: 'bg-sky-500/15', text: 'text-sky-400', dot: 'bg-sky-400' },
+  ATTENTE_APPROBATION_ADMIN: { label: 'Approbation Admin', bg: 'bg-amber-500/15', text: 'text-amber-400', dot: 'bg-amber-400' },
+  ATTENTE_DESSIN_2D:       { label: 'Attente Dessin 2D', bg: 'bg-violet-500/15', text: 'text-violet-400', dot: 'bg-violet-400' },
+  ATTENTE_VERIFICATION:    { label: 'Vérification', bg: 'bg-rose-500/15', text: 'text-rose-400', dot: 'bg-rose-400' },
+  PRET_POUR_PRODUCTION:    { label: 'Prêt Production', bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+  EN_LIVRAISON:            { label: 'En Livraison', bg: 'bg-cyan-500/15', text: 'text-cyan-400', dot: 'bg-cyan-400' },
+  LIVREE:                  { label: 'Livrée', bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+  VALIDEE:                 { label: 'Validée', bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+  ANNULEE:                 { label: 'Annulée', bg: 'bg-red-500/15', text: 'text-red-400', dot: 'bg-red-400' },
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -157,23 +161,23 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   // ── Delete confirmation modal ──
   if (deleteConfirm) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-        <div className="bg-surface-50 rounded-2xl shadow-2xl p-6 w-[420px]">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 w-[420px] border border-white/10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-2xl">⚠️</div>
+            <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-2xl">⚠️</div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">Supprimer la commande</h3>
-              <p className="text-xs text-slate-500">Cette action est irréversible.</p>
+              <h3 className="text-base font-bold text-gray-200">Supprimer la commande</h3>
+              <p className="text-xs text-gray-500">Cette action est irréversible.</p>
             </div>
           </div>
-          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
-            <p className="text-sm font-bold text-slate-800 font-mono">{deleteConfirm.serialNumber}</p>
-            <p className="text-xs text-slate-500">{deleteConfirm.clientName} — {deleteConfirm.clientCity}</p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mb-4">
+            <p className="text-sm font-bold text-gray-200 font-mono">{deleteConfirm.serialNumber}</p>
+            <p className="text-xs text-gray-500">{deleteConfirm.clientName} — {deleteConfirm.clientCity}</p>
           </div>
-          <p className="text-xs text-slate-600 mb-4">Tous les documents et soumissions CAD liés seront également supprimés.</p>
+          <p className="text-xs text-gray-400 mb-4">Tous les documents et soumissions CAD liés seront également supprimés.</p>
           <div className="flex items-center gap-2 justify-end">
             <button onClick={() => setDeleteConfirm(null)}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 transition-all">Annuler</button>
+              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:bg-white/[0.06] transition-all">Annuler</button>
             <button onClick={async () => {
               setDeleting(true)
               try {
@@ -183,7 +187,7 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
               } catch { setDeleteConfirm(null) }
               setDeleting(false)
             }} disabled={deleting}
-              className="px-4 py-2 rounded-xl text-sm font-bold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-all flex items-center gap-2">
+              className="px-4 py-2 rounded-xl text-sm font-bold bg-red-500 text-white hover:bg-red-400 disabled:opacity-50 transition-all flex items-center gap-2">
               {deleting ? '⏳...' : '🗑️ Confirmer la suppression'}
             </button>
           </div>
@@ -197,7 +201,6 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
       <OrderDetailView
         order={selectedOrder}
         onBack={() => setSelectedOrder(null)}
-        onFiche={onFiche ? () => onFiche(selectedOrder.id) : undefined}
         onEdit={async () => { try { const d = await apiFetch(`/orders/${selectedOrder.id}`); setEditingOrder(d) } catch {} }}
         onDelete={() => setDeleteConfirm(selectedOrder)}
       />
@@ -205,37 +208,37 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50/60 via-surface-50 to-surface-50">
-      <header className="sticky top-0 z-40 bg-gradient-to-r from-primary-50 to-surface-50 border-b border-surface-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-40 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-gray-200 transition-all">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
           <div>
-            <h1 className="text-lg font-extrabold text-slate-800 tracking-tight">📋 Mes Commandes</h1>
-            <p className="text-[11px] text-slate-400 font-medium">{stats.total} commandes au total</p>
+            <h1 className="text-lg font-extrabold text-gray-200 tracking-tight">📋 Mes Commandes</h1>
+            <p className="text-[11px] text-gray-500 font-semibold">{stats.total} commandes au total</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher par série ou client..."
-              className="w-56 px-3.5 py-2 rounded-xl bg-surface-50 border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-200" />
+              className="w-56 px-3.5 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
           </div>
         </div>
       </header>
 
       <div className="px-6 py-4 grid grid-cols-4 gap-4">
         {[
-          { label: 'Total', value: stats.total, color: 'text-slate-800', bg: 'bg-surface-50 border border-slate-200' },
-          { label: 'En cours', value: stats.actives, color: 'text-primary-700', bg: 'bg-primary-50 border border-primary-100' },
-          { label: 'Prêts Livraison', value: stats.pret, color: 'text-cyan-700', bg: 'bg-cyan-50 border border-cyan-100' },
-          { label: 'Terminées', value: stats.validees, color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-100' },
+          { label: 'Total', value: stats.total, color: 'text-amber-400', bg: 'bg-white/[0.06] border border-white/10' },
+          { label: 'En cours', value: stats.actives, color: 'text-blue-400', bg: 'bg-blue-500/10 border border-blue-500/20' },
+          { label: 'Prêts Livraison', value: stats.pret, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border border-cyan-500/20' },
+          { label: 'Terminées', value: stats.validees, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border border-emerald-500/20' },
         ].map(kpi => (
           <div key={kpi.label} className={`rounded-xl px-4 py-3 flex items-center justify-between ${kpi.bg}`}>
-            <span className="text-xs font-semibold text-slate-500">{kpi.label}</span>
+            <span className="text-xs font-semibold text-gray-400">{kpi.label}</span>
             <span className={`text-xl font-extrabold ${kpi.color}`}>{kpi.value}</span>
           </div>
         ))}
@@ -243,22 +246,22 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
 
       <div className="px-6 pb-3 flex items-center gap-2 flex-wrap">
         <button onClick={() => setFilterStatus('all')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === 'all' ? 'bg-slate-800 text-white' : 'bg-surface-50 border border-slate-200 text-slate-500 hover:bg-surface-50'}`}>
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === 'all' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/[0.06] border border-white/10 text-gray-400 hover:bg-white/[0.1]'}`}>
           Tous
         </button>
         {uniqueStatuses.map(s => (
           <button key={s} onClick={() => setFilterStatus(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === s ? 'bg-slate-800 text-white' : 'bg-surface-50 border border-slate-200 text-slate-500 hover:bg-surface-50'}`}>
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === s ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/[0.06] border border-white/10 text-gray-400 hover:bg-white/[0.1]'}`}>
             {STATUS_MAP[s]?.label || s}
           </button>
         ))}
       </div>
 
       <div className="px-6 pb-8">
-        <div className="bg-primary-50/80 rounded-2xl border border-surface-200 overflow-hidden shadow-sm">
+        <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden shadow-lg">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 bg-surface-50/50">
+              <tr className="border-b border-white/5 bg-white/[0.02]">
                 {[
                   { key: 'serialNumber', label: 'N° Série' },
                   { key: 'clientName', label: 'Client' },
@@ -273,43 +276,43 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
                         else { setSortField(col.key); setSortDir('desc') }
                       }
                     }}
-                    className={`px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-left ${col.key === 'serialNumber' || col.key === 'createdAt' ? 'cursor-pointer hover:text-slate-800 select-none' : ''}`}>
+                    className={`px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-left ${col.key === 'serialNumber' || col.key === 'createdAt' ? 'cursor-pointer hover:text-gray-300 select-none' : ''}`}>
                     <span className="inline-flex items-center gap-1">
                       {col.label}
                       {sortField === col.key && <span className="text-[10px]">{sortDir === 'asc' ? '↑' : '↓'}</span>}
                     </span>
                   </th>
                 ))}
-                <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-left">Actions</th>
+                <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-left">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-white/[0.03]">
               {loading ? (
-                <tr><td colSpan={6} className="text-center py-12 text-sm text-slate-400">Chargement...</td></tr>
+                <tr><td colSpan={6} className="text-center py-12 text-sm text-gray-500">Chargement...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-12 text-sm text-slate-400">Aucune commande trouvée.</td></tr>
+                <tr><td colSpan={6} className="text-center py-12 text-sm text-gray-500">Aucune commande trouvée.</td></tr>
               ) : (
                 filtered.map(order => (
                   <tr key={order.id} onClick={() => setSelectedOrder(order)}
-                    className={`hover:bg-primary-50/30 transition-all cursor-pointer ${order.status === 'LIVREE' ? 'bg-emerald-50/30' : order.status === 'ANNULEE' ? 'bg-red-50/20' : ''}`}>
+                    className={`hover:bg-white/[0.03] transition-all cursor-pointer ${order.status === 'LIVREE' ? 'bg-emerald-500/[0.04]' : order.status === 'ANNULEE' ? 'bg-red-500/[0.03]' : ''}`}>
                     <td className="px-4 py-3">
-                      <span className="text-sm font-bold text-slate-800 font-mono">{order.serialNumber}</span>
+                      <span className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm font-semibold text-slate-700">{order.clientName}</p>
-                      <p className="text-[11px] text-slate-400">{order.clientCity}</p>
+                      <p className="text-sm font-semibold text-gray-300">{order.clientName}</p>
+                      <p className="text-[11px] text-gray-500">{order.clientCity}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-slate-600">{order.typeMotorisation}</span>
+                      <span className="text-sm text-gray-400">{order.typeMotorisation}</span>
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
                     <td className="px-4 py-3">
-                      <span className="text-xs text-slate-400 font-mono">{formatDate(order.createdAt)}</span>
+                      <span className="text-xs text-gray-500 font-mono">{formatDate(order.createdAt)}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button onClick={(e) => { e.stopPropagation(); setSelectedOrder(order) }}
-                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">
+                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-all">
                           Détails
                         </button>
                         <button onClick={async (e) => {
@@ -319,16 +322,16 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
                             setEditingOrder(d)
                           } catch {}
                         }}
-                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all">
+                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.1] transition-all">
                           ✏️
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(order) }}
-                          className="px-2 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-500 hover:bg-red-100 transition-all">
+                          className="px-2 py-1 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">
                           🗑️
                         </button>
                         {onFiche && (
                           <button onClick={(e) => { e.stopPropagation(); onFiche(order.id) }}
-                            className="px-3 py-1 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">📄</button>
+                            className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-all">📄</button>
                         )}
                       </div>
                     </td>
@@ -347,8 +350,8 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
 function Row({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex justify-between text-xs">
-      <span className="text-slate-400">{label}</span>
-      <span className="font-semibold text-slate-700">{value || '—'}</span>
+      <span className="text-gray-500">{label}</span>
+      <span className="font-semibold text-gray-300">{value || '—'}</span>
     </div>
   )
 }
@@ -356,8 +359,8 @@ function Row({ label, value }: { label: string; value: string | null }) {
 function RowBool({ label, value }: { label: string; value: boolean }) {
   return (
     <div className="flex justify-between text-xs">
-      <span className="text-slate-400">{label}</span>
-      <span className={`font-semibold ${value ? 'text-emerald-600' : 'text-slate-300'}`}>{value ? '✓' : '✗'}</span>
+      <span className="text-gray-500">{label}</span>
+      <span className={`font-semibold ${value ? 'text-emerald-400' : 'text-gray-400'}`}>{value ? '✓' : '✗'}</span>
     </div>
   )
 }
@@ -379,9 +382,9 @@ function getCadIcon(type: string): string {
 }
 
 function getStatusColor(status: string): string {
-  if (status === 'APPROUVE' || status === 'VALIDE' || status === 'LIVREE') return 'text-emerald-600 bg-emerald-50 border-emerald-200'
-  if (status === 'REJETE' || status === 'ANNULE') return 'text-red-600 bg-red-50 border-red-200'
-  return 'text-amber-600 bg-amber-50 border-amber-200'
+  if (status === 'APPROUVE' || status === 'VALIDE' || status === 'LIVREE') return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+  if (status === 'REJETE' || status === 'ANNULE') return 'text-red-400 bg-red-500/10 border-red-500/20'
+  return 'text-amber-400 bg-amber-500/10 border-amber-500/20'
 }
 
 function getStatusLabel(status: string): string {
@@ -403,10 +406,10 @@ function formatBytes(bytes: number): string {
 //  ORDER DETAIL VIEW — with Archive Tab
 // ═════════════════════════════════════════════════════════════════════════════
 
-function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
-  order: OrderRow; onBack: () => void; onFiche?: () => void; onEdit?: () => void; onDelete?: () => void
+function OrderDetailView({ order, onBack, onEdit, onDelete }: {
+  order: OrderRow; onBack: () => void; onEdit?: () => void; onDelete?: () => void
 }) {
-  const [tab, setTab] = useState<'info' | 'edit' | 'production' | 'archive' | 'fichiers'>('info')
+  const [tab, setTab] = useState<'info' | 'edit' | 'production' | 'archive' | 'fichiers' | 'fiche'>('info')
   const [noteText, setNoteText] = useState('')
   const [notices, setNotices] = useState(getNotices(order.id))
   const [noteSent, setNoteSent] = useState(false)
@@ -487,47 +490,46 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
   const docCount = (archive?.cadSubmissions?.length || 0) + (archive?.stockDocuments?.length || 0) + uploadedFiles.length
 
   return (
-    <div className="min-h-screen bg-surface-50">
+    <div className="min-h-screen">
       {/* Top bar */}
-      <div className="sticky top-0 z-40 bg-surface-50 border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-40 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+          <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-gray-200 transition-all">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           </button>
-          <h2 className="text-base font-extrabold text-slate-800 font-mono">{order.serialNumber}</h2>
+          <h2 className="text-base font-extrabold text-gray-200 font-mono">{order.serialNumber}</h2>
           <StatusBadge status={order.status} />
         </div>
         <div className="flex items-center gap-2">
           {onEdit && (
-            <button onClick={onEdit} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all">
+            <button onClick={onEdit} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.1] transition-all">
               ✏️ Modifier
             </button>
           )}
           {onDelete && (
-            <button onClick={onDelete} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-500 hover:bg-red-100 transition-all">
+            <button onClick={onDelete} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">
               🗑️ Supprimer
             </button>
           )}
-          {onFiche && (
-            <button onClick={onFiche} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">
-              📄 Fiche Technique
-            </button>
-          )}
+          <button onClick={() => setTab('fiche')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab === 'fiche' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/[0.06] text-gray-400 hover:bg-white/[0.1]'}`}>
+            📄 Fiche Technique
+          </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 px-6 flex gap-0 overflow-x-auto">
+      <div className="border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
         {[
           { key: 'info' as const, label: '📋 Informations' },
           { key: 'edit' as const, label: '✏️ Modifier & Fichiers' },
           { key: 'production' as const, label: '🏭 Production & Notifications' },
           { key: 'archive' as const, label: `📦 Archive (${docCount})` },
           { key: 'fichiers' as const, label: `📁 Fichiers (${uploadedFiles.length})` },
+          { key: 'fiche' as const, label: '📄 Fiche Technique' },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${
-              tab === t.key ? 'border-slate-800 text-slate-800' : 'border-transparent text-slate-400 hover:text-slate-600'
+            className={`px-5 py-3 text-base font-bold border-b-2 transition-all whitespace-nowrap ${
+              tab === t.key ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'
             }`}>
             {t.label}
           </button>
@@ -536,7 +538,7 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
 
       {/* Toast feedback */}
       {noteSent && (
-        <div className="bg-emerald-50 border-b border-emerald-100 px-6 py-2 text-sm text-emerald-700 font-medium flex items-center gap-2">
+        <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-6 py-2 text-sm text-emerald-400 font-medium flex items-center gap-2">
           <span>✅</span> Action enregistrée
           <button onClick={() => setNoteSent(false)} className="ml-auto">✕</button>
         </div>
@@ -546,41 +548,41 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
       {tab === 'info' && (
         <div className="max-w-4xl mx-auto p-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-surface-50 rounded-xl p-4 border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Client</p>
-              <p className="text-sm font-bold text-slate-800">{order.clientName}</p>
-              <p className="text-xs text-slate-500">{order.clientCity}</p>
-              {order.clientEmail && <p className="text-xs text-slate-400">{order.clientEmail}</p>}
-              <p className="text-xs text-slate-400">{order.clientPhone}</p>
+            <div className="bg-white/[0.04] rounded-xl p-4 border border-white/5">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Client</p>
+              <p className="text-sm font-bold text-gray-200">{order.clientName}</p>
+              <p className="text-xs text-gray-400">{order.clientCity}</p>
+              {order.clientEmail && <p className="text-xs text-gray-500">{order.clientEmail}</p>}
+              <p className="text-xs text-gray-500">{order.clientPhone}</p>
             </div>
-            <div className="bg-surface-50 rounded-xl p-4 border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Motorisation</p>
-              <p className="text-sm font-bold text-slate-800">{order.typeMotorisation}</p>
-              <p className="text-xs text-slate-500">{order.sousTypeElectrique || '—'}</p>
-              <p className="text-xs text-slate-400">{order.vitesseMs ? `${order.vitesseMs} m/s` : '—'}</p>
-              <p className="text-xs text-slate-400">{order.nombreEtages ? `${order.nombreEtages} étages` : '—'}</p>
+            <div className="bg-white/[0.04] rounded-xl p-4 border border-white/5">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Motorisation</p>
+              <p className="text-sm font-bold text-gray-200">{order.typeMotorisation}</p>
+              <p className="text-xs text-gray-400">{order.sousTypeElectrique || '—'}</p>
+              <p className="text-xs text-gray-500">{order.vitesseMs ? `${order.vitesseMs} m/s` : '—'}</p>
+              <p className="text-xs text-gray-500">{order.nombreEtages ? `${order.nombreEtages} étages` : '—'}</p>
             </div>
           </div>
-          <div className="bg-surface-50 rounded-xl p-4 border border-slate-100">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dimensions Gaine (mm)</p>
+          <div className="bg-white/[0.04] rounded-xl p-4 border border-white/5">
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Dimensions Gaine (mm)</p>
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-surface-50 rounded-lg p-3 text-center border border-slate-100">
-                <p className="text-xs text-slate-400">Largeur</p>
-                <p className="text-base font-extrabold text-slate-800">{order.largeurGaineMm}</p>
+              <div className="bg-white/[0.04] rounded-lg p-3 text-center border border-white/5">
+                <p className="text-xs text-gray-500">Largeur</p>
+                <p className="text-base font-extrabold text-gray-200">{order.largeurGaineMm}</p>
               </div>
-              <div className="bg-surface-50 rounded-lg p-3 text-center border border-slate-100">
-                <p className="text-xs text-slate-400">Profondeur</p>
-                <p className="text-base font-extrabold text-slate-800">{order.profondeurGaineMm}</p>
+              <div className="bg-white/[0.04] rounded-lg p-3 text-center border border-white/5">
+                <p className="text-xs text-gray-500">Profondeur</p>
+                <p className="text-base font-extrabold text-gray-200">{order.profondeurGaineMm}</p>
               </div>
-              <div className="bg-surface-50 rounded-lg p-3 text-center border border-slate-100">
-                <p className="text-xs text-slate-400">Hauteur</p>
-                <p className="text-base font-extrabold text-slate-800">{order.hauteurGaineMm}</p>
+              <div className="bg-white/[0.04] rounded-lg p-3 text-center border border-white/5">
+                <p className="text-xs text-gray-500">Hauteur</p>
+                <p className="text-base font-extrabold text-gray-200">{order.hauteurGaineMm}</p>
               </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-surface-50 rounded-xl p-4 border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Matériaux</p>
+            <div className="bg-white/[0.04] rounded-xl p-4 border border-white/5">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Matériaux</p>
               <div className="space-y-1">
                 <Row label="Cabine" value={order.materiauCabine} />
                 <Row label="Portes" value={order.materiauPortes} />
@@ -588,8 +590,8 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
                 <Row label="Sol" value={order.materiauSol} />
               </div>
             </div>
-            <div className="bg-surface-50 rounded-xl p-4 border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Options</p>
+            <div className="bg-white/[0.04] rounded-xl p-4 border border-white/5">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Options</p>
               <div className="space-y-1">
                 <RowBool label="Panoramique" value={order.optPanoramique} />
                 <RowBool label="Secours" value={order.optSecours} />
@@ -608,57 +610,57 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
         <AddElevator onBack={() => { setShowFullEdit(false); setFullEditOrder(null) }} editOrder={fullEditOrder} />
       ) : tab === 'edit' ? (
         <div className="max-w-3xl mx-auto p-6 space-y-5">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 p-5 shadow-sm">
+          <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl border border-amber-500/20 p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-lg">✏️</div>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-lg">✏️</div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800">Modification complète</h3>
-                  <p className="text-xs text-slate-500">Modifiez toutes les informations de la commande en utilisant l'assistant complet.</p>
+                  <h3 className="text-sm font-bold text-gray-200">Modification complète</h3>
+                  <p className="text-xs text-gray-500">Modifiez toutes les informations de la commande en utilisant l'assistant complet.</p>
                 </div>
               </div>
               <button onClick={async () => {
                 try { const d = await apiFetch(`/orders/${order.id}`); setFullEditOrder(d); setShowFullEdit(true) }
                 catch { setNoteSent(true); setTimeout(() => setNoteSent(false), 3000) }
               }}
-                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-all shadow-sm flex items-center gap-2">
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-sm font-bold transition-all shadow-lg shadow-amber-500/25 flex items-center gap-2">
                 ✏️ Modifier la commande
               </button>
             </div>
           </div>
 
-          <div className="bg-surface-50 rounded-xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-800 mb-3">✏️ Modifier les informations client</h3>
+          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-200 mb-3">✏️ Modifier les informations client</h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-slate-500 block mb-1">Nom du client</label>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Nom du client</label>
                 <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200" />
+                  className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-500 block mb-1">Ville</label>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Ville</label>
                 <input type="text" value={editCity} onChange={e => setEditCity(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200" />
+                  className="w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
               </div>
             </div>
             <button onClick={handleSaveEdit} disabled={editSaving}
-              className="mt-3 px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-50 transition-all">
+              className="mt-3 px-4 py-2 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 disabled:opacity-50 transition-all">
               {editSaving ? '⏳ Enregistrement...' : '💾 Enregistrer les modifications'}
             </button>
           </div>
 
-          <div className="bg-surface-50 rounded-xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-800 mb-3">📎 Ajouter des fichiers</h3>
-            <p className="text-xs text-slate-400 mb-3">Ces fichiers seront archivés avec la commande.</p>
+          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-200 mb-3">📎 Ajouter des fichiers</h3>
+            <p className="text-xs text-gray-500 mb-3">Ces fichiers seront archivés avec la commande.</p>
             <button onClick={handleUploadFile}
-              className="px-4 py-2.5 rounded-lg text-xs font-bold bg-primary-600 text-white hover:bg-primary-700 transition-all">
+              className="px-4 py-2.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/25">
               📂 Choisir un fichier
             </button>
             {uploadedFiles.length > 0 && (
               <div className="mt-4 space-y-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Fichiers attachés ({uploadedFiles.length})</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Fichiers attachés ({uploadedFiles.length})</p>
                 {uploadedFiles.map((f, i) => (
-                  <div key={i} className="group flex items-center gap-2 text-xs text-slate-600 bg-slate-50 rounded-lg px-3 py-2 hover:bg-slate-100 transition-all cursor-pointer"
+                  <div key={i} className="group flex items-center gap-2 text-xs text-gray-400 bg-white/[0.04] rounded-lg px-3 py-2 hover:bg-white/[0.06] transition-all cursor-pointer"
                     onClick={() => {
                       const uploads = getUploads(order.id)
                       const idx = uploads.findIndex(u => u.name === f.name)
@@ -666,22 +668,22 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
                     }}>
                     <span>📄</span>
                     <span className="font-medium truncate flex-1">{f.name}</span>
-                    <span className="text-slate-400">{new Date(f.uploadedAt).toLocaleDateString('fr-FR')}</span>
-                    <span className="text-[10px] text-amber-600 font-medium opacity-0 group-hover:opacity-100 transition-all">👁️ Voir & Télécharger</span>
+                    <span className="text-gray-500">{new Date(f.uploadedAt).toLocaleDateString('fr-FR')}</span>
+                    <span className="text-[10px] text-amber-400 font-medium opacity-0 group-hover:opacity-100 transition-all">👁️ Voir & Télécharger</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="bg-surface-50 rounded-xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-800 mb-3">📢 Envoyer une notification</h3>
-            <p className="text-xs text-slate-400 mb-2">Cette notification sera visible par tous les ingénieurs du Bureau d'Études.</p>
+          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-200 mb-3">📢 Envoyer une notification</h3>
+            <p className="text-xs text-gray-500 mb-2">Cette notification sera visible par tous les ingénieurs du Bureau d'Études.</p>
             <textarea value={noteText} onChange={e => setNoteText(e.target.value)}
               placeholder="Écrivez votre message ici..." rows={3}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 resize-none" />
+              className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 resize-none" />
             <button onClick={handleSendNote} disabled={!noteText.trim()}
-              className="mt-2 px-4 py-2 rounded-lg text-xs font-bold bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-all">
+              className="mt-2 px-4 py-2 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 disabled:opacity-50 transition-all">
               📨 Envoyer la notification
             </button>
           </div>
@@ -691,61 +693,61 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
       {/* ═══ TAB 3: Production & Notifications ═══ */}
       {tab === 'production' && (
         <div className="max-w-3xl mx-auto p-6 space-y-5">
-          <div className="bg-surface-50 rounded-xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-800 mb-3">🏭 Statut Production</h3>
+          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-200 mb-3">🏭 Statut Production</h3>
             <div className="flex items-center gap-3 mb-3">
               <StatusBadge status={order.status} />
               {order.status === 'LIVREE' && (
-                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">✅ Livrée et terminée</span>
+                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg">✅ Livrée et terminée</span>
               )}
               {order.status === 'EN_LIVRAISON' && (
-                <span className="text-xs font-bold text-cyan-600 bg-cyan-50 px-3 py-1 rounded-lg">🚛 En cours de livraison</span>
+                <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-lg">🚛 En cours de livraison</span>
               )}
             </div>
-            <div className="bg-surface-50 rounded-xl p-4 border border-slate-100">
+            <div className="bg-white/[0.04] rounded-xl p-4 border border-white/5">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Date de création</span>
-                <span className="font-semibold text-slate-700">{formatDate(order.createdAt)}</span>
+                <span className="text-gray-500">Date de création</span>
+                <span className="font-semibold text-gray-300">{formatDate(order.createdAt)}</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-2">
-                <span className="text-slate-500">Motorisation</span>
-                <span className="font-semibold text-slate-700">{order.typeMotorisation}</span>
+                <span className="text-gray-500">Motorisation</span>
+                <span className="font-semibold text-gray-300">{order.typeMotorisation}</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-2">
-                <span className="text-slate-500">Dimensions gaine</span>
-                <span className="font-semibold text-slate-700">{order.largeurGaineMm}×{order.profondeurGaineMm}×{order.hauteurGaineMm} mm</span>
+                <span className="text-gray-500">Dimensions gaine</span>
+                <span className="font-semibold text-gray-300">{order.largeurGaineMm}×{order.profondeurGaineMm}×{order.hauteurGaineMm} mm</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-surface-50 rounded-xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-800 mb-3">📋 Historique des notifications</h3>
+          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-200 mb-3">📋 Historique des notifications</h3>
             {notices.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">Aucune notification envoyée pour cette commande.</p>
+              <p className="text-xs text-gray-500 italic">Aucune notification envoyée pour cette commande.</p>
             ) : (
               <div className="space-y-3">
                 {[...notices].reverse().map((n, i) => (
-                  <div key={i} className="bg-surface-50 rounded-xl p-3 border border-slate-100">
+                  <div key={i} className="bg-white/[0.04] rounded-xl p-3 border border-white/5">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-slate-700">{n.from}</span>
-                      <span className="text-[10px] text-slate-400">{new Date(n.date).toLocaleString('fr-FR')}</span>
+                      <span className="text-xs font-bold text-gray-300">{n.from}</span>
+                      <span className="text-[10px] text-gray-500">{new Date(n.date).toLocaleString('fr-FR')}</span>
                     </div>
-                    <p className="text-sm text-slate-600">{n.message}</p>
+                    <p className="text-sm text-gray-400">{n.message}</p>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="bg-surface-50 rounded-xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-800 mb-3">📎 Fichiers attachés</h3>
+          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-200 mb-3">📎 Fichiers attachés</h3>
             {uploadedFiles.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">Aucun fichier attaché.</p>
+              <p className="text-xs text-gray-500 italic">Aucun fichier attaché.</p>
             ) : (
               uploadedFiles.map((f, i) => (
                 <div key={i} className="flex items-center gap-2 py-2">
                   <span className="text-sm">📄</span>
-                  <span className="text-sm text-slate-700">{f.name}</span>
+                  <span className="text-sm text-gray-400">{f.name}</span>
                 </div>
               ))
             )}
@@ -768,46 +770,46 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-extrabold text-slate-800">📦 Archive Documentaire</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <h2 className="text-lg font-extrabold text-gray-200">📦 Archive Documentaire</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
                 Registre numérique complet de la commande {order.serialNumber} — conforme ISO 9001
               </p>
             </div>
             <button onClick={loadArchive} disabled={archiveLoading}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center gap-1.5">
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.1] transition-all flex items-center gap-1.5">
               🔄 Actualiser
             </button>
           </div>
 
           {archiveLoading ? (
             <div className="text-center py-16">
-              <div className="w-10 h-10 rounded-full border-3 border-slate-200 border-t-amber-500 animate-spin mx-auto mb-3" />
-              <p className="text-sm text-slate-400">Chargement de l'archive...</p>
+              <div className="w-10 h-10 rounded-full border-3 border-white/10 border-t-amber-400 animate-spin mx-auto mb-3" />
+              <p className="text-sm text-gray-500">Chargement de l'archive...</p>
             </div>
           ) : archiveError ? (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center">
               <span className="text-3xl mb-2 block">⚠️</span>
-              <p className="text-sm text-red-700 font-medium">{archiveError}</p>
-              <button onClick={loadArchive} className="mt-3 text-xs text-red-600 underline">Réessayer</button>
+              <p className="text-sm text-red-400 font-medium">{archiveError}</p>
+              <button onClick={loadArchive} className="mt-3 text-xs text-red-400 underline">Réessayer</button>
             </div>
           ) : !archive ? (
             <div className="text-center py-16">
               <span className="text-5xl mb-4 block">📦</span>
-              <p className="text-sm text-slate-400">Cliquez sur l'onglet Archive pour charger les documents.</p>
+              <p className="text-sm text-gray-500">Cliquez sur l'onglet Archive pour charger les documents.</p>
             </div>
           ) : (
             <>
               {/* ── SECTION: Metadata header ── */}
-              <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-5 text-white shadow-md">
+              <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-5 shadow-lg border border-white/5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Commandes / Archive</p>
-                    <h3 className="text-xl font-extrabold font-mono">{archive.order.serialNumber}</h3>
-                    <p className="text-sm text-slate-300 mt-1">{archive.order.clientName} — {archive.order.clientCity}</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-bold">Commandes / Archive</p>
+                    <h3 className="text-xl font-extrabold font-mono text-gray-200">{archive.order.serialNumber}</h3>
+                    <p className="text-sm text-gray-400 mt-1">{archive.order.clientName} — {archive.order.clientCity}</p>
                   </div>
                   <div className="text-right">
                     <StatusBadge status={archive.order.status} />
-                    <p className="text-[10px] text-slate-400 mt-2">Créée le {formatDate(archive.order.createdAt)}</p>
+                    <p className="text-[10px] text-gray-500 mt-2">Créée le {formatDate(archive.order.createdAt)}</p>
                     {archive.order.completedAt && (
                       <p className="text-[10px] text-emerald-400">Terminée le {formatDate(archive.order.completedAt)}</p>
                     )}
@@ -816,31 +818,31 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
               </div>
 
               {/* ── SECTION: Plans Techniques (CAD) ── */}
-              <div className="bg-surface-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="bg-white/[0.04] rounded-2xl border border-white/5 overflow-hidden shadow-sm">
+                <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">📐</span>
-                    <h3 className="text-sm font-bold text-slate-800">Plans Techniques & Soumissions CAD</h3>
+                    <h3 className="text-sm font-bold text-gray-200">Plans Techniques & Soumissions CAD</h3>
                   </div>
-                  <span className="text-xs text-slate-400 font-mono">{archive.cadSubmissions.length} document{archive.cadSubmissions.length > 1 ? 's' : ''}</span>
+                  <span className="text-xs text-gray-500 font-mono">{archive.cadSubmissions.length} document{archive.cadSubmissions.length > 1 ? 's' : ''}</span>
                 </div>
                 {archive.cadSubmissions.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-sm text-slate-400 italic">Aucune soumission CAD dans cette commande.</div>
+                  <div className="px-5 py-8 text-center text-sm text-gray-500 italic">Aucune soumission CAD dans cette commande.</div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-white/[0.03]">
                     {archive.cadSubmissions.map(cad => (
-                      <div key={cad.id} className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/50 transition-all">
+                      <div key={cad.id} className="px-5 py-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-all">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center text-base flex-shrink-0">
+                          <div className="w-9 h-9 rounded-lg bg-amber-500/15 flex items-center justify-center text-base flex-shrink-0">
                             {getCadIcon(cad.engineeringType)}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 truncate">
+                            <p className="text-sm font-semibold text-gray-200 truncate">
                               {cad.engineeringType === 'DESSIN_TECH_1' ? "Plan d'Installation Technique" :
                                cad.engineeringType === 'DESSIN_TECH_2' ? 'Dessin 2D Cabine' :
                                cad.engineeringType === 'MODEL_2D' ? 'Modélisation 2D' : 'Modélisation 3D'}
                             </p>
-                            <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                            <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
                               <span>👤 {cad.engineerName}</span>
                               <span>•</span>
                               <span>📄 {cad.fileMimeType}</span>
@@ -851,9 +853,18 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
                             </div>
                           </div>
                         </div>
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${getStatusColor(cad.status)}`}>
-                          {getStatusLabel(cad.status)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${getStatusColor(cad.status)}`}>
+                            {getStatusLabel(cad.status)}
+                          </span>
+                          {/* Electronic Stamp Seal badge — shown when order has stamped PDFs */}
+                          {cad.status === 'APPROUVE' && order.isStamped && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-500/15 text-red-400 border border-red-500/20 flex items-center gap-1"
+                              title={`Cachet électronique appliqué par ${order.stampedBy || 'Administrateur'}`}>
+                              🏷️ Scellé
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -862,25 +873,25 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
 
               {/* ── SECTION: Documents Stock ── */}
               {archive.stockDocuments.length > 0 && (
-                <div className="bg-surface-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                  <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="bg-white/[0.04] rounded-2xl border border-white/5 overflow-hidden shadow-sm">
+                  <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">📄</span>
-                      <h3 className="text-sm font-bold text-slate-800">Documents d'Approvisionnement</h3>
+                      <h3 className="text-sm font-bold text-gray-200">Documents d'Approvisionnement</h3>
                     </div>
-                    <span className="text-xs text-slate-400 font-mono">{archive.stockDocuments.length} document{archive.stockDocuments.length > 1 ? 's' : ''}</span>
+                    <span className="text-xs text-gray-500 font-mono">{archive.stockDocuments.length} document{archive.stockDocuments.length > 1 ? 's' : ''}</span>
                   </div>
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-white/[0.03]">
                     {archive.stockDocuments.map(doc => (
-                      <div key={doc.id} className="px-5 py-3.5 hover:bg-slate-50/50 transition-all">
+                      <div key={doc.id} className="px-5 py-3.5 hover:bg-white/[0.02] transition-all">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-9 h-9 rounded-lg bg-cyan-50 flex items-center justify-center text-base flex-shrink-0">
+                            <div className="w-9 h-9 rounded-lg bg-cyan-500/15 flex items-center justify-center text-base flex-shrink-0">
                               {getDocIcon(doc.documentType)}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-800 truncate">{doc.title}</p>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                              <p className="text-sm font-semibold text-gray-200 truncate">{doc.title}</p>
+                              <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
                                 <span className="font-mono">{doc.documentNumber}</span>
                                 <span>•</span>
                                 <span>{doc.documentType.replace(/_/g, ' ')}</span>
@@ -895,9 +906,9 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
                           </span>
                         </div>
                         {doc.lines && doc.lines.length > 0 && (
-                          <div className="mt-2 ml-12 pl-3 border-l-2 border-slate-200 space-y-1">
+                          <div className="mt-2 ml-12 pl-3 border-l-2 border-white/5 space-y-1">
                             {doc.lines.map((line, i) => (
-                              <p key={i} className="text-[10px] text-slate-500">
+                              <p key={i} className="text-[10px] text-gray-500">
                                 {line.item?.name || 'Article'} × {line.quantity} — {formatDA(line.totalPrice || 0)}
                               </p>
                             ))}
@@ -911,20 +922,20 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
 
               {/* ── SECTION: Fichiers attachés localement ── */}
               {uploadedFiles.length > 0 && (
-                <div className="bg-surface-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                  <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="bg-white/[0.04] rounded-2xl border border-white/5 overflow-hidden shadow-sm">
+                  <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">📎</span>
-                      <h3 className="text-sm font-bold text-slate-800">Fichiers Attachés</h3>
+                      <h3 className="text-sm font-bold text-gray-200">Fichiers Attachés</h3>
                     </div>
-                    <span className="text-xs text-slate-400 font-mono">{uploadedFiles.length} fichier{uploadedFiles.length > 1 ? 's' : ''}</span>
+                    <span className="text-xs text-gray-500 font-mono">{uploadedFiles.length} fichier{uploadedFiles.length > 1 ? 's' : ''}</span>
                   </div>
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-white/[0.03]">
                     {uploadedFiles.map((f, i) => (
                       <div key={i} className="px-5 py-3 flex items-center gap-3">
                         <span className="text-base">📄</span>
-                        <span className="text-sm font-medium text-slate-700">{f.name}</span>
-                        <span className="text-[10px] text-slate-400 ml-auto">{new Date(f.uploadedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-sm font-medium text-gray-300">{f.name}</span>
+                        <span className="text-[10px] text-gray-500 ml-auto">{new Date(f.uploadedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     ))}
                   </div>
@@ -932,13 +943,13 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
               )}
 
               {/* ── SECTION: Summary / ISO Compliance ── */}
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 p-5 shadow-sm">
+              <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-2xl border border-amber-500/20 p-5 shadow-sm">
                 <div className="flex items-start gap-3">
                   <span className="text-xl">📋</span>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-800 mb-1">Registre de Conformité</h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Cette archive constitue le dossier numérique complet de la commande <strong>{archive.order.serialNumber}</strong>.
+                    <h3 className="text-sm font-bold text-gray-200 mb-1">Registre de Conformité</h3>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Cette archive constitue le dossier numérique complet de la commande <strong className="text-gray-200">{archive.order.serialNumber}</strong>.
                       Elle regroupe l'ensemble des documents techniques, administratifs et commerciaux
                       générés tout au long du cycle de vie de l'ascenseur.
                     </p>
@@ -949,10 +960,10 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
                         { label: 'Fichiers attachés', count: uploadedFiles.length, icon: '📎' },
                         { label: 'Total documents', count: docCount, icon: '📦' },
                       ].map(stat => (
-                        <div key={stat.label} className="bg-surface-50 rounded-xl px-3 py-2.5 text-center border border-amber-100/50">
+                        <div key={stat.label} className="bg-white/[0.06] rounded-xl px-3 py-2.5 text-center border border-white/5">
                           <span className="text-lg block">{stat.icon}</span>
-                          <p className="text-lg font-extrabold text-slate-800">{stat.count}</p>
-                          <p className="text-[10px] text-slate-400">{stat.label}</p>
+                          <p className="text-lg font-extrabold text-gray-200">{stat.count}</p>
+                          <p className="text-[10px] text-gray-500">{stat.label}</p>
                         </div>
                       ))}
                     </div>
@@ -961,6 +972,13 @@ function OrderDetailView({ order, onBack, onFiche, onEdit, onDelete }: {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* ═══ TAB 6: Fiche Technique ═══ */}
+      {tab === 'fiche' && (
+        <div className="p-6">
+          <FicheTechniqueView orderId={order.id} variant="inline" />
         </div>
       )}
     </div>

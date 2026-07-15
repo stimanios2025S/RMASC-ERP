@@ -42,16 +42,63 @@ export default function BureauEtudeVault({ onBack, engineerName }: Props) {
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
-    try {
-      const vaultRaw = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
-      const ordersRaw = JSON.parse(localStorage.getItem('rmasc_local_orders') || '[]')
-      const filtered = engineerName
-        ? vaultRaw.filter((f: any) => f.engineer === engineerName)
-        : vaultRaw
-      setFiles(filtered)
-      setOrders(ordersRaw.map((o: any) => ({ id: o.id, serialNumber: o.serialNumber, clientName: o.clientName, status: o.status })))
-    } catch { /* silent */ }
-    finally { setLoading(false) }
+    let cancelled = false
+    async function load() {
+      try {
+        // Load orders from API (real data)
+        let apiOrders: any[] = []
+        try {
+          const { apiFetch } = await import('../config/api')
+          apiOrders = await apiFetch('/orders')
+        } catch {}
+
+        // Also get vault files from localStorage
+        const vaultRaw = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
+        // Also get uploaded files from runtime-store
+        let uploadFiles: any[] = []
+        try {
+          const raw = JSON.parse(localStorage.getItem('rmasc_uploads_cache') || '{}')
+          for (const [orderId, uploads] of Object.entries(raw)) {
+            if (Array.isArray(uploads)) {
+              uploadFiles.push(...uploads.map((u: any, i: number) => ({
+                id: `upload_${orderId}_${i}`,
+                orderId,
+                fileName: u.name,
+                engineer: u.label || 'Administrateur',
+                uploadedAt: u.uploadedAt,
+                size: u.data ? `${Math.round((u.data.length * 0.75) / 1024)} KB` : '—',
+                type: u.type,
+              })))
+            }
+          }
+        } catch {}
+
+        // Combine all files
+        const allFiles = [...vaultRaw, ...uploadFiles]
+        const filtered = engineerName
+          ? allFiles.filter((f: any) => f.engineer === engineerName)
+          : allFiles
+
+        if (!cancelled) {
+          setFiles(filtered)
+          // Use API orders if available, fall back to localStorage
+          if (apiOrders.length > 0) {
+            setOrders(apiOrders.map((o: any) => ({
+              id: o.id || o._id,
+              serialNumber: o.serialNumber,
+              clientName: o.clientName,
+              status: o.status,
+            })))
+          } else {
+            const ordersRaw = JSON.parse(localStorage.getItem('rmasc_local_orders') || '[]')
+            setOrders(ordersRaw.map((o: any) => ({ id: o.id, serialNumber: o.serialNumber, clientName: o.clientName, status: o.status })))
+          }
+        }
+      } catch { /* silent */ }
+      if (!cancelled) setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
   }, [engineerName])
 
   const getOrderInfo = (orderId: string) => orders.find(o => o.id === orderId)
@@ -96,9 +143,9 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-surface-50">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
           <button onClick={() => setPreviewFile(null)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-all">
+            className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-all">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             Retour au Vault
           </button>
@@ -108,18 +155,18 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
         </div>
 
         {/* Preview content */}
-        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-primary-50/60 via-surface-50 to-surface-50 p-6 flex items-center justify-center">
-          <div className="max-w-lg w-full bg-surface-50 rounded-2xl shadow-card border border-gray-50 p-8 space-y-6">
+        <div className="flex-1 overflow-y-auto bg-slate-950 p-6 flex items-center justify-center">
+          <div className="max-w-lg w-full bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 shadow-lg p-8 space-y-6">
             {/* File icon */}
             <div className="flex justify-center">
-              <div className="w-24 h-24 rounded-2xl bg-primary-50 flex items-center justify-center text-4xl">
+              <div className="w-24 h-24 rounded-2xl bg-amber-500/10 flex items-center justify-center text-4xl">
                 {getFileIcon(previewFile.type)}
               </div>
             </div>
 
             {/* File info */}
             <div className="text-center">
-              <h3 className="text-lg font-bold text-gray-900">{previewFile.fileName}</h3>
+              <h3 className="text-lg font-bold text-gray-200">{previewFile.fileName}</h3>
               <p className="text-xs text-gray-400 mt-1">{previewFile.size} • {previewFile.type === 'application/pdf' ? 'Document PDF' : 'Plan DWG'}</p>
             </div>
 
@@ -127,19 +174,19 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
             <div className="bg-gray-50/50 rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Ingenieur</span>
-                <span className="font-semibold text-gray-800">{previewFile.engineer}</span>
+                <span className="font-semibold text-gray-200">{previewFile.engineer}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Ascenseur</span>
-                <span className="font-semibold text-gray-800 font-mono">{order?.serialNumber || '—'}</span>
+                <span className="font-semibold text-gray-200 font-mono">{order?.serialNumber || '—'}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Client</span>
-                <span className="font-semibold text-gray-800">{order?.clientName || '—'}</span>
+                <span className="font-semibold text-gray-200">{order?.clientName || '—'}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Date d'upload</span>
-                <span className="font-semibold text-gray-800">{fmtDate(previewFile.uploadedAt)}</span>
+                <span className="font-semibold text-gray-200">{fmtDate(previewFile.uploadedAt)}</span>
               </div>
             </div>
 
@@ -151,7 +198,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
                 Telecharger le fichier
               </button>
               <button onClick={() => setPreviewFile(null)}
-                className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all">
+                className="flex-1 py-3 rounded-xl border-2 border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.06] transition-all">
                 Fermer
               </button>
             </div>
@@ -172,9 +219,9 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-surface-50">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.04]">
         <button onClick={onBack}
-          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-all">
+          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-200 transition-all">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Retour
         </button>
@@ -201,12 +248,12 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
               { label: 'Fichiers Total', value: metrics.total, icon: '📄', color: 'text-primary-600' },
               { label: 'Documents PDF', value: metrics.pdf, icon: '📑', color: 'text-accent-600' },
               { label: 'Plans DWG', value: metrics.dwg, icon: '📐', color: 'text-emerald-600' },
-              { label: 'Ingenieurs', value: metrics.engineers, icon: '👥', color: 'text-slate-600' },
+              { label: 'Ingenieurs', value: metrics.engineers, icon: '👥', color: 'text-gray-400' },
             ].map(kpi => (
-              <div key={kpi.label} className="bg-surface-50 rounded-2xl p-4 shadow-card border border-gray-50 flex items-center gap-4">
+              <div key={kpi.label} className="bg-white/[0.04] rounded-2xl p-4 shadow-card border border-white/5 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center text-lg">{kpi.icon}</div>
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">{kpi.label}</p>
+                  <p className="text-xs text-gray-400 font-semibold">{kpi.label}</p>
                   <p className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
                 </div>
               </div>
@@ -214,9 +261,9 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
           </div>
 
           {/* File Vault Table */}
-          <div className="bg-surface-50 rounded-2xl shadow-card border border-gray-50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-800">Tableau des Fichiers Techniques</h3>
+          <div className="bg-white/[0.04] rounded-2xl shadow-card border border-white/5 overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-200">Tableau des Fichiers Techniques</h3>
               <span className="text-xs text-gray-400">{files.length} fichier{files.length > 1 ? 's' : ''}</span>
             </div>
 
@@ -228,7 +275,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                    <tr className="border-b border-white/5 bg-gray-50/50">
                       <th className="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Nom du fichier</th>
                       <th className="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Ascenseur Associe</th>
                       <th className="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Ingenieur</th>
@@ -245,15 +292,15 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
                           <td className="px-6 py-3">
                             <div className="flex items-center gap-2.5">
                               <span className="text-base">{getFileIcon(f.type)}</span>
-                              <span className="text-sm font-semibold text-gray-800">{f.fileName}</span>
+                              <span className="text-sm font-semibold text-gray-200">{f.fileName}</span>
                             </div>
                           </td>
                           <td className="px-6 py-3">
-                            <span className="text-sm font-mono text-gray-600">{order?.serialNumber || '—'}</span>
+                            <span className="text-sm font-mono text-gray-400">{order?.serialNumber || '—'}</span>
                             <p className="text-[10px] text-gray-400">{order?.clientName || ''}</p>
                           </td>
                           <td className="px-6 py-3">
-                            <span className="text-xs text-gray-600">{f.engineer}</span>
+                            <span className="text-xs text-gray-400">{f.engineer}</span>
                           </td>
                           <td className="px-6 py-3">
                             <span className="text-xs text-gray-400 font-mono">{fmtDate(f.uploadedAt)}</span>

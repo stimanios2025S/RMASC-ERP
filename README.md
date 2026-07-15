@@ -2,29 +2,9 @@
 
 **Progiciel de Gestion Intégré pour l'Industrie Ascenseur**
 
-Application web full-stack déployée sur Vercel avec base de données Neon PostgreSQL.
+Application web full-stack déployée sur serveur dédié (HP ProLiant) avec MongoDB auto-hébergé et tunnel Cloudflare.
 
----
-
-## 🚀 Déploiement Express (Vercel)
-
-1. **Poussez sur GitHub :**
-   ```bash
-   git add -A
-   git commit -m "Deploy v2.5.3"
-   git push
-   ```
-
-2. **Importez le repo** sur [vercel.com](https://vercel.com)
-
-3. **Ajoutez les variables d'environnement :**
-   | Variable | Description |
-   |----------|-------------|
-   | `DATABASE_URL` | Neon PostgreSQL poolé |
-   | `DIRECT_URL` | Neon PostgreSQL direct |
-   | `JWT_SECRET` | Chaîne aléatoire 64 caractères |
-
-4. **Déployez.** — Le frontend et l'API sont servis depuis la même URL.
+🌐 **Production :** [https://sarl-rmasc.com](https://sarl-rmasc.com)
 
 ---
 
@@ -34,18 +14,27 @@ Application web full-stack déployée sur Vercel avec base de données Neon Post
 rmasc-factory/
 ├── src/                    # React + Vite (Frontend)
 │   ├── components/         # 20+ composants métier
-│   ├── config/             # Client API, store runtime
+│   │   ├── agent/          # Assistant IA Salim Hamoun
+│   │   └── smart/          # Recherche, notifications, tips
+│   ├── config/             # Client API, notifications, runtime store
 │   └── data/               # Authentification, stockage local
 ├── backend/
-│   ├── api.mjs             # Entry point serverless Vercel
-│   ├── prisma/             # Schéma PostgreSQL (Neon)
-│   └── src/                # Routes Express, contrôleurs, services
+│   ├── api.mjs             # Serveur Express permanent (port 4000)
+│   └── src/
+│       ├── models/         # Mongoose schemas (Order, StockItem, etc.)
+│       ├── lib/            # MongoDB connection, env loader
+│       └── config/         # Webhook keys
+├── deploy/
+│   ├── nginx/              # Configuration Nginx reverse proxy
+│   ├── pm2/                # PM2 ecosystem config
+│   ├── cloudflare/         # Tunnel Cloudflare configuration
+│   ├── configs/            # Variables d'environnement production
+│   └── scripts/            # Déploiement automatisé
 ├── public/                 # Assets statiques
-├── vercel.json             # Configuration Vercel
 └── vite.config.ts          # Build Vite
 ```
 
-**Stack :** React 18 · TypeScript · Tailwind CSS · Vite · Express · Prisma · PostgreSQL (Neon) · Zod · JWT
+**Stack :** React 18 · TypeScript · Tailwind CSS · Vite · Express · Mongoose · MongoDB · JWT · PM2 · Nginx · Cloudflare Tunnel
 
 ---
 
@@ -53,7 +42,8 @@ rmasc-factory/
 
 | Rôle | Identifiant | Mot de passe |
 |------|-------------|--------------|
-| 👑 Administration | `admin` | `admin123` |
+| 👑 Administration | `salim` | `salim123` |
+| 👑 Administration | `chergui_ghani` | `chergui123` |
 | 📐 Ingénieur Dessinateur 1 | `ingenieur1` | `ingenieur1` |
 | ✏️ Ingénieur Dessinateur 2 | `ingenieur2` | `ingenieur2` |
 | 🔍 Vérificateur | `verificateur` | `verificateur` |
@@ -87,11 +77,33 @@ npm run dev
 # Backend (dans un second terminal)
 cd backend
 npm install
-npx prisma db push    # Crée les tables PostgreSQL
 npx tsx src/index.ts  # API sur http://localhost:4000
 ```
 
 > L'API proxy est configurée dans `vite.config.ts` — le frontend (`:5173`) transmet `/api/*` au backend (`:4000`).
+
+---
+
+## 🚀 Déploiement
+
+```bash
+# Déploiement complet depuis Windows
+.\deploy-rmasc.ps1
+
+# Ou via le script bash
+bash deploy/scripts/deploy-rmasc.sh
+
+# Voir le guide détaillé
+cat deploy/README-DEPLOY.md
+```
+
+## 🔒 Sécurité
+
+- **CORS** : Verrouillé sur `https://sarl-rmasc.com` et `http://localhost:5173`
+- **JWT** : Tokens 24h avec bcrypt (12 rounds) pour les mots de passe
+- **Dev-login** : Endpoint `/api/auth/dev-login` définitivement supprimé
+- **MongoDB** : Bindé sur `127.0.0.1` uniquement
+- **HTTPS** : Géré par Cloudflare (edge) + certificats auto-signés (LAN)
 
 ---
 

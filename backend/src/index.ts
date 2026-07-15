@@ -1,6 +1,6 @@
-// ─── RMASC FACTORY — Backend Local Dev Entry (MongoDB) ──────────────────
-// Starts Express on port 4000. For development only.
-// Vercel production uses: api/index.mjs → backend/api.mjs
+// ─── RMASC FACTORY — Backend Entry Point ───────────────────────────────
+// Starts Express as a permanent server on port 4000.
+// Served via Cloudflare Tunnel → https://sarl-rmasc.com
 
 import './lib/load-env.js'
 import app from '../api.mjs'
