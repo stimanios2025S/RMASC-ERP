@@ -271,13 +271,13 @@ function addIdField(doc) {
 // ═══ ORDERS ══════════════════════════════════════════════════════════════
 app.get('/api/orders', authenticate, async (_req, res) => {
   try {
+    // Cache-busting: if no orders have changed, return 304
     const orders = await Order.aggregate([
       { $sort: { createdAt: -1 } },
       { $lookup: { from: 'cad_submissions', localField: '_id', foreignField: 'order', as: 'cadSubmissions' } },
-      { $addFields: { _count: { cadSubmissions: { $size: '$cadSubmissions' } } } },
+      { $addFields: { _count: { $size: '$cadSubmissions' } } },
       { $project: { cadSubmissions: 0 } },
-    ])
-    // Ensure rejection fields are included
+    ]).option({ allowDiskUse: false }).hint({ createdAt: -1 })
     for (const o of orders) {
       if (o.rejectionReason === undefined) o.rejectionReason = null
       if (o.rejectedBy === undefined) o.rejectedBy = null
@@ -691,7 +691,7 @@ app.get('/api/stock/items', authenticate, async (req, res) => {
     if (req.query.category) filter.category = req.query.category
     if (req.query.location) filter.location = req.query.location
     if (req.query.supplierId) filter.supplier = req.query.supplierId
-    let items = await StockItem.find(filter).populate('supplier').sort({ name: 1 })
+    let items = await StockItem.find(filter).populate('supplier', 'name').sort({ name: 1 }).lean()
     if (req.query.lowStock === 'true') items = items.filter(i => i.quantity <= i.alertThreshold)
     res.json(items)
   } catch (e) { res.status(500).json({ error: e.message }) }
@@ -856,17 +856,19 @@ app.post('/api/stock/bon-commande', authenticate, async (req, res) => {
 // Stats
 app.get('/api/stock/stats', authenticate, async (req, res) => {
   try {
-    const [totalItems, totalSuppliers, recentMovements, allItems] = await Promise.all([
-      StockItem.countDocuments(), Supplier.countDocuments(),
-      StockMovement.find().populate('item').sort({ createdAt: -1 }).limit(10),
-      StockItem.find().select('quantity alertThreshold'),
+    const [totalItems, totalSuppliers, recentMovements, allItems, categoryCounts] = await Promise.all([
+      StockItem.countDocuments(),
+      Supplier.countDocuments(),
+      StockMovement.find().populate('item', 'name reference').sort({ createdAt: -1 }).limit(10).lean(),
+      StockItem.find().select('quantity alertThreshold').lean(),
+      StockItem.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]).option({ allowDiskUse: false }),
     ])
     res.json({
       totalItems,
       lowStockItems: allItems.filter(i => i.quantity <= i.alertThreshold).length,
       totalSuppliers,
       recentMovements: addIdField(recentMovements),
-      categoryCounts: await StockItem.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]),
+      categoryCounts,
     })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })

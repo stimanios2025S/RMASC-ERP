@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '../config/api'
+import FileViewer from './FileViewer'
 
 interface ServerFile {
   _id: string
@@ -44,6 +45,7 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [previewFile, setPreviewFile] = useState<ServerFile | null>(null)
 
   const showFeedback = (ok: boolean, msg: string) => {
     setFeedback({ ok, msg })
@@ -124,61 +126,61 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
     input.click()
   }
 
-  // ── Compact variant (inline for expanded order cards) ──
-  if (compact) {
-    return (
-      <div className="space-y-2">
-        {feedback && (
-          <div className={`text-xs font-medium px-3 py-1.5 rounded-lg ${feedback.ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-            {feedback.msg}
-          </div>
-        )}
+  // ── Build the main content (compact or full) ──────────────────────
+  const mainContent = compact ? (
+    <div className="space-y-2">
+      {feedback && (
+        <div className={`text-xs font-medium px-3 py-1.5 rounded-lg ${feedback.ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+          {feedback.msg}
+        </div>
+      )}
 
-        {loading ? (
-          <p className="text-[10px] text-gray-500 italic">Chargement...</p>
-        ) : files.length > 0 ? (
-          <div className="bg-white/[0.03] rounded-xl p-2.5 border border-white/5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
-              📎 Documents ({files.length})
-            </p>
-            <div className="space-y-1">
-              {files.map(f => {
-                const fid = f._id || f.id || ''
-                return (
-                  <div key={fid} className="flex items-center justify-between bg-white/[0.03] rounded-lg px-2.5 py-1.5 border border-white/5 hover:bg-white/[0.06] transition-all group">
-                    <button onClick={() => handleDownload(fid, f.originalname)} className="flex items-center gap-2 min-w-0 flex-1 text-left">
-                      <span className="text-sm">{fileIcon(f.mimetype)}</span>
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-gray-200 truncate">{f.originalname}</p>
-                        <p className="text-[9px] text-gray-500">{formatSize(f.size)} — {f.uploadedBy}</p>
-                      </div>
-                    </button>
+      {loading ? (
+        <p className="text-[10px] text-gray-500 italic">Chargement...</p>
+      ) : files.length > 0 ? (
+        <div className="bg-white/[0.03] rounded-xl p-2.5 border border-white/5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+            📎 Documents ({files.length})
+          </p>
+          <div className="space-y-1">
+            {files.map(f => {
+              const fid = f._id || f.id || ''
+              return (
+                <div key={fid} className="flex items-center justify-between bg-white/[0.03] rounded-lg px-2.5 py-1.5 border border-white/5 hover:bg-white/[0.06] transition-all group">
+                  <button onClick={() => handleDownload(fid, f.originalname)} className="flex items-center gap-2 min-w-0 flex-1 text-left">
+                    <span className="text-sm">{fileIcon(f.mimetype)}</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-gray-200 truncate">{f.originalname}</p>
+                      <p className="text-[9px] text-gray-500">{formatSize(f.size)} — {f.uploadedBy}</p>
+                    </div>
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setPreviewFile(f)}
+                      className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-semibold transition-all flex-shrink-0"
+                      title="Voir">👁️</button>
                     <button onClick={() => handleDelete(fid, f.originalname)}
-                      className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-semibold transition-all flex-shrink-0 ml-2"
+                      className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-semibold transition-all flex-shrink-0 ml-1"
                       title="Supprimer">🗑️</button>
                   </div>
-                )
-              })}
-            </div>
+                </div>
+              )
+            })}
           </div>
-        ) : null}
-
-        <div onClick={openFilePicker}
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => { e.preventDefault(); Array.from(e.dataTransfer.files).forEach(f => handleUpload(f)) }}
-          className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${uploading ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10 bg-white/[0.02] hover:border-amber-500/30 hover:bg-amber-500/5'}`}>
-          {uploading ? (
-            <p className="text-sm text-amber-400 font-semibold">⏳ Upload en cours...</p>
-          ) : (
-            <><p className="text-sm font-semibold text-gray-400 mb-0.5">📂 Ajouter un fichier</p><p className="text-xs text-gray-500">Cliquez ou glissez-déposez</p></>
-          )}
         </div>
-      </div>
-    )
-  }
+      ) : null}
 
-  // ── Full variant ──
-  return (
+      <div onClick={openFilePicker}
+        onDragOver={e => e.preventDefault()}
+        onDrop={e => { e.preventDefault(); Array.from(e.dataTransfer.files).forEach(f => handleUpload(f)) }}
+        className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${uploading ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10 bg-white/[0.02] hover:border-amber-500/30 hover:bg-amber-500/5'}`}>
+        {uploading ? (
+          <p className="text-sm text-amber-400 font-semibold">⏳ Upload en cours...</p>
+        ) : (
+          <><p className="text-sm font-semibold text-gray-400 mb-0.5">📂 Ajouter un fichier</p><p className="text-xs text-gray-500">Cliquez ou glissez-déposez</p></>
+        )}
+      </div>
+    </div>
+  ) : (
     <div className="bg-white/[0.03] rounded-2xl border border-white/5 shadow-sm">
       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -225,10 +227,16 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
                         <p className="text-[10px] text-gray-500">{f.uploadedBy} • {formatSize(f.size)} • {new Date(f.uploadedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
                       </div>
                     </button>
-                    <button onClick={() => handleDelete(fid, f.originalname)}
-                      className="opacity-0 group-hover:opacity-100 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition-all flex items-center gap-1 flex-shrink-0">
-                      🗑️ Supprimer
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => setPreviewFile(f)}
+                        className="opacity-0 group-hover:opacity-100 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-semibold transition-all flex items-center gap-1 flex-shrink-0">
+                        👁️ Voir
+                      </button>
+                      <button onClick={() => handleDelete(fid, f.originalname)}
+                        className="opacity-0 group-hover:opacity-100 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition-all flex items-center gap-1 flex-shrink-0">
+                        🗑️ Supprimer
+                      </button>
+                    </div>
                   </div>
                 )
               })}
@@ -241,5 +249,38 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
         )}
       </div>
     </div>
+  )
+
+  // ── Wrap everything with the preview modal ─────────────────────────
+  return (
+    <>
+      {mainContent}
+      {previewFile && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setPreviewFile(null)}>
+          <div className="relative w-full max-w-5xl h-[90vh] bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 bg-slate-800/50 border-b border-slate-700">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">{fileIcon(previewFile.mimetype)}</span>
+                <div>
+                  <p className="text-sm font-bold text-white truncate max-w-md">{previewFile.originalname}</p>
+                  <p className="text-[10px] text-slate-400">{previewFile.uploadedBy} • {formatSize(previewFile.size)}</p>
+                </div>
+              </div>
+              <button onClick={() => setPreviewFile(null)}
+                className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-red-500 text-white text-sm flex items-center justify-center transition-colors">
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 bg-[#0a0f1a] overflow-hidden">
+              <FileViewer
+                fileUrl={`/api/orders/${orderId}/files/${previewFile._id || previewFile.id}`}
+                fileName={previewFile.originalname}
+                fileType={previewFile.mimetype}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

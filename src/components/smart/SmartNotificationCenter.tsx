@@ -179,7 +179,7 @@ export default function SmartNotificationCenter({ onNavigate, orders: propOrders
       {showPanel && (
         <div
           ref={panelRef}
-          className="absolute right-0 top-full mt-2 z-50 w-[420px] max-h-[70vh] overflow-y-auto bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 animate-fade-in"
+          className="fixed right-4 md:right-24 top-16 z-[100] w-[420px] max-h-[70vh] overflow-y-auto bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 animate-fade-in"
         >
           {/* Header */}
           <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl px-5 py-4 border-b border-white/5 flex items-center justify-between rounded-t-2xl z-10">

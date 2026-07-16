@@ -13,7 +13,7 @@ export function resolveUrl(path: string): string {
 
 export const apiPath = resolveUrl
 
-export async function apiFetch<T = any>(path: string, options: RequestInit = {}, retries = 2): Promise<T> {
+export async function apiFetch<T = any>(path: string, options: RequestInit = {}, retries = 1): Promise<T> {
   const token = localStorage.getItem('rmasc_token')
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {},
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 15000)
+    const timeout = setTimeout(() => controller.abort(), 10000)
 
     try {
       const res = await fetch(url, {

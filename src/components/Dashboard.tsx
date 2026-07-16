@@ -413,8 +413,8 @@ function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentAc
 
           {showProfile && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
-              <div className="absolute right-0 top-full mt-2 z-50 w-[580px] max-h-[70vh] overflow-y-auto bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10">
+              <div className="fixed inset-0 z-[99]" onClick={() => setShowProfile(false)} />
+              <div className="fixed right-4 md:right-6 top-16 z-[100] w-[580px] max-h-[70vh] overflow-y-auto bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10">
                 <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl px-5 py-4 border-b border-white/5 flex items-center justify-between rounded-t-2xl">
                   <h3 className="text-sm font-bold text-gray-200">📊 Roadmap — Suivi des commandes</h3>
                   <span className="text-xs text-gray-500 font-medium">{orders.length} commande{orders.length > 1 ? 's' : ''}</span>

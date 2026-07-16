@@ -101,4 +101,10 @@ orderSchema.virtual('cadSubmissions', {
   foreignField: 'order',
 })
 
+// ─── Performance indexes for common queries ──────────────────────────────
+orderSchema.index({ status: 1, createdAt: -1 })   // Status filters + sort
+orderSchema.index({ createdAt: -1 })               // Recent orders
+orderSchema.index({ clientName: 1 })               // Search by client
+orderSchema.index({ serialNumber: 1 })              // Already unique, but explicit
+
 export default mongoose.model('Order', orderSchema)
