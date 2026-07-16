@@ -962,12 +962,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'add-elevator') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <AddElevator onBack={() => persistView('dashboard')} />
@@ -980,12 +975,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'be-inspect') {
     return (
       <div className="h-screen flex flex-col relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex-1 flex flex-col">
         {/* Inspection banner bar */}
         <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-2.5 flex items-center justify-between shadow-lg z-50">
@@ -1013,12 +1003,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'commandes') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <div className="flex-1 overflow-y-auto">
@@ -1033,12 +1018,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'validations') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <ValidationsPage
@@ -1054,12 +1034,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'help') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <HelpPage onBack={() => persistView('dashboard')} />
@@ -1072,12 +1047,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'settings') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <SettingsPage onBack={() => persistView('dashboard')} session={session} onSessionUpdate={onSessionUpdate} />
@@ -1090,12 +1060,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'roadmap') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <RoadmapPage orders={orders as any} onBack={() => persistView('dashboard')} />
@@ -1117,12 +1082,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'invoicing') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <InvoicingPage onBack={() => persistView('dashboard')} />
@@ -1135,12 +1095,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'vault') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <BureauEtudeVault onBack={() => persistView('dashboard')} />
@@ -1153,12 +1108,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'lifecycle') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <LifecyclePipeline onBack={() => persistView('dashboard')} />
@@ -1171,12 +1121,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'archives') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
           <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
           <div className="flex-1 flex flex-col min-h-0">
@@ -1194,12 +1139,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'pieces-solo') {
     return (
       <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
           <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
           <PiecesSoloWorkspace onBack={() => persistView('dashboard')} session={session} />
@@ -1212,12 +1152,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
 
   return (
     <div className="flex h-screen relative">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/50 to-slate-950/10" />
-          <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/15 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/15 blur-3xl" />
-        </div>
+        <div className="absolute inset-0 z-0 bg-white" />
         <div className="relative z-10 flex w-full">
       {/* Sidebar */}
       <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />

@@ -208,8 +208,8 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-40 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-white">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
             <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-gray-200 transition-all">
