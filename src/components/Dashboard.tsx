@@ -538,17 +538,17 @@ function KpiCard({ title, value, subtext, dark = false, icon }: { title: string;
   // Use title to pick a consistent color
   const idx = title.length % 4
   return (
-    <div className={`rounded-2xl p-5 bg-white/[0.06] backdrop-blur-xl border ${gradients[idx]} shadow-lg hover:bg-white/[0.09] transition-all duration-300 group`}>
+    <div className="rounded-2xl p-5 bg-white border-2 border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 group">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold text-gray-300">{title}</span>
+        <span className="text-sm font-semibold text-gray-700">{title}</span>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconBg[idx]}`}>
           <Icon name={icon} className="w-[18px] h-[18px]" />
         </div>
       </div>
-      <p className="text-3xl font-bold text-white mb-0.5 tracking-tight">{value}</p>
+      <p className="text-3xl font-bold text-gray-900 mb-0.5 tracking-tight">{value}</p>
       <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Icon name="ArrowUp" className="w-3.5 h-3.5 text-amber-400" />
-        <span className="text-xs font-medium text-gray-400">{subtext}</span>
+        <Icon name="ArrowUp" className="w-3.5 h-3.5 text-amber-500" />
+        <span className="text-xs font-medium text-gray-500">{subtext}</span>
       </div>
     </div>
   )
@@ -565,10 +565,10 @@ function AnalyticsChart() {
   const maxValue = Math.max(...chartData.map(d => d.value), 1)
 
   return (
-    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg">
+    <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-semibold text-white">Répartition par Application</h3>
-        <button className="text-xs flex items-center gap-1 text-gray-400 hover:text-white transition-colors">
+        <h3 className="text-base font-semibold text-gray-800">Répartition par Application</h3>
+        <button className="text-xs flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
           Ce mois
           <Icon name="ChevronDown" className="w-3 h-3" />
         </button>
@@ -579,7 +579,7 @@ function AnalyticsChart() {
           {chartData.map((data, i) => (
             <div key={i} className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
               {/* Value label */}
-              <span className="text-xs font-bold text-white">{data.value}</span>
+              <span className="text-xs font-bold text-gray-700">{data.value}</span>
               {/* Bar */}
               <div className="relative w-full max-w-[32px] rounded-lg overflow-hidden group cursor-pointer" style={{ height: `${(data.value / maxValue) * 100}%` }}>
                 <div
@@ -589,7 +589,7 @@ function AnalyticsChart() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
               {/* Category label */}
-              <span className="text-[10px] font-medium text-gray-400">{data.label}</span>
+              <span className="text-[10px] font-medium text-gray-500">{data.label}</span>
             </div>
           ))}
         </div>
@@ -600,17 +600,17 @@ function AnalyticsChart() {
 
 function RemindersCard() {
   return (
-    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg">
-      <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+    <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md">
+      <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
         Rappels Atelier
       </h3>
-      <div className="bg-white/[0.04] rounded-xl p-4 border border-white/5">
+      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
         <div className="flex items-start gap-3 mb-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0 shadow-lg shadow-amber-400/30" />
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0 shadow-lg shadow-amber-500/30" />
           <div>
-            <p className="font-semibold text-gray-200">Contrôle Qualité Cabines — Série RMASC-2026</p>
-            <p className="text-sm text-gray-400 mt-0.5 font-medium">Atelier Montage — 08h00</p>
+            <p className="font-semibold text-gray-800">Contrôle Qualité Cabines — Série RMASC-2026</p>
+            <p className="text-sm text-gray-500 mt-0.5 font-medium">Atelier Montage — 08h00</p>
           </div>
         </div>
         <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 shadow-lg shadow-amber-500/25">
@@ -633,10 +633,10 @@ function ProjectList({ orders, onFiche }: { orders: OrderSummary[]; onFiche?: (i
   ]
 
   return (
-    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg">
+    <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-white">Commandes Récentes</h3>
-        <span className="text-xs text-gray-400 font-semibold bg-white/[0.06] px-2.5 py-1 rounded-full">{orders.length} au total</span>
+        <h3 className="text-base font-bold text-gray-800">Commandes Récentes</h3>
+        <span className="text-xs text-gray-500 font-semibold bg-gray-100 px-2.5 py-1 rounded-full">{orders.length} au total</span>
       </div>
       <div className="space-y-1">
         {recent.length === 0 ? (
@@ -644,22 +644,22 @@ function ProjectList({ orders, onFiche }: { orders: OrderSummary[]; onFiche?: (i
         ) : (
           recent.map((order, i) => (
             <div key={order.id}
-              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-all cursor-pointer group">
+              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-all cursor-pointer group">
               <div className={`w-8 h-8 rounded-xl ${iconColors[i % iconColors.length]} flex items-center justify-center flex-shrink-0`}>
                 <span className="text-xs font-bold">{order.serialNumber.slice(-2)}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-200 truncate">
-                  {order.clientName} — <span className="font-mono text-xs text-gray-500">{order.serialNumber}</span>
+                <p className="text-sm font-medium text-gray-700 truncate">
+                  {order.clientName} — <span className="font-mono text-xs text-gray-400">{order.serialNumber}</span>
                 </p>
-                <p className="text-xs text-gray-400 font-medium">
+                <p className="text-xs text-gray-500 font-medium">
                   {order.clientCity} • {order.typeMotorisation}
                 </p>
               </div>
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                 {onFiche && (
                   <button onClick={(e) => { e.stopPropagation(); onFiche(order.id) }}
-                    className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all">
+                    className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-amber-100 text-amber-600 hover:bg-amber-200 transition-all">
                     📄 Fiche
                   </button>
                 )}
@@ -693,23 +693,23 @@ function CollaborationCard() {
   } as const
 
   return (
-    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg">
+    <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-white">Équipe Bureau d'Études</h3>
-        <button className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all border border-amber-500/20">
+        <h3 className="text-base font-semibold text-gray-800">Équipe Bureau d'Études</h3>
+        <button className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 text-amber-600 hover:bg-amber-200 transition-all border border-amber-200">
           <Icon name="UserPlus" className="w-3.5 h-3.5 inline mr-1" />
           Ajouter
         </button>
       </div>
       <div className="space-y-2">
         {teamMembers.map((member) => (
-          <div key={member.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-all">
+          <div key={member.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-all">
             <div className={`w-9 h-9 rounded-xl ${member.avatarBg} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-lg`}>
               {member.avatar}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-200">{member.name}</p>
-              <p className="text-xs text-gray-500">{member.module}</p>
+              <p className="text-sm font-semibold text-gray-700">{member.name}</p>
+              <p className="text-xs text-gray-400">{member.module}</p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-xs text-gray-400 mb-1">{member.role}</p>
@@ -736,13 +736,13 @@ function ProgressArc({ orders }: { orders: OrderSummary[] }) {
   const inProgressOffset = circumference - ((completedPct + inProgressPct) / 100) * circumference
 
   return (
-    <div className="bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-lg flex flex-col items-center">
+    <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md flex flex-col items-center">
       <div className="flex items-center justify-between w-full mb-3">
-        <h3 className="text-base font-semibold text-white">Progression des Commandes</h3>
+        <h3 className="text-base font-semibold text-gray-800">Progression des Commandes</h3>
       </div>
       <div className="relative w-[130px] h-[130px] mb-4">
         <svg className="w-full h-full" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="8" />
           <circle cx="50" cy="50" r="45" fill="none" stroke="#f59e0b" strokeWidth="8"
             strokeDasharray={`${(completedPct / 100) * circumference} ${circumference}`}
             strokeLinecap="round" transform="rotate(-90 50 50)" className="transition-all duration-700" />
@@ -750,28 +750,28 @@ function ProgressArc({ orders }: { orders: OrderSummary[] }) {
             strokeDasharray={`${(inProgressPct / 100) * circumference} ${circumference}`}
             strokeDashoffset={-completedOffset} strokeLinecap="round" transform="rotate(-90 50 50)"
             className="transition-all duration-700" />
-          <circle cx="50" cy="50" r="45" fill="none" stroke="#6b7280" strokeWidth="8"
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#9ca3af" strokeWidth="8"
             strokeDasharray={`${(pendingPct / 100) * circumference} ${circumference}`}
             strokeDashoffset={-inProgressOffset} strokeLinecap="round" transform="rotate(-90 50 50)"
             className="transition-all duration-700" />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-white">{completedPct}%</span>
-          <span className="text-[10px] text-gray-400 font-medium">Terminés</span>
+          <span className="text-2xl font-bold text-gray-800">{completedPct}%</span>
+          <span className="text-[10px] text-gray-500 font-medium">Terminés</span>
         </div>
       </div>
       <div className="flex items-center gap-4 text-xs">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-          <span className="text-gray-400">Terminé ({termines})</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+          <span className="text-gray-600">Terminé ({termines})</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
-          <span className="text-gray-400">En Cours ({enCours})</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+          <span className="text-gray-600">En Cours ({enCours})</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-gray-500" />
-          <span className="text-gray-400">Attente ({enAttente})</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-gray-400" />
+          <span className="text-gray-600">Attente ({enAttente})</span>
         </div>
       </div>
     </div>
@@ -804,23 +804,23 @@ function TimeTracker({ orders }: { orders: OrderSummary[] }) {
 
   if (activeOrders.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 rounded-2xl p-5 shadow-card border border-slate-800 text-white relative overflow-hidden">
-        <h3 className="text-base font-semibold mb-4 relative z-10 flex items-center gap-2">
+      <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md">
+        <h3 className="text-base font-semibold mb-4 relative z-10 flex items-center gap-2 text-gray-800">
           <span>⏱️</span>
           Suivi de Production
         </h3>
-        <p className="text-sm text-slate-400 text-center py-6">Aucune commande active</p>
+        <p className="text-sm text-gray-500 text-center py-6">Aucune commande active</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 rounded-2xl p-5 shadow-card border border-slate-800 text-white relative overflow-hidden">
-      <h3 className="text-base font-semibold mb-3 relative z-10 flex items-center gap-2">
+    <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md">
+      <h3 className="text-base font-semibold mb-3 flex items-center gap-2 text-gray-800">
         <span>⏱️</span>
         Suivi de Production
       </h3>
-      <div className="space-y-3 relative z-10">
+      <div className="space-y-3">
         {activeOrders.map((order, idx) => {
           const createdAt = new Date(order.createdAt).getTime()
           const hoursAllocated = PHASE_HOURS[order.status] || 0
@@ -834,14 +834,14 @@ function TimeTracker({ orders }: { orders: OrderSummary[] }) {
             <div key={order.id}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${remainingHours <= 0 ? 'bg-emerald-400' : remainingHours < hoursAllocated * 0.25 ? 'bg-amber-400' : 'bg-cyan-400'}`} />
-                  <p className="text-xs font-bold text-white font-mono truncate">{order.serialNumber.slice(-12)}</p>
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${remainingHours <= 0 ? 'bg-emerald-500' : remainingHours < hoursAllocated * 0.25 ? 'bg-amber-500' : 'bg-cyan-500'}`} />
+                  <p className="text-xs font-bold text-gray-700 font-mono truncate">{order.serialNumber.slice(-12)}</p>
                 </div>
-                <span className={`text-[10px] font-bold flex-shrink-0 ${remainingHours <= 0 ? 'text-emerald-400' : 'text-amber-300'}`}>
+                <span className={`text-[10px] font-bold flex-shrink-0 ${remainingHours <= 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
                   {remainingHours <= 0 ? '✅ Terminé' : `~${remainingDays > 0 ? `${remainingDays}j ` : ''}${remainingRemainder}h`}
                 </span>
               </div>
-              <div className="w-full h-1.5 rounded-full bg-slate-700 overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-gray-200 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ${
                     remainingHours <= 0 ? 'bg-emerald-500' : progress > 80 ? 'bg-amber-500' : 'bg-cyan-500'
@@ -849,7 +849,7 @@ function TimeTracker({ orders }: { orders: OrderSummary[] }) {
                   style={{ width: `${Math.min(100, progress)}%` }}
                 />
               </div>
-              <p className="text-[9px] text-slate-500 mt-0.5">
+              <p className="text-[9px] text-gray-500 mt-0.5">
                 {order.clientName.slice(0, 20)} — {order.status === 'ATTENTE_DESSIN_TECH' ? 'Plan d\'Installation' : order.status === 'ATTENTE_DESSIN_2D' ? 'Dessin 2D' : order.status === 'ATTENTE_VERIFICATION' ? 'Vérification' : order.status === 'ATTENTE_APPROBATION_ADMIN' ? 'Validation Admin' : order.status}
               </p>
             </div>
@@ -1281,23 +1281,23 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
 
           {/* Notification Panel — Approbations en attente */}
           {showNotifPanel && notifications.length > 0 && (
-            <div className="mb-4 bg-white/[0.06] backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 shadow-lg animate-fade-in">
+            <div className="mb-4 bg-white border-2 border-amber-200 rounded-2xl p-4 shadow-md animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <h3 className="text-sm font-bold text-amber-700 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                   {notifications.length} commande{notifications.length > 1 ? 's' : ''} en attente d'approbation
                 </h3>
-                <button onClick={() => setShowNotifPanel(false)} className="text-amber-400 hover:text-amber-300 text-xs font-semibold">Masquer</button>
+                <button onClick={() => setShowNotifPanel(false)} className="text-amber-600 hover:text-amber-500 text-xs font-semibold">Masquer</button>
               </div>
               <div className="space-y-2">
                 {notifications.slice(0, 5).map(n => (
-                  <div key={n.id} className="flex items-center justify-between bg-white/[0.04] rounded-xl px-4 py-3 border border-white/5 shadow-sm">
+                  <div key={n.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 shadow-sm">
                     <div>
-                      <p className="text-sm font-bold text-gray-200 font-mono">{n.serialNumber}</p>
-                      <p className="text-xs text-gray-400">{n.clientName} — {n.clientCity}</p>
+                      <p className="text-sm font-bold text-gray-800 font-mono">{n.serialNumber}</p>
+                      <p className="text-xs text-gray-500">{n.clientName} — {n.clientCity}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-amber-400 font-semibold bg-amber-500/10 px-2 py-1 rounded-lg">En attente</span>
+                      <span className="text-xs text-amber-700 font-semibold bg-amber-100 px-2 py-1 rounded-lg">En attente</span>
                       <button
                         onClick={() => { persistView('validations'); setShowNotifPanel(false) }}
                         className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-white hover:bg-amber-400 transition-all"
@@ -1314,32 +1314,32 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
           {/* ═══ SMART PREDICTION & INSIGHTS ROW ═══ */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* ── Prédiction & Tendances ── */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 border border-slate-700 shadow-lg animate-scale-in relative overflow-hidden">
-              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-amber-500/5 blur-3xl" />
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md relative overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-amber-500/10 blur-3xl" />
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                     <span>🔮</span> Prédictions
                   </h3>
-                  <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full font-semibold">IA</span>
+                  <span className="text-[10px] text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full font-semibold">IA</span>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Commandes en cours</span>
-                    <span className="text-lg font-bold text-white">{orders.filter(o => !['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length}</span>
+                    <span className="text-xs text-gray-500">Commandes en cours</span>
+                    <span className="text-lg font-bold text-gray-800">{orders.filter(o => !['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length}</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
                     <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 animate-progress"
                       style={{ width: `${orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%` }} />
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-500">Progression</span>
-                    <span className="text-amber-400 font-bold">{orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%</span>
+                    <span className="text-gray-500">Progression</span>
+                    <span className="text-amber-600 font-bold">{orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%</span>
                   </div>
-                  <div className="pt-2 border-t border-slate-700">
+                  <div className="pt-2 border-t border-gray-100">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400">📅 Estimation fin</span>
-                      <span className="text-xs font-bold text-emerald-400">
+                      <span className="text-[10px] text-gray-500">📅 Estimation fin</span>
+                      <span className="text-xs font-bold text-emerald-600">
                         {(() => {
                           const enCours = orders.filter(o => !['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length
                           const rythme = Math.max(1, Math.round(orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / 6))
@@ -1356,38 +1356,38 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
             </div>
 
             {/* ── Score de Productivité ── */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 border border-slate-700 shadow-lg animate-scale-in relative overflow-hidden" style={{ animationDelay: '0.1s' }}>
-              <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-emerald-500/5 blur-3xl" />
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md relative overflow-hidden" style={{ animationDelay: '0.1s' }}>
+              <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-emerald-500/10 blur-3xl" />
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                     <span>🏆</span> Productivité
                   </h3>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     orders.length > 0 && (orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) > 0.5
-                      ? 'bg-emerald-500/10 text-emerald-400'
-                      : 'bg-amber-500/10 text-amber-400'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-amber-100 text-amber-700'
                   }`}>
                     {orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%
                   </span>
                 </div>
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">✅ Terminées</span>
-                    <span className="text-sm font-bold text-emerald-400">{orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length}</span>
+                    <span className="text-xs text-gray-500">✅ Terminées</span>
+                    <span className="text-sm font-bold text-emerald-600">{orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">🔄 En cours</span>
-                    <span className="text-sm font-bold text-amber-400">{orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION', 'ATTENTE_APPROBATION_ADMIN', 'EN_LIVRAISON'].includes(o.status)).length}</span>
+                    <span className="text-xs text-gray-500">🔄 En cours</span>
+                    <span className="text-sm font-bold text-amber-600">{orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION', 'ATTENTE_APPROBATION_ADMIN', 'EN_LIVRAISON'].includes(o.status)).length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">⏸️ Bloquées</span>
-                    <span className="text-sm font-bold text-red-400">{orders.filter(o => ['BROUILLON', 'PRET_POUR_PRODUCTION'].includes(o.status)).length}</span>
+                    <span className="text-xs text-gray-500">⏸️ Bloquées</span>
+                    <span className="text-sm font-bold text-red-600">{orders.filter(o => ['BROUILLON', 'PRET_POUR_PRODUCTION'].includes(o.status)).length}</span>
                   </div>
-                  <div className="pt-2 mt-1 border-t border-slate-700">
+                  <div className="pt-2 mt-1 border-t border-gray-100">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-500">Diagnostic</span>
-                      <span className="text-[10px] font-semibold text-slate-300">
+                      <span className="text-[10px] text-gray-500">Diagnostic</span>
+                      <span className="text-[10px] font-semibold text-gray-700">
                         {orders.filter(o => ['BROUILLON', 'ATTENTE_APPROBATION_ADMIN'].includes(o.status)).length > 3
                           ? '⚠️ Goulot d\'étranglement'
                           : orders.length === 0 ? '📭 Aucune donnée' : '✅ Bon rythme'}
@@ -1399,37 +1399,37 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
             </div>
 
             {/* ── Alertes & Priorités ── */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 border border-slate-700 shadow-lg animate-scale-in relative overflow-hidden" style={{ animationDelay: '0.2s' }}>
-              <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-red-500/5 blur-3xl" />
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-md relative overflow-hidden" style={{ animationDelay: '0.2s' }}>
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-red-500/10 blur-3xl" />
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                     <span>🚨</span> Priorités
                   </h3>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                    <span className="text-[10px] text-red-400 font-bold">
+                    <span className="text-[10px] text-red-600 font-bold">
                       {orders.filter(o => o.priority === 'URGENT' || o.priority === 'HAUTE').length}
                     </span>
                   </div>
                 </div>
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">🔴 Urgent</span>
-                    <span className="text-sm font-bold text-red-400">{orders.filter(o => o.priority === 'URGENT').length}</span>
+                    <span className="text-xs text-gray-500">🔴 Urgent</span>
+                    <span className="text-sm font-bold text-red-600">{orders.filter(o => o.priority === 'URGENT').length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">🟠 Haute priorité</span>
-                    <span className="text-sm font-bold text-orange-400">{orders.filter(o => o.priority === 'HAUTE').length}</span>
+                    <span className="text-xs text-gray-500">🟠 Haute priorité</span>
+                    <span className="text-sm font-bold text-orange-600">{orders.filter(o => o.priority === 'HAUTE').length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">🔵 Normale</span>
-                    <span className="text-sm font-bold text-blue-400">{orders.filter(o => !o.priority || o.priority === 'NORMAL').length}</span>
+                    <span className="text-xs text-gray-500">🔵 Normale</span>
+                    <span className="text-sm font-bold text-blue-600">{orders.filter(o => !o.priority || o.priority === 'NORMAL').length}</span>
                   </div>
-                  <div className="pt-2 mt-1 border-t border-slate-700">
+                  <div className="pt-2 mt-1 border-t border-gray-100">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-500">Actions recommandées</span>
-                      <span className="text-[10px] text-amber-400 font-semibold">
+                      <span className="text-[10px] text-gray-500">Actions recommandées</span>
+                      <span className="text-[10px] text-amber-700 font-semibold">
                         {orders.filter(o => o.priority === 'URGENT').length > 0
                           ? '✅ Traiter les urgences'
                           : orders.filter(o => o.status === 'ATTENTE_APPROBATION_ADMIN').length > 0
