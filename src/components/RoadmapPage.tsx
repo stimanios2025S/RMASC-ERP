@@ -61,7 +61,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
   const enAttente = orders.filter(o => ['BROUILLON', 'ATTENTE_APPROBATION_ADMIN'].includes(o.status)).length
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white/[0.04]">
+    <div className="flex-1 overflow-y-auto bg-white">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-white/[0.04] border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">

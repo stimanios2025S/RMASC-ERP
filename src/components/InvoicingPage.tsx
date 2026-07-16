@@ -150,13 +150,13 @@ export default function InvoicingPage({ onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden print:overflow-visible">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03] print:hidden">
-        <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-all">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white print:hidden">
+        <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Retour
         </button>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400 font-medium">Salim Hamoun AI — Facturation</span>
+          <span className="text-xs text-gray-500 font-medium">Salim Hamoun AI — Facturation</span>
           <button onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-sm font-bold transition-all shadow-lg shadow-amber-500/25">
             📥 Exporter / Imprimer
@@ -164,13 +164,13 @@ export default function InvoicingPage({ onBack }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-slate-950 p-6 print:p-0 print:bg-white">
+      <div className="flex-1 overflow-y-auto bg-white p-6 print:p-0 print:bg-white">
         <div className="max-w-7xl mx-auto flex gap-6 print:block print:max-w-none">
 
           {/* ── LEFT PANEL ───────────────────────────────────────────────── */}
           <div className="w-80 flex-shrink-0 space-y-5 print:hidden">
             {/* Order selector */}
-            <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-5 border border-white/5 shadow-lg">
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md">
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Commande</h3>
               {loading ? <div className="text-sm text-gray-400 italic">Chargement...</div> : orders.length === 0 ? (
                 <div className="text-sm text-gray-400 italic">Aucune commande</div>
@@ -187,7 +187,7 @@ export default function InvoicingPage({ onBack }: Props) {
             </div>
 
             {/* Paramètres */}
-            <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-5 border border-white/5 shadow-lg space-y-4">
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-md space-y-4">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center"><span className="text-xs font-bold text-amber-400">$</span></div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Paramètres</h3>
@@ -238,7 +238,7 @@ export default function InvoicingPage({ onBack }: Props) {
 
           {/* ── RIGHT PANEL: Facture ──────────────────────────────────────── */}
           <div className="flex-1 print:flex-none print:w-full">
-            <div id="invoice-content" className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden shadow-lg print:rounded-none print:shadow-none print:border-0 print:bg-white">
+            <div id="invoice-content" className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-md print:rounded-none print:shadow-none print:border-0">
               {!selectedOrder ? (
                 <div className="flex items-center justify-center h-96 text-gray-400 text-sm">{loading ? 'Chargement...' : 'Sélectionnez une commande'}</div>
               ) : (

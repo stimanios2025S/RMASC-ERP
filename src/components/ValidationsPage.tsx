@@ -93,10 +93,10 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
   return (
     <PageBackground className="flex-1 overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
@@ -107,7 +107,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-[57px] z-10 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 flex gap-0">
+      <div className="sticky top-[57px] z-10 bg-white border-b border-gray-200 px-6 flex gap-0">
         {TABS.map(t => {
           const isActive = tab === t.key
           const count = t.key === 'plans' ? pending.length : pendingDelivery.length

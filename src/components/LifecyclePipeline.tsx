@@ -76,9 +76,9 @@ export default function LifecyclePipeline({ onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white">
         <button onClick={onBack}
-          className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-all">
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Retour au Tableau de bord
         </button>
