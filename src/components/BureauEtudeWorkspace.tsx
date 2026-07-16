@@ -209,7 +209,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
   return (
     <PageBackground className="h-full flex flex-col">
       {/* ═══ HEADER ═══ */}
-      <header className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-slate-500"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
           <div className="flex items-center gap-3">
@@ -250,7 +250,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
       </header>
 
       {/* ═══ TABS ═══ */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 flex gap-0 overflow-x-auto">
+      <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/10 px-6 flex gap-0 overflow-x-auto">
         {engineerTabs.map(t => {
           const isActive = activeTab === t.id
           return (

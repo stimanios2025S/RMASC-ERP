@@ -155,7 +155,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
         </div>
 
         {/* Preview content */}
-        <div className="flex-1 overflow-y-auto bg-white p-6 flex items-center justify-center">
+        <div className="flex-1 overflow-y-auto bg-slate-950 p-6 flex items-center justify-center">
           <div className="max-w-lg w-full bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 shadow-lg p-8 space-y-6">
             {/* File icon */}
             <div className="flex justify-center">
@@ -219,7 +219,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.04]">
         <button onClick={onBack}
           className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-200 transition-all">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -239,7 +239,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
       )}
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto bg-white p-6">
+      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-primary-50/60 via-surface-50 to-surface-50 p-6">
         <div className="max-w-6xl mx-auto space-y-6">
 
           {/* KPI Cards */}
