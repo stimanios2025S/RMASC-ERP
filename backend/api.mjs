@@ -88,8 +88,9 @@ app.use('/uploads', authenticate, express.static(UPLOADS_DIR))
 app.use(async (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
     try { await connectDB() } catch (e) {
-      // If DB is down, health check still works
+      // If DB is down, health check still works — all other routes get 503
       if (req.path === '/api/health') return next()
+      return res.status(503).json({ error: 'Base de données indisponible. Vérifiez MongoDB.' })
     }
   }
   next()
