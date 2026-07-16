@@ -963,7 +963,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <AddElevator onBack={() => persistView('dashboard')} />
         </div>
@@ -976,7 +976,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="h-screen flex flex-col relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex-1 flex flex-col">
+        <div className="relative flex-1 flex flex-col">
         {/* Inspection banner bar */}
         <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-2.5 flex items-center justify-between shadow-lg z-50">
           <div className="flex items-center gap-2.5">
@@ -1004,7 +1004,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <div className="flex-1 overflow-y-auto">
           <MesCommandesPage onBack={() => persistView('dashboard')} onFiche={(id) => { setFicheOrderId(id); persistView('fiche') }} />
@@ -1019,7 +1019,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <ValidationsPage
           onBack={() => persistView('dashboard')}
@@ -1035,7 +1035,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <HelpPage onBack={() => persistView('dashboard')} />
         </div>
@@ -1048,7 +1048,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <SettingsPage onBack={() => persistView('dashboard')} session={session} onSessionUpdate={onSessionUpdate} />
         </div>
@@ -1061,7 +1061,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <RoadmapPage orders={orders as any} onBack={() => persistView('dashboard')} />
         </div>
@@ -1083,7 +1083,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <InvoicingPage onBack={() => persistView('dashboard')} />
         </div>
@@ -1096,7 +1096,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <BureauEtudeVault onBack={() => persistView('dashboard')} />
         </div>
@@ -1109,7 +1109,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
         <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
         <LifecyclePipeline onBack={() => persistView('dashboard')} />
         </div>
@@ -1122,7 +1122,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
           <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
           <div className="flex-1 flex flex-col min-h-0">
             <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={buildCurrentUser(session)} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} />
@@ -1140,7 +1140,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     return (
       <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
           <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
           <PiecesSoloWorkspace onBack={() => persistView('dashboard')} session={session} />
         </div>
@@ -1153,7 +1153,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   return (
     <div className="flex h-screen relative">
         <div className="absolute inset-0 z-0 bg-white" />
-        <div className="relative z-10 flex w-full">
+        <div className="relative flex w-full">
       {/* Sidebar */}
       <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
 
