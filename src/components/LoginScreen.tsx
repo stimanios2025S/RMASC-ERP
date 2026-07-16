@@ -126,7 +126,7 @@ export default function LoginScreen({ onLogin }: Props) {
         </div>
 
         <p className="text-[10px] md:text-[11px] text-slate-500 mt-4 md:mt-10 font-medium">
-          RMASC FACTORY v2.5.2 — Plateforme unifiée. Tous droits réservés © 2026.
+          RMASC FACTORY v2.6.0 — Plateforme unifiée. Tous droits réservés © 2026.
         </p>
       </div>
 
@@ -188,7 +188,11 @@ export default function LoginScreen({ onLogin }: Props) {
               <div className="bg-white/5 border border-white/20 rounded-xl p-3 space-y-1 backdrop-blur-sm">
                 <p className="text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1.5">Comptes disponibles</p>
                 <div className="text-[12px] text-slate-300 space-y-0.5 font-mono">
-                  <p>👑 <span className="text-amber-300 font-bold">admin</span> / admin123 — Direction</p>
+                  <p>👑 <span className="text-amber-300 font-bold">salim</span> / salim123 — Direction</p>
+                  <p>👑 <span className="text-amber-300 font-bold">chergui_ghani</span> / chergui123 — Admin</p>
+                  <p>👑 <span className="text-amber-300 font-bold">chergui_nassim</span> / chergui123 — Admin</p>
+                  <p>👑 <span className="text-amber-300 font-bold">chergui_said</span> / chergui123 — Admin</p>
+                  <p>👑 <span className="text-amber-300 font-bold">chergui_aziz</span> / chergui123 — Admin</p>
                   <p>📐 <span className="text-sky-300 font-bold">ingenieur1</span> / ingenieur1 — BE Dessin 1</p>
                   <p>✏️ <span className="text-violet-300 font-bold">ingenieur2</span> / ingenieur2 — BE Dessin 2</p>
                   <p>🔍 <span className="text-rose-300 font-bold">verificateur</span> / verificateur — BE Vérif.</p>
@@ -229,7 +233,7 @@ export default function LoginScreen({ onLogin }: Props) {
           {/* Footer */}
           <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-white-400 font-medium">
             <span>🔒 Connexion locale sécurisée</span>
-            <span>RMASC ERP v2.5.2</span>
+            <span>RMASC ERP v2.6.0</span>
           </div>
         </div>
       </div>

@@ -445,8 +445,20 @@ app.get('/api/orders/:id/files', authenticate, async (req, res) => {
 })
 
 // Download/view a specific file
+// Supports Bearer token in Authorization header OR ?token= query param
+// (query param is needed for <embed> and <img> tags that can't set headers)
 app.get('/api/orders/:id/files/:fileId', authenticate, async (req, res) => {
   try {
+    // Also accept token via query param (for embed/img tags)
+    const queryToken = req.query.token
+    if (queryToken) {
+      try {
+        jwt.verify(queryToken, JWT_SECRET)
+      } catch {
+        return res.status(401).json({ error: 'Token invalide.' })
+      }
+    }
+
     const order = await Order.findById(req.params.id).select('files')
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
 
@@ -458,6 +470,8 @@ app.get('/api/orders/:id/files/:fileId', authenticate, async (req, res) => {
     res.setHeader('Content-Disposition', `inline; filename="${file.originalname}"`)
     res.setHeader('Content-Type', file.mimetype || 'application/octet-stream')
     res.setHeader('Content-Length', file.size)
+    // Allow embedding in iframe/embed tags (needed for PDF viewer)
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN')
     fs.createReadStream(file.path).pipe(res)
   } catch (e) { res.status(500).json({ error: e.message }) }
 })

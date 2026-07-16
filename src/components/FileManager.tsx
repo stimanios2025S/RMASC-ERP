@@ -99,15 +99,29 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
     }
   }
 
-  const handleDownload = (fileId: string, fileName: string) => {
+  const handleDownload = async (fileId: string, fileName: string) => {
     const token = localStorage.getItem('rmasc_token')
     const url = `/api/orders/${orderId}/files/${fileId}`
-    const a = document.createElement('a')
-    a.href = url
-    a.download = fileName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    try {
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (!res.ok) throw new Error('Téléchargement échoué')
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+    } catch { /* silent */ }
+  }
+
+  const getFileUrl = (fileId: string) => {
+    const token = localStorage.getItem('rmasc_token')
+    return `/api/orders/${orderId}/files/${fileId}?token=${encodeURIComponent(token || '')}`
   }
 
   const openFilePicker = () => {
@@ -273,7 +287,7 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
             </div>
             <div className="flex-1 bg-[#0a0f1a] overflow-hidden">
               <FileViewer
-                fileUrl={`/api/orders/${orderId}/files/${previewFile._id || previewFile.id}`}
+                fileUrl={getFileUrl(previewFile._id || previewFile.id)}
                 fileName={previewFile.originalname}
                 fileType={previewFile.mimetype}
               />

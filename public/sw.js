@@ -6,8 +6,8 @@ const CACHE = 'rmasc-erp-v2'
 const PRE_CACHE = [
   '/',
   '/manifest.json',
-  '/images/icon-192.png',
-  '/images/icon-512.png',
+  '/images/icon-192.svg',
+  '/images/icon-512.svg',
 ]
 
 self.addEventListener('install', (event) => {

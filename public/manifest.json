@@ -1,18 +1,19 @@
 {
   "short_name": "RMASC ERP",
-  "name": "RMASC Production Management ERP",
-  "description": "Systeme de gestion integre pour la fabrication d'ascenseurs. Bureau d'Etudes, Production, Stocks & Logistique.",
-  "start_url": "/",
+  "name": "RMASC FACTORY — ERP Ascenseur",
+  "description": "Système de gestion intégré pour la fabrication d'ascenseurs. Bureau d'Études, Production, Stocks & Logistique.",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "theme_color": "#f97316",
   "orientation": "any",
-  "categories": ["business", "productivity"],
+  "categories": ["business", "productivity", "manufacturing"],
   "icons": [
-    { "src": "/images/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/images/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/images/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/images/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
   ],
   "screenshots": [],
   "lang": "fr-DZ",
-  "scope": "/"
+  "scope": "/",
+  "display_override": ["window-controls-overlay", "standalone", "browser"]
 }
