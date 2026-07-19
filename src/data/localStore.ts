@@ -4,7 +4,7 @@
 // In production mode with Neon backend, all data goes through the API.
 // localStorage is only used for session + local fallback.
 
-const SEED_KEY = 'rmasc_local_seeded_v2'
+const SEED_KEY = 'rmasc_local_seeded_v3'
 const SESSION_KEY = 'rmasc_portal_session'
 
 interface LocalUser {
@@ -38,6 +38,11 @@ function seedOnce() {
   if (localStorage.getItem(SEED_KEY)) return
   const users: LocalUser[] = [
     { id: genId('u'), loginId: 'admin', password: 'admin123', name: 'Totok Michael', role: 'ADMIN' },
+    { id: genId('u'), loginId: 'salim', password: 'salim123', name: 'Salim', role: 'ADMIN' },
+    { id: genId('u'), loginId: 'chergui_ghani', password: 'chergui123', name: 'Chergui El Ghani', role: 'ADMIN' },
+    { id: genId('u'), loginId: 'chergui_nassim', password: 'chergui123', name: 'Chergui Nassim', role: 'ADMIN' },
+    { id: genId('u'), loginId: 'chergui_said', password: 'chergui123', name: 'Chergui Said', role: 'ADMIN' },
+    { id: genId('u'), loginId: 'chergui_aziz', password: 'chergui123', name: 'Chergui El Aziz', role: 'ADMIN' },
     { id: genId('u'), loginId: 'ingenieur1', password: 'ingenieur1', name: 'Karim Bensalem', role: 'INGENIEUR_1' },
     { id: genId('u'), loginId: 'ingenieur2', password: 'ingenieur2', name: 'Yasmine Hamidi', role: 'INGENIEUR_2' },
     { id: genId('u'), loginId: 'verificateur', password: 'verificateur', name: 'Rachid Imane', role: 'VERIFICATEUR' },
@@ -124,7 +129,7 @@ export const localApi = {
   login: (loginId: string, password: string) => { const users: LocalUser[] = ls('rmasc_local_users'); const user = users.find(u => u.loginId === loginId && u.password === password); return user || null },
   getUsers: () => { const users: LocalUser[] = ls('rmasc_local_users'); return users.map(({ password, ...u }) => u) },
   updateUser: (id: string, name: string) => { const users: LocalUser[] = ls('rmasc_local_users'); const idx = users.findIndex(u => u.id === id); if (idx >= 0) { users[idx].name = name; localStorage.setItem('rmasc_local_users', JSON.stringify(users)) } },
-  updateAdminCredentials: (loginId: string, newPassword: string, newId: string) => { const users: LocalUser[] = ls('rmasc_local_users'); const admin = users.find(u => u.role === 'ADMIN'); if (admin) { admin.loginId = newId; admin.password = newPassword; localStorage.setItem('rmasc_local_users', JSON.stringify(users)) } },
+  updateAdminCredentials: (loginId: string, currentPassword: string, newPassword: string, newId: string) => { const users: LocalUser[] = ls('rmasc_local_users'); const admin = users.find(u => u.loginId === loginId && u.password === currentPassword); if (!admin) return null; if (admin) { admin.loginId = newId; admin.password = newPassword; localStorage.setItem('rmasc_local_users', JSON.stringify(users)); return admin } },
   getVaultFiles: () => ls('rmasc_vault_files'),
   getVaultFilesByEngineer: (engineerName: string) => ls('rmasc_vault_files').filter((f: any) => f.engineer === engineerName),
 }

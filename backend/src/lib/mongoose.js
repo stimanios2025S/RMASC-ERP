@@ -1,11 +1,9 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-//  RMASC FACTORY — MongoDB Connection Pool + Global JSON Transform
-//  - Global `toJSON` transform: maps `_id` → `id` for every model
-//  - Prevents the `id` vs `_id` bug that breaks ALL frontend CRUD operations
-// ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+//  RMASC FACTORY — MongoDB Connection Pool (Production Hardened)
+//  Retry logic, health monitoring, auto-reconnect, pool sizing
+// ═══════════════════════════════════════════════════════════════════════════
 
 import mongoose from 'mongoose'
-import { Schema } from 'mongoose'
 
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || 'mongodb://localhost:27017/rmasc-erp'
 
@@ -13,83 +11,77 @@ if (!MONGODB_URI) {
   throw new Error('MONGODB_URI environment variable is required')
 }
 
-// ─── Global Plugin: auto-map _id → id in JSON responses ────────────────
-// This ensures every Mongoose document returned via res.json() includes
-// an `id` field matching the MongoDB _id, exactly like Prisma did.
+// ─── Global JSON transform ────────────────────────────────────────────────
 mongoose.plugin(function setIdPlugin(schema) {
-  // Only add if not already present
   if (!schema.paths['id']) {
-    schema.virtual('id').get(function () {
-      return this._id?.toString()
-    })
+    schema.virtual('id').get(function () { return this._id?.toString() })
   }
-
-  // Ensure virtuals are included in JSON
   schema.set('toJSON', {
     virtuals: true,
     versionKey: false,
-    transform(_doc, ret) {
-      ret.id = ret._id?.toString()
-      return ret
-    },
+    transform(_doc, ret) { ret.id = ret._id?.toString(); return ret },
   })
-
   schema.set('toObject', {
     virtuals: true,
     versionKey: false,
-    transform(_doc, ret) {
-      ret.id = ret._id?.toString()
-      return ret
-    },
+    transform(_doc, ret) { ret.id = ret._id?.toString(); return ret },
   })
 })
 
-// ─── Global cache — survives Vercel function re-use ───────────────────────
-const globalCache = globalThis
+// ─── Connection state ────────────────────────────────────────────────────
+const MAX_RETRIES = 5
+const RETRY_BASE_MS = 1000
 
-let cached = globalCache.__rmascMongoose
+let connectionPromise = null
+let reconnectTimer = null
 
-if (!cached) {
-  cached = globalCache.__rmascMongoose = {
-    conn: null,
-    promise: null,
+// ─── Connection events ────────────────────────────────────────────────────
+mongoose.connection.on('connected', () => {
+  console.log(`  ✅ MongoDB connectée — Pool: 20 connexions`)
+})
+mongoose.connection.on('disconnected', () => {
+  console.warn(`  ⚠️  MongoDB déconnectée — tentative de reconnexion...`)
+})
+mongoose.connection.on('error', (err) => {
+  console.error(`  ❌ MongoDB erreur: ${err.message}`)
+})
+mongoose.connection.on('reconnected', () => {
+  console.log(`  ✅ MongoDB reconnectée`)
+})
+
+// ─── Connect with retry ───────────────────────────────────────────────────
+export async function connectDB(retries = MAX_RETRIES) {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose
   }
-}
 
-export async function connectDB() {
-  if (cached.conn && mongoose.connection.readyState === 1) {
-    return cached.conn
-  }
-
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
       maxPoolSize: 20,
       minPoolSize: 5,
       maxIdleTimeMS: 30000,
-      bufferCommands: true,
+      waitQueueTimeoutMS: 5000,
+      heartbeatFrequencyMS: 10000,
+      retryWrites: true,
+      w: 'majority',
     })
   }
 
   try {
-    cached.conn = await cached.promise
-    return cached.conn
+    await connectionPromise
+    return mongoose
   } catch (err) {
-    cached.promise = null
-    cached.conn = null
+    connectionPromise = null
+    if (retries > 0) {
+      const delay = RETRY_BASE_MS * Math.pow(2, MAX_RETRIES - retries)
+      console.warn(`  ⚠️  MongoDB échec — nouvelle tentative dans ${delay}ms (${retries} restantes)`)
+      await new Promise(r => { reconnectTimer = setTimeout(r, delay) })
+      return connectDB(retries - 1)
+    }
     throw err
   }
-}
-
-export async function disconnectDB() {
-  try {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect()
-    }
-  } catch {}
-  cached.conn = null
-  cached.promise = null
 }
 
 export async function testDBConnection() {
@@ -102,6 +94,16 @@ export async function testDBConnection() {
     const message = err instanceof Error ? err.message : String(err)
     return { connected: false, latencyMs: Date.now() - start, error: message }
   }
+}
+
+export async function disconnectDB() {
+  if (reconnectTimer) clearTimeout(reconnectTimer)
+  connectionPromise = null
+  try {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect()
+    }
+  } catch {}
 }
 
 export default mongoose

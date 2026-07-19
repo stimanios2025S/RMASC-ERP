@@ -8,8 +8,6 @@ export default {
     extend: {
       colors: {
         // ── Primary: Premium Safety Orange ─────────────────────────────────
-        // Used for all primary CTAs, active highlights, focus rings,
-        // validation success states, and hero elements.
         primary: {
           50: '#FFF7ED',
           100: '#FFEDD5',
@@ -24,7 +22,6 @@ export default {
           950: '#431407',
         },
         // ── Accent: Warm Amber / Orange complementary ──────────────────────
-        // Used for secondary highlights, badge accents, subtle active states.
         accent: {
           50: '#FFFBEB',
           100: '#FEF3C7',
@@ -38,36 +35,15 @@ export default {
           900: '#78350F',
           950: '#451A03',
         },
-        // ── Surface: Dark Glass ──────────────────────────────────────────────
-        surface: {
-          50: '#1a1d29',
-          100: '#1e2230',
-          200: '#242838',
-          300: '#2a2f40',
-          400: '#363b4d',
-          500: '#475569',
-          600: '#64748b',
-          700: '#94a3b8',
-          800: '#cbd5e1',
-          900: '#e2e8f0',
-          950: '#f1f5f9',
-        },
-        // ── Sidebar tokens ─────────────────────────────────────────────────
-        sidebar: {
-          bg: 'rgba(255,255,255,0.03)',
-          hover: 'rgba(255,255,255,0.06)',
-          active: 'rgba(251,146,60,0.15)',
-          text: '#94a3b8',
-          'text-active': '#fb923c',
-        },
-        // ── Card tokens ────────────────────────────────────────────────────
-        card: {
-          bg: 'rgba(255,255,255,0.06)',
-          border: 'rgba(255,255,255,0.1)',
+        // ── Surface / Glass tokens ─────────────────────────────────────────
+        glass: {
+          DEFAULT: 'rgba(255,255,255,0.05)',
+          hover: 'rgba(255,255,255,0.08)',
+          active: 'rgba(255,255,255,0.12)',
+          border: 'rgba(255,255,255,0.08)',
+          'border-hover': 'rgba(255,255,255,0.15)',
         },
         // ── Override default Tailwind gray with cool slate ─────────────────
-        // This cascades to ALL `bg-gray-*`, `text-gray-*`, `border-gray-*`
-        // references across every component without touching the JSX.
         gray: {
           50: '#F1F5F9',
           100: '#E2E8F0',
@@ -84,15 +60,21 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['SF Mono', 'IBM Plex Mono', 'Consolas', 'monospace'],
       },
       borderRadius: {
         '2xl': '1rem',
         '3xl': '1.25rem',
       },
       boxShadow: {
-        'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
-        'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
-        'sidebar': '1px 0 3px 0 rgb(0 0 0 / 0.04)',
+        'glass': '0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2)',
+        'glass-lg': '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2)',
+        'glass-xl': '0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.2)',
+        'amber-glow': '0 0 15px rgba(249,115,22,0.15)',
+        'amber-glow-lg': '0 0 30px rgba(249,115,22,0.2)',
+      },
+      backdropBlur: {
+        xs: '2px',
       },
     },
   },

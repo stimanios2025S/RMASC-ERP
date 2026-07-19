@@ -112,17 +112,17 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       <PageBackground className="h-full flex flex-col">
         <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-gray-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+            {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🏭</span></div>
-              <div><h1 className="text-lg font-extrabold text-gray-200">Production & Atelier</h1><p className="text-[11px] text-gray-400 font-semibold">{orders.length} commandes actives</p></div>
+              <div><h1 className="text-lg font-extrabold text-white">Production & Atelier</h1><p className="text-[11px] text-white font-semibold">{orders.length} commandes actives</p></div>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => setShowAgent(p => !p)}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-gray-400'}`}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
               title="Assistant IA Salim (⌘I)"><span className="text-base">🤖</span></button>
-            {session?.name && <span className="text-xs text-gray-500 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
+            {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
           </div>
         </header>
         <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0">
@@ -141,18 +141,18 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     <PageBackground className="h-full flex flex-col">
       <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-gray-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🏭</span></div>
-            <div><h1 className="text-lg font-extrabold text-gray-200">Production & Atelier</h1><p className="text-[11px] text-gray-400 font-semibold">{orders.length} commandes en production</p></div>
+            <div><h1 className="text-lg font-extrabold text-white">Production & Atelier</h1><p className="text-[11px] text-white font-semibold">{orders.length} commandes en production</p></div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => setShowAgent(p => !p)}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-gray-400'}`}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
             title="Assistant IA Salim (⌘I)"><span className="text-base">🤖</span></button>
-          {session?.name && <span className="text-xs text-gray-500 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
-          <button onClick={loadOrders} className="p-2 rounded-xl hover:bg-white/[0.06] text-gray-400">
+          {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
+          <button onClick={loadOrders} className="p-2 rounded-xl hover:bg-white/[0.06] text-white">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
           </button>
         </div>
@@ -186,14 +186,14 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       <div className={`flex-shrink-0 px-6 py-3 ${currentPhase.bgColor} border-b ${currentPhase.borderColor}`}>
         <div className="flex items-center gap-3">
           <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${currentPhase.color} flex items-center justify-center text-white shadow-sm`}>{currentPhase.icon}</div>
-          <div><p className="text-sm font-bold text-gray-200">{currentPhase.label}</p><p className="text-xs text-gray-500">{currentPhase.desc}</p></div>
+          <div><p className="text-sm font-bold text-white">{currentPhase.label}</p><p className="text-xs text-white/80">{currentPhase.desc}</p></div>
         </div>
       </div>
 
       {/* Orders grid */}
       <div className="flex-1 overflow-y-auto p-6">
         {phaseOrders.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-gray-400">
+          <div className="h-full flex flex-col items-center justify-center text-white">
             <span className="text-5xl mb-4">📭</span>
             <p className="text-sm font-medium">Aucune commande dans cette phase</p>
             <p className="text-xs mt-1">Les commandes prêtes pour la production apparaîtront ici.</p>
@@ -212,26 +212,26 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
                   className={`bg-white/[0.03] rounded-xl border transition-all cursor-pointer ${isExpanded ? 'border-amber-500/30 shadow-lg' : isInThisPhase ? 'border-white/5 hover:border-white/10 hover:shadow-sm' : 'border-white/5 opacity-40'}`}>
                   <div className={`px-4 py-3 border-b ${isExpanded ? 'border-amber-500/20' : 'border-white/5'}`}>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold font-mono text-gray-200">{order.serialNumber}</span>
+                      <span className="text-sm font-bold font-mono text-white">{order.serialNumber}</span>
                       {isInThisPhase && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
                       {phaseIdx > currentIdx && <span className="text-xs font-bold text-emerald-400">✅ Terminé</span>}
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{order.clientName} — {order.clientCity}</p>
+                    <p className="text-xs text-white/80 mt-0.5">{order.clientName} — {order.clientCity}</p>
                   </div>
                   <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400">Phase actuelle</span>
+                      <span className="text-white">Phase actuelle</span>
                       <span className={`font-semibold ${PHASES[phaseIdx]?.textColor}`}>{PHASES[phaseIdx]?.icon} {PHASES[phaseIdx]?.label}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400">Motorisation</span>
-                      <span className="text-gray-200 font-semibold">{order.typeMotorisation}</span>
+                      <span className="text-white">Motorisation</span>
+                      <span className="text-white font-semibold">{order.typeMotorisation}</span>
                     </div>
                     <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden mt-2">
                       <div className={`h-full rounded-full bg-gradient-to-r ${currentPhase.color}`} style={{ width: `${((phaseIdx + 1) / PHASES.length) * 100}%` }} />
                     </div>
                     <button onClick={() => setExpandedId(isExpanded ? null : order.id)}
-                      className="w-full py-1.5 mt-1 rounded-lg text-xs font-semibold bg-white/[0.04] text-gray-400 hover:bg-white/[0.08] transition-all">
+                      className="w-full py-1.5 mt-1 rounded-lg text-xs font-semibold bg-white/[0.04] text-white hover:bg-white/[0.08] transition-all">
                       {isExpanded ? '▲ Réduire' : '▼ Détails'}
                     </button>
                     {isExpanded && (
@@ -257,7 +257,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         )}
       </div>
 
-      <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] text-gray-500">
+      <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] text-white/80">
         <span>RMASC Factory — Production & Atelier v2.6</span>
         <span>{orders.length} commandes • ⌘K Recherche • ⌘I Agent</span>
       </footer>

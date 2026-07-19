@@ -72,13 +72,13 @@ function formatDate(iso: string | null | undefined) {
 function movementLabel(t: string) { return { ENTRY: '📥 Entrée', EXIT: '📤 Sortie', ADJUSTMENT: '🔧 Ajustement', TRANSFER: '🔄 Transfert' }[t] || t }
 function docTypeLabel(t: string) { return { BON_COMMANDE: '📝 Bon de Commande', BON_LIVRAISON: '📦 Bon de Livraison', FACTURE: '🧾 Facture', BON_SORTIE: '📤 Bon de Sortie', INVENTAIRE: '📋 Inventaire' }[t] || t }
 function docStatusBadge(s: string) {
-  const colors: Record<string, string> = { BROUILLON: 'bg-white/10 text-gray-400', EN_ATTENTE: 'bg-amber-500/15 text-amber-400', VALIDE: 'bg-emerald-500/15 text-emerald-400', ANNULE: 'bg-red-500/15 text-red-400' }
-  return colors[s] || 'bg-white/10 text-gray-400'
+  const colors: Record<string, string> = { BROUILLON: 'bg-white/10 text-white', EN_ATTENTE: 'bg-amber-500/15 text-amber-400', VALIDE: 'bg-emerald-500/15 text-emerald-400', ANNULE: 'bg-red-500/15 text-red-400' }
+  return colors[s] || 'bg-white/10 text-white'
 }
-function PdfLink({ mType, mId }: { mType: string; mId: string }) {
-  const suffix = ({ ENTRY: 'entree', EXIT: 'sortie', ADJUSTMENT: 'ajustement', TRANSFER: 'transfert' } as any)[mType] || 'mouvement'
-  return <a href={apiPath(`/documents/stock/stock_${suffix}_${mId.slice(0, 8)}.pdf`)} target="_blank" rel="noopener noreferrer"
-    className="text-cyan-600 hover:text-cyan-800 text-[10px] font-semibold underline">📄 PDF</a>
+// PdfLink disabled: PDF generation endpoint not yet implemented on the backend.
+// Shows a placeholder badge until the feature is built.
+function PdfLink({ _mType, _mId }: { _mType: string; _mId: string }) {
+  return <span className="text-white/60 text-[10px] font-medium italic">PDF — Bientôt</span>
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -166,17 +166,17 @@ export default function StockWorkspace({ onBack, session }: Props) {
       {/* ── Header ── */}
       <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-gray-400"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">📦</span></div>
           <div>
-            <h1 className="text-lg font-extrabold text-gray-200">Gestion des Stocks</h1>
-            <p className="text-[11px] text-gray-400 font-semibold">Suivi des articles, fournisseurs et mouvements</p>
+            <h1 className="text-lg font-extrabold text-white">Gestion des Stocks</h1>
+            <p className="text-[11px] text-white font-semibold">Suivi des articles, fournisseurs et mouvements</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {/* Agent IA Button */}
           <button onClick={() => setShowAgent(p => !p)}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-gray-400'}`}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
             title="Assistant IA Salim (⌘I)">
             <span className="text-base">🤖</span>
           </button>
@@ -189,10 +189,10 @@ export default function StockWorkspace({ onBack, session }: Props) {
           {session && (
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/10">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="text-[10px] font-semibold text-gray-400">{session.name}</span>
+              <span className="text-[10px] font-semibold text-white">{session.name}</span>
             </div>
           )}
-          <button onClick={loadData} className="p-2 rounded-xl hover:bg-white/[0.06] text-gray-400">
+          <button onClick={loadData} className="p-2 rounded-xl hover:bg-white/[0.06] text-white">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
           </button>
         </div>
@@ -216,7 +216,7 @@ export default function StockWorkspace({ onBack, session }: Props) {
 
       {/* ── Feedback toast ── */}
       {feedback && (
-        <div className={`flex-shrink-0 px-6 py-2.5 text-sm font-medium flex items-center gap-2 ${feedback.ok ? 'bg-emerald-50 text-emerald-700 border-b border-emerald-100' : 'bg-amber-50 text-amber-700 border-b border-amber-100'}`}>
+        <div className={`flex-shrink-0 px-6 py-2.5 text-sm font-medium flex items-center gap-2 ${feedback.ok ? 'bg-emerald-500/10 text-emerald-400 border-b border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-b border-amber-500/20'}`}>
           <span>{feedback.ok ? '✅' : '⚠️'}</span> {feedback.msg}
           <button onClick={() => setFeedback(null)} className="ml-auto opacity-50 hover:opacity-100">✕</button>
         </div>
@@ -247,41 +247,41 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
     <div className="max-w-5xl mx-auto space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-slate-400">Articles en stock</p>
+            <p className="text-xs font-medium text-white">Articles en stock</p>
             <span className="text-lg">📦</span>
           </div>
-          <p className="text-3xl font-bold text-gray-200">{stats?.totalItems || 0}</p>
-          <p className="text-[11px] text-slate-400 mt-1">
+          <p className="text-3xl font-bold text-white">{stats?.totalItems || 0}</p>
+          <p className="text-[11px] text-white/60 mt-1">
             {items.reduce((s, i) => s + i.quantity, 0)} unités totales
           </p>
         </div>
-        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-slate-400">Alertes stock</p>
+            <p className="text-xs font-medium text-white">Alertes stock</p>
             <span className="text-lg">🔴</span>
           </div>
-          <p className={`text-3xl font-bold ${lowStockItems.length > 0 ? 'text-red-500' : 'text-gray-200'}`}>
+          <p className={`text-3xl font-bold ${lowStockItems.length > 0 ? 'text-red-500' : 'text-white'}`}>
             {lowStockItems.length}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">Articles sous seuil critique</p>
+          <p className="text-[11px] text-white/60 mt-1">Articles sous seuil critique</p>
         </div>
-        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-slate-400">Fournisseurs</p>
+            <p className="text-xs font-medium text-white">Fournisseurs</p>
             <span className="text-lg">🏢</span>
           </div>
-          <p className="text-3xl font-bold text-gray-200">{stats?.totalSuppliers || 0}</p>
-          <p className="text-[11px] text-slate-400 mt-1">Partenaires enregistrés</p>
+          <p className="text-3xl font-bold text-white">{stats?.totalSuppliers || 0}</p>
+          <p className="text-[11px] text-white/60 mt-1">Partenaires enregistrés</p>
         </div>
-        <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-slate-400">Valeur du stock</p>
+            <p className="text-xs font-medium text-white">Valeur du stock</p>
             <span className="text-lg">💰</span>
           </div>
-          <p className="text-3xl font-bold text-gray-200">{totalValue.toLocaleString()} DA</p>
-          <p className="text-[11px] text-slate-400 mt-1">Valeur totale estimée</p>
+          <p className="text-3xl font-bold text-white">{totalValue.toLocaleString()} DA</p>
+          <p className="text-[11px] text-white/60 mt-1">Valeur totale estimée</p>
         </div>
       </div>
 
@@ -290,24 +290,24 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
         {/* Low Stock Alerts */}
         <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-gray-200">🔴 Alertes Stock</h3>
-            <span className="text-xs text-slate-400">{lowStockItems.length} article{lowStockItems.length > 1 ? 's' : ''}</span>
+            <h3 className="text-sm font-bold text-white">🔴 Alertes Stock</h3>
+            <span className="text-xs text-white">{lowStockItems.length} article{lowStockItems.length > 1 ? 's' : ''}</span>
           </div>
           {lowStockItems.length === 0 ? (
-            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
               <span>✅</span>
-              <p className="text-sm text-emerald-700 font-medium">Tous les articles sont bien approvisionnés.</p>
+              <p className="text-sm text-emerald-400 font-medium">Tous les articles sont bien approvisionnés.</p>
             </div>
           ) : (
             <div className="space-y-2">
               {lowStockItems.slice(0, 8).map(item => (
                 <button key={item.id} onClick={() => onViewItem(item.id)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-red-50 border border-red-100 hover:bg-red-100 transition-all">
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="text-lg">📦</span>
                     <div className="text-left min-w-0">
-                      <p className="text-xs font-bold text-gray-200 truncate">{item.name}</p>
-                      <p className="text-[10px] text-slate-400">{item.reference}</p>
+                      <p className="text-xs font-bold text-white truncate">{item.name}</p>
+                      <p className="text-[10px] text-white">{item.reference}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -323,11 +323,11 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
         {/* Recent Movements */}
         <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-gray-200">📋 Mouvements Récents</h3>
-            <span className="text-xs text-slate-400">{movements.length} total</span>
+            <h3 className="text-sm font-bold text-white">📋 Mouvements Récents</h3>
+            <span className="text-xs text-white">{movements.length} total</span>
           </div>
           {movements.length === 0 ? (
-            <p className="text-sm text-slate-400 italic text-center py-4">Aucun mouvement enregistré.</p>
+            <p className="text-sm text-white italic text-center py-4">Aucun mouvement enregistré.</p>
           ) : (
             <div className="space-y-2">
               {movements.slice(0, 8).map(m => (
@@ -335,15 +335,15 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="text-base">{m.type === 'ENTRY' ? '📥' : m.type === 'EXIT' ? '📤' : '🔧'}</span>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-gray-200 truncate">{m.item?.name || 'Article'}</p>
-                      <p className="text-[10px] text-slate-400">{formatDate(m.createdAt)}</p>
+                      <p className="text-xs font-semibold text-white truncate">{m.item?.name || 'Article'}</p>
+                      <p className="text-[10px] text-white">{formatDate(m.createdAt)}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className={`text-xs font-bold ${m.type === 'ENTRY' ? 'text-emerald-600' : 'text-red-600'}`}>
                       {m.type === 'ENTRY' ? '+' : '-'}{m.quantity}
                     </p>
-                    <p className="text-[10px] text-slate-400">{movementLabel(m.type)}</p>
+                    <p className="text-[10px] text-white">{movementLabel(m.type)}</p>
                   </div>
                 </div>
               ))}
@@ -354,17 +354,17 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
 
       {/* Stock locations breakdown */}
       <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-gray-200 mb-4">📍 Répartition par Stock</h3>
+        <h3 className="text-sm font-bold text-white mb-4">📍 Répartition par Stock</h3>
         <div className="grid grid-cols-2 gap-3">
           {['Stock 1', 'Stock 2'].map(loc => {
             const locItems = items.filter(i => i.location === loc)
             const total = locItems.reduce((s, i) => s + i.quantity, 0)
             const alerts = locItems.filter(i => i.quantity <= i.alertThreshold).length
             return (
-              <div key={loc} className={`rounded-xl border px-4 py-3 ${loc === 'Stock 2' ? 'bg-violet-50 border-violet-200' : 'bg-cyan-50 border-cyan-200'}`}>
-                <p className="text-xs font-bold text-gray-200">{loc}</p>
-                <p className="text-lg font-bold text-gray-200">{total}</p>
-                <p className="text-[10px] text-gray-400">{locItems.length} articles</p>
+              <div key={loc} className={`rounded-xl border px-4 py-3 ${loc === 'Stock 2' ? 'bg-violet-500/10 border-violet-500/20' : 'bg-cyan-500/10 border-cyan-500/20'}`}>
+                <p className="text-xs font-bold text-white">{loc}</p>
+                <p className="text-lg font-bold text-white">{total}</p>
+                <p className="text-[10px] text-white">{locItems.length} articles</p>
                 {alerts > 0 && <p className="text-[10px] text-red-500 font-semibold mt-1">🔴 {alerts} alerte{alerts > 1 ? 's' : ''}</p>}
               </div>
             )
@@ -374,16 +374,16 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
 
       {/* Categories breakdown */}
       <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-gray-200 mb-4">📊 Répartition par Catégorie</h3>
+        <h3 className="text-sm font-bold text-white mb-4">📊 Répartition par Catégorie</h3>
         <div className="grid grid-cols-3 gap-3">
           {Array.from(new Set(items.map(i => i.category))).map(cat => {
             const catItems = items.filter(i => i.category === cat)
             const total = catItems.reduce((s, i) => s + i.quantity, 0)
             return (
               <div key={cat} className="bg-white/[0.04] rounded-xl border border-white/10 px-4 py-3">
-                <p className="text-xs font-bold text-gray-200">{cat}</p>
+                <p className="text-xs font-bold text-white">{cat}</p>
                 <p className="text-lg font-bold text-cyan-600">{total}</p>
-                <p className="text-[10px] text-slate-400">{catItems.length} article{catItems.length > 1 ? 's' : ''}</p>
+                <p className="text-[10px] text-white">{catItems.length} article{catItems.length > 1 ? 's' : ''}</p>
               </div>
             )
           })}
@@ -479,17 +479,17 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
   if (generatedDoc) {
     return (
       <div className="max-w-2xl mx-auto text-center py-12">
-        <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+        <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
           <span className="text-4xl">✅</span>
         </div>
-        <h2 className="text-xl font-bold text-gray-200 mb-2">Bon de Commande Créé</h2>
-        <p className="text-sm text-slate-400 mb-2">N° <span className="font-mono font-bold text-gray-400">{generatedDoc.docNumber}</span></p>
+        <h2 className="text-xl font-bold text-white mb-2">Bon de Commande Créé</h2>
+        <p className="text-sm text-white mb-2">N° <span className="font-mono font-bold text-white">{generatedDoc.docNumber}</span></p>
         <a href={apiPath(generatedDoc.pdfUrl)} target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 transition-all shadow-sm mb-4">
           📄 Télécharger le PDF
         </a>
         <div>
-          <button onClick={resetForm} className="px-4 py-2 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.04] transition-all">
+          <button onClick={resetForm} className="px-4 py-2 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/[0.04] transition-all">
             ➕ Nouveau bon de commande
           </button>
         </div>
@@ -500,8 +500,8 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-gray-200">📝 Nouveau Bon de Commande</h2>
-        <span className="text-xs text-slate-400">{selectedLines.length} article{selectedLines.length > 1 ? 's' : ''} sélectionné{selectedLines.length > 1 ? 's' : ''}</span>
+        <h2 className="text-lg font-bold text-white">📝 Nouveau Bon de Commande</h2>
+        <span className="text-xs text-white">{selectedLines.length} article{selectedLines.length > 1 ? 's' : ''} sélectionné{selectedLines.length > 1 ? 's' : ''}</span>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -513,7 +513,7 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
             <InputField label="Titre du bon" value={title} onChange={setTitle} placeholder="Ex: Achat tôle acier avril" />
           </div>
           <div className="mt-3">
-            <label className="text-xs font-semibold text-gray-400">Description</label>
+            <label className="text-xs font-semibold text-white">Description</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}
               className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Notes ou instructions..." />
           </div>
@@ -521,7 +521,7 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
 
         {/* Search Items */}
         <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-400 mb-3">🔍 Rechercher des articles à commander</p>
+          <p className="text-xs font-semibold text-white mb-3">🔍 Rechercher des articles à commander</p>
           <div className="flex items-center gap-3 mb-3">
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par nom ou référence..." className="h-9 flex-1 px-3.5 rounded-xl border border-white/10 text-xs focus:ring-2 focus:ring-cyan-200" />
             <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)} className="h-9 px-3 rounded-xl border border-white/10 text-xs"><option value="">Tous stocks</option><option value="Stock 1">Stock 1</option><option value="Stock 2">Stock 2</option></select>
@@ -530,17 +530,17 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
 
           {/* Search results grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-52 overflow-y-auto p-1">
-            {filtered.length === 0 && <p className="col-span-full text-xs text-slate-400 italic text-center py-4">Aucun article trouvé.</p>}
+            {filtered.length === 0 && <p className="col-span-full text-xs text-white italic text-center py-4">Aucun article trouvé.</p>}
             {filtered.slice(0, 30).map(item => {
               const alreadySelected = selectedLines.some(l => l.item.id === item.id)
               return (
                 <button key={item.id} type="button" onClick={() => !alreadySelected && addLine(item)}
                   disabled={alreadySelected}
-                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${alreadySelected ? 'bg-white/[0.04] border-white/10 opacity-50 cursor-not-allowed' : 'border-white/10 hover:border-cyan-300 hover:bg-cyan-50'}`}>
-                  <p className="font-bold text-gray-200 truncate">{item.name}</p>
-                  <p className="text-[10px] text-slate-400 font-mono">{item.reference}</p>
-                  <p className="text-[10px] text-slate-400">
-                    <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span>
+                  className={`text-left p-2.5 rounded-xl border text-xs transition-all ${alreadySelected ? 'bg-white/[0.04] border-white/10 opacity-50 cursor-not-allowed' : 'border-white/10 hover:border-cyan-400 hover:bg-cyan-500/10'}`}>
+                  <p className="font-bold text-white truncate">{item.name}</p>
+                  <p className="text-[10px] text-white font-mono">{item.reference}</p>
+                  <p className="text-[10px] text-white">
+                    <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${item.location === 'Stock 2' ? 'bg-violet-500/20 text-violet-400' : 'bg-cyan-500/20 text-cyan-400'}`}>{item.location}</span>
                     {' · '}{item.quantity} en stock · {item.unitPrice?.toLocaleString() || '—'} DA
                   </p>
                 </button>
@@ -551,33 +551,33 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
 
         {/* Selected Items */}
         <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-400 mb-3">📋 Articles sélectionnés ({selectedLines.length})</p>
+          <p className="text-xs font-semibold text-white mb-3">📋 Articles sélectionnés ({selectedLines.length})</p>
           {selectedLines.length === 0 ? (
-            <p className="text-xs text-slate-400 italic">Recherchez et cliquez sur des articles pour les ajouter.</p>
+            <p className="text-xs text-white italic">Recherchez et cliquez sur des articles pour les ajouter.</p>
           ) : (
             <div className="space-y-2">
               {selectedLines.map(line => (
                 <div key={line.item.id} className="flex items-center gap-3 bg-white/[0.04] rounded-xl px-3 py-2 border border-white/10">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-200 truncate">{line.item.name}</p>
-                    <p className="text-[10px] text-slate-400 font-mono">{line.item.reference}</p>
+                    <p className="text-xs font-bold text-white truncate">{line.item.name}</p>
+                    <p className="text-[10px] text-white font-mono">{line.item.reference}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-400">Qté:</span>
+                    <span className="text-[10px] text-white">Qté:</span>
                     <input type="number" min="1" value={line.qty}
                       onChange={e => updateQty(line.item.id, parseInt(e.target.value) || 1)}
                       className="w-16 h-8 px-2 rounded-lg border border-white/10 text-xs text-center font-semibold" />
                   </div>
                   <div className="text-right min-w-[80px]">
-                    <p className="text-xs font-bold text-gray-200">{((line.item.unitPrice || 0) * line.qty).toLocaleString()} DA</p>
-                    <p className="text-[9px] text-slate-400">{line.item.unitPrice?.toLocaleString() || '0'} DA/unité</p>
+                    <p className="text-xs font-bold text-white">{((line.item.unitPrice || 0) * line.qty).toLocaleString()} DA</p>
+                    <p className="text-[9px] text-white">{line.item.unitPrice?.toLocaleString() || '0'} DA/unité</p>
                   </div>
                   <button type="button" onClick={() => removeLine(line.item.id)} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
                 </div>
               ))}
               <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
-                <p className="text-xs text-gray-400">Total HT estimé</p>
-                <p className="text-sm font-bold text-gray-200">{totalHT.toLocaleString()} DA</p>
+                <p className="text-xs text-white">Total HT estimé</p>
+                <p className="text-sm font-bold text-white">{totalHT.toLocaleString()} DA</p>
               </div>
             </div>
           )}
@@ -589,7 +589,7 @@ function BonCommandeTab({ items, suppliers, onRefresh, feedback, session }: {
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold hover:from-cyan-400 hover:to-teal-500 transition-all shadow-sm disabled:opacity-60 flex items-center gap-2">
             {saving ? '⏳...' : '📄 Générer le Bon de Commande'}
           </button>
-          <button type="button" onClick={resetForm} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.04]">Réinitialiser</button>
+          <button type="button" onClick={resetForm} className="px-4 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/[0.04]">Réinitialiser</button>
         </div>
       </form>
     </div>
@@ -655,7 +655,7 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
       }
       feedback(true, `✅ Article "${form.name}" créé avec succès.`)
       setShowForm(false)
-      setForm({ reference: '', name: '', description: '', category: 'Tôlerie & Métal', unit: 'Unité', quantity: 0, alertThreshold: 5, unitPrice: 0, supplierId: '' })
+      setForm({ reference: '', name: '', description: '', category: 'Tôlerie & Métal', unit: 'Unité', location: 'Stock 1', quantity: 0, alertThreshold: 5, unitPrice: 0, supplierId: '' })
       setImageFile(null); setImagePreview(null)
       onRefresh()
     } catch (err: any) { feedback(false, err.message) }
@@ -667,7 +667,7 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-gray-200">📦 Nouvel Article</h2>
+        <h2 className="text-lg font-bold text-white">📦 Nouvel Article</h2>
       </div>
       <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -680,14 +680,14 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
           <SelectField label="Stock" value={form.location} onChange={v => setForm({ ...form, location: v })} options={['Stock 1', 'Stock 2']} />
         </div>
         <div>
-          <label className="text-xs font-semibold text-gray-400">Description</label>
+          <label className="text-xs font-semibold text-white">Description</label>
           <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Description optionnelle..." />
         </div>
         {/* Image upload */}
         <div>
-          <label className="text-xs font-semibold text-gray-400 mb-1 block">Photo du produit</label>
+          <label className="text-xs font-semibold text-white mb-1 block">Photo du produit</label>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-white/10 bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition-all text-sm text-gray-400 hover:text-gray-200">
+            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-white/10 bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition-all text-sm text-white hover:text-white">
               <span>📷</span>
               <span>{imageFile ? imageFile.name : 'Ajouter une photo'}</span>
               <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
@@ -708,7 +708,7 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
         <SelectField label="Fournisseur" value={form.supplierId} onChange={v => setForm({ ...form, supplierId: v })} options={[{ value: '', label: 'Aucun' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]} />
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold hover:from-cyan-400 hover:to-teal-500 transition-all shadow-sm disabled:opacity-60">{saving ? '⏳...' : '💾 Créer l\'article'}</button>
-          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.04]">Annuler</button>
+          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/[0.04]">Annuler</button>
         </div>
       </form>
     </div>
@@ -718,8 +718,8 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-gray-200">📦 Articles en Stock</h2>
-          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{items.length} articles</span>
+          <h2 className="text-lg font-bold text-white">📦 Articles en Stock</h2>
+          <span className="text-xs text-white bg-white/[0.06] px-2 py-0.5 rounded">{items.length} articles</span>
         </div>
         <button onClick={() => setShowForm(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-xs font-bold hover:from-cyan-400 hover:to-teal-500 transition-all shadow-sm">➕ Nouvel article</button>
       </div>
@@ -748,20 +748,20 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
                     <div className="flex items-center gap-1.5">
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-gray-200 truncate">{item.name}</p>
-                        <p className="text-[10px] text-slate-400 font-mono">{item.reference}</p>
+                        <p className="text-sm font-bold text-white truncate">{item.name}</p>
+                        <p className="text-[10px] text-white font-mono">{item.reference}</p>
                       </div>
                     </div>
-                    <span className={`ml-2 px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${isLow ? 'bg-red-100 text-red-600' : 'bg-white/[0.06] text-gray-400'}`}>
+                    <span className={`ml-2 px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${isLow ? 'bg-red-500/20 text-red-400' : 'bg-white/[0.06] text-white'}`}>
                       {item.quantity} {item.unit}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                  <div className="flex items-center gap-2 text-[10px] text-white">
                     <span>{item.category}</span>
                     {item.supplier && <><span>•</span><span>{item.supplier.name}</span></>}
                   </div>
                   {isLow && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[10px] text-red-500 bg-red-50 rounded-lg px-2 py-1">
+                    <div className="mt-2 flex items-center gap-1.5 text-[10px] text-red-400 bg-red-500/10 rounded-lg px-2 py-1">
                       <span>🔴</span> Stock bas — Seuil: {item.alertThreshold}
                     </div>
                   )}
@@ -770,7 +770,7 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
             </button>
           )
         })}
-        {filtered.length === 0 && <p className="col-span-full text-sm text-slate-400 italic text-center py-8">Aucun article trouvé.</p>}
+        {filtered.length === 0 && <p className="col-span-full text-sm text-white italic text-center py-8">Aucun article trouvé.</p>}
       </div>
     </div>
   )
@@ -804,55 +804,55 @@ function ItemDetailView({ item, onBack, feedback }: { item: StockItem; onBack: (
         )}
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-gray-200">{item.name}</h2>
-            <span className="text-xs font-mono text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{item.reference}</span>
+            <h2 className="text-lg font-bold text-white">{item.name}</h2>
+            <span className="text-xs font-mono text-white bg-white/[0.06] px-2 py-0.5 rounded">{item.reference}</span>
           </div>
-          {!item.imageUrl && <p className="text-[10px] text-slate-400 mt-1">📷 Aucune photo</p>}
+          {!item.imageUrl && <p className="text-[10px] text-white mt-1">📷 Aucune photo</p>}
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Quantité</p>
+          <p className="text-[10px] font-bold text-white uppercase tracking-wider">Quantité</p>
           <p className={`text-2xl font-bold mt-1 ${item.quantity <= item.alertThreshold ? 'text-red-500' : 'text-emerald-600'}`}>{item.quantity} {item.unit}</p>
         </div>
         <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Seuil d'alerte</p>
-          <p className="text-2xl font-bold mt-1 text-gray-200">{item.alertThreshold} {item.unit}</p>
+          <p className="text-[10px] font-bold text-white uppercase tracking-wider">Seuil d'alerte</p>
+          <p className="text-2xl font-bold mt-1 text-white">{item.alertThreshold} {item.unit}</p>
         </div>
         <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Prix unitaire</p>
-          <p className="text-2xl font-bold mt-1 text-gray-200">{item.unitPrice?.toLocaleString() || '—'} DA</p>
+          <p className="text-[10px] font-bold text-white uppercase tracking-wider">Prix unitaire</p>
+          <p className="text-2xl font-bold mt-1 text-white">{item.unitPrice?.toLocaleString() || '—'} DA</p>
         </div>
       </div>
 
       <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 mb-6">
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-gray-400">Catégorie</span><p className="font-semibold text-gray-200">{item.category}</p></div>
-          <div><span className="text-gray-400">Emplacement</span><p className="font-semibold text-gray-200"><span className={`px-2 py-0.5 rounded text-xs font-bold ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span></p></div>
-          <div><span className="text-gray-400">Fournisseur</span><p className="font-semibold text-gray-200">{item.supplier?.name || '—'}</p></div>
-          {item.description && <div className="col-span-2"><span className="text-gray-400">Description</span><p className="font-semibold text-gray-200">{item.description}</p></div>}
+          <div><span className="text-white">Catégorie</span><p className="font-semibold text-white">{item.category}</p></div>
+          <div><span className="text-white">Emplacement</span><p className="font-semibold text-white"><span className={`px-2 py-0.5 rounded text-xs font-bold ${item.location === 'Stock 2' ? 'bg-violet-500/20 text-violet-400' : 'bg-cyan-500/20 text-cyan-400'}`}>{item.location}</span></p></div>
+          <div><span className="text-white">Fournisseur</span><p className="font-semibold text-white">{item.supplier?.name || '—'}</p></div>
+          {item.description && <div className="col-span-2"><span className="text-white">Description</span><p className="font-semibold text-white">{item.description}</p></div>}
         </div>
       </div>
 
       {/* Movements history */}
-      <h3 className="text-sm font-bold text-gray-200 mb-3">📋 Historique des Mouvements</h3>
+      <h3 className="text-sm font-bold text-white mb-3">📋 Historique des Mouvements</h3>
       <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
-        {loading ? <p className="text-sm text-slate-400 italic text-center py-6">Chargement...</p> : movements.length === 0 ? <p className="text-sm text-slate-400 italic text-center py-6">Aucun mouvement.</p> : (
+        {loading ? <p className="text-sm text-white italic text-center py-6">Chargement...</p> : movements.length === 0 ? <p className="text-sm text-white italic text-center py-6">Aucun mouvement.</p> : (
           <table className="w-full text-xs">
-            <thead><tr className="bg-white/[0.04] border-b border-white/10"><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Date</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Type</th><th className="text-right px-4 py-2.5 font-semibold text-gray-400">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-gray-400">Prix</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Doc.</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Notes</th></tr></thead>
+            <thead><tr className="bg-white/[0.04] border-b border-white/10"><th className="text-left px-4 py-2.5 font-semibold text-white">Date</th><th className="text-left px-4 py-2.5 font-semibold text-white">Type</th><th className="text-right px-4 py-2.5 font-semibold text-white">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-white">Prix</th><th className="text-left px-4 py-2.5 font-semibold text-white">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-white">Doc.</th><th className="text-left px-4 py-2.5 font-semibold text-white">Notes</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
               {movements.map(m => (
                 <tr key={m.id} className="hover:bg-white/[0.04]">
-                  <td className="px-4 py-2.5 text-slate-400">{formatDate(m.createdAt)}</td>
-                  <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${m.type === 'ENTRY' ? 'bg-emerald-100 text-emerald-700' : m.type === 'EXIT' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{movementLabel(m.type)}</span></td>
+                  <td className="px-4 py-2.5 text-white">{formatDate(m.createdAt)}</td>
+                  <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${m.type === 'ENTRY' ? 'bg-emerald-500/20 text-emerald-400' : m.type === 'EXIT' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>{movementLabel(m.type)}</span></td>
                   <td className={`px-4 py-2.5 text-right font-bold ${m.type === 'ENTRY' ? 'text-emerald-600' : 'text-red-600'}`}>{m.type === 'ENTRY' ? '+' : '-'}{m.quantity}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-400">{m.totalPrice?.toLocaleString() || '—'} DA</td>
-                  <td className="px-4 py-2.5 text-gray-400">{m.reference || m.order?.serialNumber || '—'}</td>
+                  <td className="px-4 py-2.5 text-right text-white">{m.totalPrice?.toLocaleString() || '—'} DA</td>
+                  <td className="px-4 py-2.5 text-white">{m.reference || m.order?.serialNumber || '—'}</td>
                   <td className="px-4 py-2.5">
-                    {m.id ? <PdfLink mType={m.type} mId={m.id} /> : '—'}
+                    {m.id ? <PdfLink _mType={m.type} _mId={m.id} /> : '—'}
                   </td>
-                  <td className="px-4 py-2.5 text-slate-400 max-w-[120px] truncate">{m.notes || '—'}</td>
+                  <td className="px-4 py-2.5 text-white max-w-[120px] truncate">{m.notes || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -913,27 +913,27 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={() => { setSelectedSupplier(null) }} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-          <h2 className="text-lg font-bold text-gray-200">{selectedSupplier.name}</h2>
+          <h2 className="text-lg font-bold text-white">{selectedSupplier.name}</h2>
           {isAdmin && <button onClick={() => editSupplier(selectedSupplier)} className="text-xs text-cyan-600 hover:text-cyan-800 font-semibold">✏️ Modifier</button>}
         </div>
 
         {/* Supplier info card */}
         <div className="bg-white/[0.04] rounded-xl border border-white/10 p-5 mb-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
-            {selectedSupplier.contactName && <div><span className="text-xs text-gray-400 font-semibold">Contact</span><p className="font-semibold text-gray-200">{selectedSupplier.contactName}</p></div>}
-            {selectedSupplier.email && <div><span className="text-xs text-gray-400 font-semibold">Email</span><p className="font-semibold text-gray-200">{selectedSupplier.email}</p></div>}
-            {selectedSupplier.phone && <div><span className="text-xs text-gray-400 font-semibold">Téléphone</span><p className="font-semibold text-gray-200">{selectedSupplier.phone}</p></div>}
-            {selectedSupplier.address && <div><span className="text-xs text-gray-400 font-semibold">Adresse</span><p className="font-semibold text-gray-200">{selectedSupplier.address}</p></div>}
-            {selectedSupplier.notes && <div className="col-span-2"><span className="text-xs text-gray-400 font-semibold">Notes</span><p className="font-semibold text-gray-200">{selectedSupplier.notes}</p></div>}
+            {selectedSupplier.contactName && <div><span className="text-xs text-white font-semibold">Contact</span><p className="font-semibold text-white">{selectedSupplier.contactName}</p></div>}
+            {selectedSupplier.email && <div><span className="text-xs text-white font-semibold">Email</span><p className="font-semibold text-white">{selectedSupplier.email}</p></div>}
+            {selectedSupplier.phone && <div><span className="text-xs text-white font-semibold">Téléphone</span><p className="font-semibold text-white">{selectedSupplier.phone}</p></div>}
+            {selectedSupplier.address && <div><span className="text-xs text-white font-semibold">Adresse</span><p className="font-semibold text-white">{selectedSupplier.address}</p></div>}
+            {selectedSupplier.notes && <div className="col-span-2"><span className="text-xs text-white font-semibold">Notes</span><p className="font-semibold text-white">{selectedSupplier.notes}</p></div>}
           </div>
         </div>
 
         {/* Products supplied */}
-        <h3 className="text-sm font-bold text-gray-200 mb-3">📦 Produits fournis ({supplierItems.length})</h3>
+        <h3 className="text-sm font-bold text-white mb-3">📦 Produits fournis ({supplierItems.length})</h3>
         {supplierItems.length === 0 ? (
           <div className="bg-white/[0.04] rounded-xl border border-white/10 p-6 text-center">
-            <p className="text-sm text-slate-400">Aucun article lié à ce fournisseur.</p>
-            <p className="text-xs text-slate-400 mt-1">Associez des articles lors de leur création ou modification.</p>
+            <p className="text-sm text-white">Aucun article lié à ce fournisseur.</p>
+            <p className="text-xs text-white mt-1">Associez des articles lors de leur création ou modification.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -945,16 +945,16 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-200 truncate">{item.name}</p>
-                  <p className="text-[10px] text-slate-400 font-mono">{item.reference}</p>
+                  <p className="text-sm font-bold text-white truncate">{item.name}</p>
+                  <p className="text-[10px] text-white font-mono">{item.reference}</p>
                   <div className="flex items-center gap-2 mt-1 text-[10px]">
-                    <span className={`px-1.5 py-0.5 rounded font-bold ${item.location === 'Stock 2' ? 'bg-violet-100 text-violet-700' : 'bg-cyan-100 text-cyan-700'}`}>{item.location}</span>
-                    <span className="text-slate-400">{item.category}</span>
-                    <span className="text-slate-400">· {item.quantity} en stock</span>
+                    <span className={`px-1.5 py-0.5 rounded font-bold ${item.location === 'Stock 2' ? 'bg-violet-500/20 text-violet-400' : 'bg-cyan-500/20 text-cyan-400'}`}>{item.location}</span>
+                    <span className="text-white">{item.category}</span>
+                    <span className="text-white">· {item.quantity} en stock</span>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xs font-bold text-gray-200">{item.unitPrice?.toLocaleString() || '—'} DA</p>
+                  <p className="text-xs font-bold text-white">{item.unitPrice?.toLocaleString() || '—'} DA</p>
                 </div>
               </div>
             ))}
@@ -969,7 +969,7 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => { setShowForm(false); setEditingId(null) }} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-gray-200">{editingId ? '✏️ Modifier' : '🏢 Nouveau'} Fournisseur</h2>
+        <h2 className="text-lg font-bold text-white">{editingId ? '✏️ Modifier' : '🏢 Nouveau'} Fournisseur</h2>
       </div>
       <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <InputField label="Nom du fournisseur *" value={form.name} onChange={v => setForm({ ...form, name: v })} required />
@@ -981,10 +981,10 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
           <InputField label="Téléphone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} />
           <InputField label="Adresse" value={form.address} onChange={v => setForm({ ...form, address: v })} />
         </div>
-        <div><label className="text-xs font-semibold text-gray-400">Notes / Produits proposés</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Ex: Fournit des tôles inox, des vérins hydrauliques, et des composants électriques..." /></div>
+        <div><label className="text-xs font-semibold text-white">Notes / Produits proposés</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Ex: Fournit des tôles inox, des vérins hydrauliques, et des composants électriques..." /></div>
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold disabled:opacity-60">{saving ? '⏳...' : '💾 Enregistrer'}</button>
-          <button type="button" onClick={() => { setShowForm(false); setEditingId(null) }} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold">Annuler</button>
+          <button type="button" onClick={() => { setShowForm(false); setEditingId(null) }} className="px-4 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold">Annuler</button>
         </div>
       </form>
     </div>
@@ -995,41 +995,41 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-gray-200">🏢 Fournisseurs</h2>
-          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{suppliers.length} fournisseurs</span>
+          <h2 className="text-lg font-bold text-white">🏢 Fournisseurs</h2>
+          <span className="text-xs text-white bg-white/[0.06] px-2 py-0.5 rounded">{suppliers.length} fournisseurs</span>
         </div>
         {isAdmin && <button onClick={() => setShowForm(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-xs font-bold transition-all shadow-sm">➕ Ajouter un fournisseur</button>}
       </div>
-      {!isAdmin && <p className="text-xs text-slate-400 mb-4 italic">Seul l'administrateur peut gérer les fournisseurs.</p>}
+      {!isAdmin && <p className="text-xs text-white mb-4 italic">Seul l'administrateur peut gérer les fournisseurs.</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-3">
         {suppliers.map(s => (
           <button key={s.id} onClick={() => setSelectedSupplier(s)}
             className="text-left bg-white/[0.04] rounded-xl border border-white/10 p-4 hover:shadow-md transition-all cursor-pointer">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-sm font-bold text-gray-200">{s.name}</p>
-                {s.contactName && <p className="text-[10px] text-slate-400">{s.contactName}</p>}
+                <p className="text-sm font-bold text-white">{s.name}</p>
+                {s.contactName && <p className="text-[10px] text-white">{s.contactName}</p>}
               </div>
               <div className="flex items-center gap-2">
-                {isAdmin && <button onClick={(e) => { e.stopPropagation(); editSupplier(s) }} className="text-slate-400 hover:text-gray-400 text-xs p-1">✏️</button>}
-                <span className="text-slate-300">→</span>
+                {isAdmin && <button onClick={(e) => { e.stopPropagation(); editSupplier(s) }} className="text-white hover:text-white text-xs p-1">✏️</button>}
+                <span className="text-white">→</span>
               </div>
             </div>
-            <div className="space-y-0.5 text-[10px] text-slate-400">
+            <div className="space-y-0.5 text-[10px] text-white">
               {s.email && <p>📧 {s.email}</p>}
               {s.phone && <p>📞 {s.phone}</p>}
               {s.address && <p>📍 {s.address}</p>}
               {s._count && (
                 <p className="mt-1.5 text-[10px] font-semibold">
-                  <span className="text-gray-400">📦 {s._count.items} article{s._count.items > 1 ? 's' : ''}</span>
-                  {s._count.movements > 0 && <span className="text-gray-400 ml-2">· 📋 {s._count.movements} mouvement{s._count.movements > 1 ? 's' : ''}</span>}
+                  <span className="text-white">📦 {s._count.items} article{s._count.items > 1 ? 's' : ''}</span>
+                  {s._count.movements > 0 && <span className="text-white ml-2">· 📋 {s._count.movements} mouvement{s._count.movements > 1 ? 's' : ''}</span>}
                 </p>
               )}
             </div>
             <p className="text-[10px] text-cyan-600 mt-1.5 font-semibold">Cliquez pour voir les produits →</p>
           </button>
         ))}
-        {suppliers.length === 0 && <p className="col-span-full text-sm text-slate-400 italic text-center py-8">Aucun fournisseur enregistré.</p>}
+        {suppliers.length === 0 && <p className="col-span-full text-sm text-white italic text-center py-8">Aucun fournisseur enregistré.</p>}
       </div>
     </div>
   )
@@ -1074,7 +1074,7 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-gray-200">📋 Nouveau Mouvement</h2>
+        <h2 className="text-lg font-bold text-white">📋 Nouveau Mouvement</h2>
       </div>
       <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -1084,16 +1084,16 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
         <SelectField label="Article *" value={form.itemId} onChange={v => setForm({ ...form, itemId: v })} options={[{ value: '', label: 'Sélectionner...' }, ...items.map(i => ({ value: i.id, label: `${i.name} (${i.reference}) — Stock: ${i.quantity}` }))]} />
         <div className="grid grid-cols-2 gap-4">
           <InputField label="Prix unitaire (DA)" value={String(form.unitPrice)} onChange={v => setForm({ ...form, unitPrice: parseFloat(v) || 0 })} type="number" />
-          <InputField label="Total estimé" value={String(form.unitPrice * form.quantity)} readOnly />
+          <InputField label="Total estimé" value={String(form.unitPrice * form.quantity)} onChange={() => {}} readOnly />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <SelectField label="Fournisseur" value={form.supplierId} onChange={v => setForm({ ...form, supplierId: v })} options={[{ value: '', label: '—' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]} />
           <InputField label="Référence" value={form.reference} onChange={v => setForm({ ...form, reference: v })} placeholder="N° BL, N° Facture..." />
         </div>
-        <div><label className="text-xs font-semibold text-gray-400">Notes</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Motif, destination production..." /></div>
+        <div><label className="text-xs font-semibold text-white">Notes</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" placeholder="Motif, destination production..." /></div>
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold disabled:opacity-60">{saving ? '⏳...' : '💾 Enregistrer le mouvement'}</button>
-          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold">Annuler</button>
+          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold">Annuler</button>
         </div>
       </form>
     </div>
@@ -1103,8 +1103,8 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-gray-200">📋 Mouvements de Stock</h2>
-          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{movements.length} mouvements</span>
+          <h2 className="text-lg font-bold text-white">📋 Mouvements de Stock</h2>
+          <span className="text-xs text-white bg-white/[0.06] px-2 py-0.5 rounded">{movements.length} mouvements</span>
         </div>
         <button onClick={() => setShowForm(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-xs font-bold transition-all shadow-sm">➕ Nouveau mouvement</button>
       </div>
@@ -1112,24 +1112,24 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
         {['', 'ENTRY', 'EXIT', 'ADJUSTMENT'].map(t => (
           <button key={t}
             onClick={() => setFilterType(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === t ? 'bg-slate-800 text-white' : 'bg-white/[0.06] text-gray-400 hover:bg-white/[0.10]'}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === t ? 'bg-slate-800 text-white' : 'bg-white/[0.06] text-white hover:bg-white/[0.10]'}`}
           >{t ? movementLabel(t) : '📋 Tous'}</button>
         ))}
       </div>
       <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
-        {filtered.length === 0 ? <p className="text-sm text-slate-400 italic text-center py-6">Aucun mouvement.</p> : (
+        {filtered.length === 0 ? <p className="text-sm text-white italic text-center py-6">Aucun mouvement.</p> : (
           <table className="w-full text-xs">
-            <thead><tr className="bg-white/[0.04] border-b border-white/10"><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Date</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Article</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Type</th><th className="text-right px-4 py-2.5 font-semibold text-gray-400">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-gray-400">Total</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-gray-400">Par</th></tr></thead>
+            <thead><tr className="bg-white/[0.04] border-b border-white/10"><th className="text-left px-4 py-2.5 font-semibold text-white">Date</th><th className="text-left px-4 py-2.5 font-semibold text-white">Article</th><th className="text-left px-4 py-2.5 font-semibold text-white">Type</th><th className="text-right px-4 py-2.5 font-semibold text-white">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-white">Total</th><th className="text-left px-4 py-2.5 font-semibold text-white">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-white">Par</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map(m => (
                 <tr key={m.id} className="hover:bg-white/[0.04]">
-                  <td className="px-4 py-2.5 text-slate-400 whitespace-nowrap">{formatDate(m.createdAt)}</td>
-                  <td className="px-4 py-2.5 font-semibold text-gray-200">{m.item?.name || '—'}</td>
-                  <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${m.type === 'ENTRY' ? 'bg-emerald-100 text-emerald-700' : m.type === 'EXIT' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{movementLabel(m.type)}</span></td>
+                  <td className="px-4 py-2.5 text-white whitespace-nowrap">{formatDate(m.createdAt)}</td>
+                  <td className="px-4 py-2.5 font-semibold text-white">{m.item?.name || '—'}</td>
+                  <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${m.type === 'ENTRY' ? 'bg-emerald-500/20 text-emerald-400' : m.type === 'EXIT' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>{movementLabel(m.type)}</span></td>
                   <td className={`px-4 py-2.5 text-right font-bold ${m.type === 'ENTRY' ? 'text-emerald-600' : 'text-red-600'}`}>{m.type === 'ENTRY' ? '+' : '-'}{m.quantity}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-400">{m.totalPrice?.toLocaleString() || '—'} DA</td>
-                  <td className="px-4 py-2.5 text-gray-400">{m.reference || m.order?.serialNumber || '—'}</td>
-                  <td className="px-4 py-2.5 text-slate-400">{m.performedBy || '—'}</td>
+                  <td className="px-4 py-2.5 text-right text-white">{m.totalPrice?.toLocaleString() || '—'} DA</td>
+                  <td className="px-4 py-2.5 text-white">{m.reference || m.order?.serialNumber || '—'}</td>
+                  <td className="px-4 py-2.5 text-white">{m.performedBy || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -1178,7 +1178,7 @@ function DocumentsTab({ documents, showForm, setShowForm, suppliers, showView, s
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-gray-200">📄 Nouveau Document</h2>
+        <h2 className="text-lg font-bold text-white">📄 Nouveau Document</h2>
       </div>
       <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -1186,16 +1186,16 @@ function DocumentsTab({ documents, showForm, setShowForm, suppliers, showView, s
           <InputField label="N° Document" value={form.documentNumber} onChange={v => setForm({ ...form, documentNumber: v })} required />
         </div>
         <InputField label="Titre *" value={form.title} onChange={v => setForm({ ...form, title: v })} placeholder="Ex: Achat tôle inox avril 2026" required />
-        <div><label className="text-xs font-semibold text-gray-400">Description</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" /></div>
+        <div><label className="text-xs font-semibold text-white">Description</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full mt-1 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:ring-2 focus:ring-cyan-200" /></div>
         <SelectField label="Fournisseur" value={form.supplierId} onChange={v => setForm({ ...form, supplierId: v })} options={[{ value: '', label: '—' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]} />
         <div className="grid grid-cols-3 gap-4">
           <InputField label="Total HT (DA)" value={String(form.totalHT)} onChange={v => { const ht = parseFloat(v) || 0; setForm({ ...form, totalHT: ht, totalTTC: ht + form.totalTVA }) }} type="number" />
           <InputField label="TVA (DA)" value={String(form.totalTVA)} onChange={v => { const tva = parseFloat(v) || 0; setForm({ ...form, totalTVA: tva, totalTTC: form.totalHT + tva }) }} type="number" />
-          <InputField label="Total TTC (DA)" value={String(form.totalHT + form.totalTVA)} readOnly />
+          <InputField label="Total TTC (DA)" value={String(form.totalHT + form.totalTVA)} onChange={() => {}} readOnly />
         </div>
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-sm font-bold disabled:opacity-60">{saving ? '⏳...' : '💾 Créer le document'}</button>
-          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold">Annuler</button>
+          <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold">Annuler</button>
         </div>
       </form>
     </div>
@@ -1205,15 +1205,15 @@ function DocumentsTab({ documents, showForm, setShowForm, suppliers, showView, s
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-gray-200">📄 Documents</h2>
-          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{documents.length} documents</span>
+          <h2 className="text-lg font-bold text-white">📄 Documents</h2>
+          <span className="text-xs text-white bg-white/[0.06] px-2 py-0.5 rounded">{documents.length} documents</span>
         </div>
         <button onClick={() => setShowForm(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-xs font-bold transition-all shadow-sm">➕ Nouveau document</button>
       </div>
       <div className="mb-4 flex items-center gap-2 flex-wrap">
         {['', 'BON_COMMANDE', 'BON_LIVRAISON', 'FACTURE', 'BON_SORTIE', 'INVENTAIRE'].map(t => (
           <button key={t} onClick={() => setFilterType(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === t ? 'bg-slate-800 text-white' : 'bg-white/[0.06] text-gray-400 hover:bg-white/[0.10]'}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === t ? 'bg-slate-800 text-white' : 'bg-white/[0.06] text-white hover:bg-white/[0.10]'}`}
           >{t ? docTypeLabel(t) : '📄 Tous'}</button>
         ))}
       </div>
@@ -1223,20 +1223,20 @@ function DocumentsTab({ documents, showForm, setShowForm, suppliers, showView, s
             className="text-left bg-white/[0.04] rounded-xl border border-white/10 p-4 hover:shadow-md transition-all">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-xs font-bold text-gray-200">{doc.title}</p>
-                <p className="text-[10px] font-mono text-slate-400">{doc.documentNumber}</p>
+                <p className="text-xs font-bold text-white">{doc.title}</p>
+                <p className="text-[10px] font-mono text-white">{doc.documentNumber}</p>
               </div>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${docStatusBadge(doc.status)}`}>{doc.status === 'VALIDE' ? '✅ Validé' : doc.status === 'EN_ATTENTE' ? '⏳ En attente' : doc.status === 'ANNULE' ? '❌ Annulé' : '📝 Brouillon'}</span>
             </div>
-            <div className="flex items-center gap-2 text-[10px] text-slate-400">
+            <div className="flex items-center gap-2 text-[10px] text-white">
               <span>{docTypeLabel(doc.documentType)}</span>
               {doc.supplier && <><span>•</span><span>{doc.supplier.name}</span></>}
               {doc.totalTTC && <><span>•</span><span>{doc.totalTTC.toLocaleString()} DA</span></>}
             </div>
-            <p className="text-[10px] text-slate-400 mt-1">{formatDate(doc.createdAt)}</p>
+            <p className="text-[10px] text-white mt-1">{formatDate(doc.createdAt)}</p>
           </button>
         ))}
-        {filtered.length === 0 && <p className="col-span-full text-sm text-slate-400 italic text-center py-8">Aucun document.</p>}
+        {filtered.length === 0 && <p className="col-span-full text-sm text-white italic text-center py-8">Aucun document.</p>}
       </div>
     </div>
   )
@@ -1251,8 +1251,8 @@ function DocumentViewer({ doc, onBack }: { doc: StockDocument; onBack: () => voi
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06]"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-        <h2 className="text-lg font-bold text-gray-200">{docTypeLabel(doc.documentType)}</h2>
-        <span className="text-xs font-mono text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded">{doc.documentNumber}</span>
+        <h2 className="text-lg font-bold text-white">{docTypeLabel(doc.documentType)}</h2>
+        <span className="text-xs font-mono text-white bg-white/[0.06] px-2 py-0.5 rounded">{doc.documentNumber}</span>
         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${docStatusBadge(doc.status)}`}>{doc.status}</span>
       </div>
 
@@ -1260,38 +1260,38 @@ function DocumentViewer({ doc, onBack }: { doc: StockDocument; onBack: () => voi
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
           <div>
-            <h1 className="text-xl font-bold text-gray-200"><span className="text-cyan-600">RM</span><span className="text-orange-600">ASC</span> FACTORY</h1>
-            <p className="text-[10px] text-slate-400">Gestion des Stocks</p>
+            <h1 className="text-xl font-bold text-white"><span className="text-cyan-600">RM</span><span className="text-orange-600">ASC</span> FACTORY</h1>
+            <p className="text-[10px] text-white">Gestion des Stocks</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold text-gray-200">{docTypeLabel(doc.documentType)}</p>
-            <p className="text-[10px] text-slate-400">N° {doc.documentNumber}</p>
-            <p className="text-[10px] text-slate-400">{formatDate(doc.createdAt)}</p>
+            <p className="text-sm font-bold text-white">{docTypeLabel(doc.documentType)}</p>
+            <p className="text-[10px] text-white">N° {doc.documentNumber}</p>
+            <p className="text-[10px] text-white">{formatDate(doc.createdAt)}</p>
           </div>
         </div>
 
-        <h2 className="text-base font-bold text-gray-200 mb-4">{doc.title}</h2>
+        <h2 className="text-base font-bold text-white mb-4">{doc.title}</h2>
 
         <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase">Fournisseur</p>
-            <p className="font-semibold text-gray-200">{doc.supplier?.name || '—'}</p>
-            {doc.supplier?.email && <p className="text-xs text-slate-400">{doc.supplier.email}</p>}
+            <p className="text-[10px] font-bold text-white uppercase">Fournisseur</p>
+            <p className="font-semibold text-white">{doc.supplier?.name || '—'}</p>
+            {doc.supplier?.email && <p className="text-xs text-white">{doc.supplier.email}</p>}
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-bold text-gray-400 uppercase">Statut</p>
-            <p className="font-semibold text-gray-200">{doc.status === 'VALIDE' ? '✅ Validé' : doc.status === 'EN_ATTENTE' ? '⏳ En attente' : '📝 Brouillon'}</p>
+            <p className="text-[10px] font-bold text-white uppercase">Statut</p>
+            <p className="font-semibold text-white">{doc.status === 'VALIDE' ? '✅ Validé' : doc.status === 'EN_ATTENTE' ? '⏳ En attente' : '📝 Brouillon'}</p>
           </div>
         </div>
 
-        {doc.description && <div className="mb-4 p-3 bg-white/[0.04] rounded-xl text-sm text-gray-400">{doc.description}</div>}
+        {doc.description && <div className="mb-4 p-3 bg-white/[0.04] rounded-xl text-sm text-white">{doc.description}</div>}
 
         {/* Totaux */}
         {(doc.totalHT || doc.totalTTC) && (
           <div className="border-t border-white/10 pt-4 mt-4">
             <div className="ml-auto w-64 space-y-1">
-              <div className="flex justify-between text-sm"><span className="text-gray-400">Total HT</span><span className="font-semibold">{doc.totalHT?.toLocaleString() || '0'} DA</span></div>
-              <div className="flex justify-between text-sm"><span className="text-gray-400">TVA</span><span className="font-semibold">{doc.totalTVA?.toLocaleString() || '0'} DA</span></div>
+              <div className="flex justify-between text-sm"><span className="text-white">Total HT</span><span className="font-semibold">{doc.totalHT?.toLocaleString() || '0'} DA</span></div>
+              <div className="flex justify-between text-sm"><span className="text-white">TVA</span><span className="font-semibold">{doc.totalTVA?.toLocaleString() || '0'} DA</span></div>
               <div className="flex justify-between text-base font-bold border-t border-white/10 pt-1"><span>Total TTC</span><span className="text-cyan-600">{doc.totalTTC?.toLocaleString() || '0'} DA</span></div>
             </div>
           </div>
@@ -1343,17 +1343,17 @@ function OrdersArchiveTab() {
     }
   }
 
-  if (loading) return <div className="p-6 text-center text-sm text-gray-500">Chargement des commandes...</div>
+  if (loading) return <div className="p-6 text-center text-sm text-white/60">Chargement des commandes...</div>
 
   return (
     <div className="p-6">
       <div className="mb-4">
-        <h2 className="text-lg font-extrabold text-gray-200">📋 Archive des commandes</h2>
-        <p className="text-xs text-gray-500 mt-0.5">Consultez les documents joints à chaque commande (stockés sur le serveur).</p>
+        <h2 className="text-lg font-extrabold text-white">📋 Archive des commandes</h2>
+        <p className="text-xs text-white/60 mt-0.5">Consultez les documents joints à chaque commande (stockés sur le serveur).</p>
       </div>
       <div className="space-y-3 max-w-4xl">
         {orders.length === 0 ? (
-          <div className="text-center py-12 text-sm text-gray-500">Aucune commande trouvée.</div>
+          <div className="text-center py-12 text-sm text-white/60">Aucune commande trouvée.</div>
         ) : orders.map(order => {
           const isExpanded = expanded === order.id
           const files = expandedFiles[order.id] || []
@@ -1364,29 +1364,29 @@ function OrdersArchiveTab() {
                 <div className="flex items-center gap-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                   <div>
-                    <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
-                    <p className="text-xs text-gray-400">{order.clientName} — {order.clientCity}</p>
+                    <p className="text-sm font-bold text-white font-mono">{order.serialNumber}</p>
+                    <p className="text-xs text-white">{order.clientName} — {order.clientCity}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-400">{order.status}</span>
-                  {files.length > 0 && <span className="text-xs text-gray-500">📎 {files.length}</span>}
-                  <svg className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                  {files.length > 0 && <span className="text-xs text-white/60">📎 {files.length}</span>}
+                  <svg className={`w-4 h-4 text-white/60 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
                 </div>
               </div>
               {isExpanded && (
                 <div className="px-5 pb-4 border-t border-white/5 pt-3">
                   {files.length === 0 ? (
-                    <p className="text-xs text-gray-500 italic">Aucun fichier attaché à cette commande.</p>
+                    <p className="text-xs text-white/60 italic">Aucun fichier attaché à cette commande.</p>
                   ) : (
                     <div className="space-y-1.5">
                       {files.map((f: any, i: number) => (
                         <a key={i} href={`/api/orders/${order.id}/files/${f._id || f.id}`} download={f.originalname}
-                          className="flex items-center gap-2 text-xs text-gray-400 bg-white/[0.04] rounded-lg px-3 py-2 hover:bg-white/[0.06] transition-all cursor-pointer">
+                          className="flex items-center gap-2 text-xs text-white bg-white/[0.04] rounded-lg px-3 py-2 hover:bg-white/[0.06] transition-all cursor-pointer">
                           <span>📄</span>
                           <span className="font-medium truncate flex-1">{f.originalname}</span>
-                          <span className="text-gray-500">{f.uploadedBy}</span>
-                          {f.uploadedAt && <span className="text-gray-500">{new Date(f.uploadedAt).toLocaleDateString('fr-FR')}</span>}
+                          <span className="text-white/60">{f.uploadedBy}</span>
+                          {f.uploadedAt && <span className="text-white/60">{new Date(f.uploadedAt).toLocaleDateString('fr-FR')}</span>}
                         </a>
                       ))}
                     </div>
@@ -1408,9 +1408,9 @@ function OrdersArchiveTab() {
 function InputField({ label, value, onChange, type = 'text', placeholder, required, readOnly }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; required?: boolean; readOnly?: boolean }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold text-gray-400">{label}</label>
+      <label className="text-xs font-semibold text-white">{label}</label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} required={required} readOnly={readOnly}
-        className={`w-full h-9 px-3.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-200 transition-all ${readOnly ? 'bg-white/[0.04] border-white/10 text-gray-400 cursor-not-allowed' : 'border-white/10 bg-white/[0.04] text-gray-200'}`} />
+        className={`w-full h-9 px-3.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-200 transition-all ${readOnly ? 'bg-white/[0.04] border-white/10 text-white cursor-not-allowed' : 'border-white/10 bg-white/[0.04] text-white'}`} />
     </div>
   )
 }
@@ -1422,9 +1422,9 @@ function SelectField({ label, value, onChange, options }: { label: string; value
   )
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold text-gray-400">{label}</label>
+      <label className="text-xs font-semibold text-white">{label}</label>
       <select value={value} onChange={e => onChange(e.target.value)}
-        className="w-full h-9 px-3.5 rounded-xl border border-white/10 bg-white/[0.04] text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-200">
+        className="w-full h-9 px-3.5 rounded-xl border border-white/10 bg-white/[0.04] text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-200">
         {normalized.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>

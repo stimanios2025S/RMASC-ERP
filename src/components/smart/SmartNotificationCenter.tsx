@@ -161,7 +161,7 @@ export default function SmartNotificationCenter({ onNavigate, orders: propOrders
       <button
         ref={badgeRef}
         onClick={() => setShowPanel(p => !p)}
-        className="w-10 h-10 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center text-gray-400 hover:text-gray-200 transition-all relative"
+        className="w-10 h-10 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center text-white/70 hover:text-white transition-all relative"
         title="Notifications intelligentes"
       >
         <svg className="w-[20px] h-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -184,12 +184,12 @@ export default function SmartNotificationCenter({ onNavigate, orders: propOrders
           {/* Header */}
           <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl px-5 py-4 border-b border-white/5 flex items-center justify-between rounded-t-2xl z-10">
             <div>
-              <h3 className="text-sm font-bold text-gray-200 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <span>🔔</span> Centre d'Intelligence
               </h3>
-              <p className="text-[10px] text-gray-500">{notifications.length} notification{notifications.length > 1 ? 's' : ''}</p>
+              <p className="text-[10px] text-white/50">{notifications.length} notification{notifications.length > 1 ? 's' : ''}</p>
             </div>
-            <button onClick={() => setShowPanel(false)} className="text-gray-400 hover:text-gray-200 text-xs">✕</button>
+            <button onClick={() => setShowPanel(false)} className="text-white/70 hover:text-white text-xs">✕</button>
           </div>
 
           {/* Notifications */}
@@ -197,8 +197,8 @@ export default function SmartNotificationCenter({ onNavigate, orders: propOrders
             {notifications.length === 0 ? (
               <div className="text-center py-8">
                 <span className="text-3xl block mb-2">✅</span>
-                <p className="text-sm text-gray-400 font-medium">Tout est sous contrôle</p>
-                <p className="text-xs text-gray-500 mt-1">Aucune notification pour le moment.</p>
+                <p className="text-sm text-white/70 font-medium">Tout est sous contrôle</p>
+                <p className="text-xs text-white/50 mt-1">Aucune notification pour le moment.</p>
               </div>
             ) : (
               notifications.map((notif, i) => (
@@ -222,9 +222,9 @@ export default function SmartNotificationCenter({ onNavigate, orders: propOrders
                           notif.type === 'success' ? 'text-emerald-400' :
                           'text-blue-400'
                         }`}>{notif.title}</span>
-                        <span className="text-[9px] text-gray-500">{notif.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-[9px] text-white/50">{notif.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                      <p className="text-xs text-gray-300">{notif.message}</p>
+                      <p className="text-xs text-white/80">{notif.message}</p>
                       {notif.action && (
                         <button
                           onClick={() => { notif.action?.onClick(); setShowPanel(false) }}
@@ -246,7 +246,7 @@ export default function SmartNotificationCenter({ onNavigate, orders: propOrders
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-xl px-5 py-3 border-t border-white/5 rounded-b-2xl">
-            <p className="text-[9px] text-gray-500 text-center">
+            <p className="text-[9px] text-white/50 text-center">
               🤖 Analyse intelligente en temps réel · Mise à jour automatique
             </p>
           </div>

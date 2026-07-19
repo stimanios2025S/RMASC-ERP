@@ -44,3 +44,6 @@ logs/
 # Vercel — track project binding, ignore cache
 .vercel/*
 !.vercel/project.json
+
+# ═══ SECURITY: NEVER commit credential vaults ═══
+credentials-vault.json

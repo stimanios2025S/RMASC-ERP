@@ -42,7 +42,7 @@ const ENGINEER_PAGES: EngineerPage[] = [
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    BROUILLON: 'bg-slate-500/15 text-slate-300', ATTENTE_DESSIN_TECH: 'bg-sky-500/15 text-sky-300',
+    BROUILLON: 'bg-slate-500/15 text-white/80', ATTENTE_DESSIN_TECH: 'bg-sky-500/15 text-sky-300',
     ATTENTE_APPROBATION_ADMIN: 'bg-amber-500/15 text-amber-300', ATTENTE_DESSIN_2D: 'bg-violet-500/15 text-violet-300',
     ATTENTE_VERIFICATION: 'bg-rose-500/15 text-rose-300', PRET_POUR_PRODUCTION: 'bg-emerald-500/15 text-emerald-300',
     EN_LIVRAISON: 'bg-cyan-500/15 text-cyan-300', LIVREE: 'bg-emerald-500/15 text-emerald-300',
@@ -53,7 +53,7 @@ function StatusBadge({ status }: { status: string }) {
     ATTENTE_DESSIN_2D: 'Dessin 2D', ATTENTE_VERIFICATION: 'Vérification', PRET_POUR_PRODUCTION: 'Prêt Production',
     EN_LIVRAISON: 'En Livraison', LIVREE: 'Livrée', VALIDEE: 'Validée', ANNULEE: 'Annulée',
   }
-  return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${colors[status] || 'bg-white/10 text-gray-500'}`}>
+  return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${colors[status] || 'bg-white/10 text-white'}`}>
     <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50"/> {labels[status] || status}</span>
 }
 
@@ -65,9 +65,9 @@ function FileDropZone({ onDrop, uploaded }: { onDrop: (f: File) => void; uploade
     <div onDragOver={e => e.preventDefault()}
       onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) onDrop(f) }}
       onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '*/*'; i.onchange = (ev: any) => { const f = ev.target?.files?.[0]; if (f) onDrop(f) }; i.click() }}
-      className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${uploaded ? 'border-emerald-400/30 bg-emerald-500/5' : 'border-white/10 bg-white/[0.04] hover:border-white/15 hover:bg-white/[0.06]'}`}>
+      className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${uploaded ? 'border-emerald-400/30 bg-emerald-500/5' : 'border-white/10 bg-slate-800/60 hover:border-white/15 hover:bg-white/[0.06]'}`}>
       {uploaded ? <p className="text-sm text-emerald-600 font-semibold">✅ {uploaded.name}</p>
-        : <><p className="text-sm font-semibold text-gray-400 mb-1">📂 Déposer le fichier</p><p className="text-xs text-slate-400">Cliquez ou glissez-déposez</p></>}
+        : <><p className="text-sm font-semibold text-white/80 mb-1">📂 Déposer le fichier</p><p className="text-xs text-white">Cliquez ou glissez-déposez</p></>}
     </div>
   )
 }
@@ -90,7 +90,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState<{ msg: string; time: string; orderId: string; serial: string }[]>([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [archiveData, setArchiveData] = useState<Record<string, { data: ArchiveData | null; loading: boolean }>>({})
+  const [archiveData, setArchiveData] = useState<Record<string, { data: any; loading: boolean }>>({})
 
   const currentPage = ENGINEER_PAGES.find(p => p.id === activeTab)
 
@@ -196,7 +196,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
   const filteredOrders = orders.filter(o => !searchTerm || o.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) || o.clientName.toLowerCase().includes(searchTerm.toLowerCase()))
 
   if (showFiche && selectedOrder) {
-    return <div className="fixed inset-0 z-50 bg-white/[0.04] overflow-y-auto"><FicheTechniqueView orderId={selectedOrder.id} onBack={() => setShowFiche(false)} /></div>
+    return <div className="fixed inset-0 z-50 bg-slate-800/60 overflow-y-auto"><FicheTechniqueView orderId={selectedOrder.id} onBack={() => setShowFiche(false)} /></div>
   }
 
   const engineerTabs: { id: TabId; icon: string; label: string; badge?: number }[] = [
@@ -209,34 +209,34 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
   return (
     <PageBackground className="h-full flex flex-col">
       {/* ═══ HEADER ═══ */}
-      <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <header className="flex-shrink-0 bg-slate-800/60 border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-slate-500"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white/80"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">📐</span></div>
-            <div><h1 className="text-lg font-extrabold text-gray-200">Bureau d'Études</h1><p className="text-[11px] text-gray-400 font-semibold">PLM — Portails Ingénieurs & Suivi</p></div>
+            <div><h1 className="text-lg font-extrabold text-white">Bureau d'Études</h1><p className="text-[11px] text-white/80 font-semibold">PLM — Portails Ingénieurs & Suivi</p></div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 rounded-xl hover:bg-white/[0.06] text-slate-500 relative">
+            <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 rounded-xl hover:bg-white/[0.06] text-white/80 relative">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
               {notifications.length > 0 && <span className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-amber-500 text-white text-[8px] font-bold flex items-center justify-center ring-2 ring-white">{notifications.length > 9 ? '9+' : notifications.length}</span>}
             </button>
             {showNotifications && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-                <div className="absolute right-0 top-full mt-2 z-50 w-96 bg-white/[0.04] rounded-2xl shadow-2xl border border-white/10 max-h-96 overflow-y-auto">
-                  <div className="sticky top-0 bg-white/[0.04] px-4 py-3 border-b border-white/5 flex items-center justify-between rounded-t-2xl">
-                    <h3 className="text-xs font-bold text-gray-200">Notifications</h3>
-                    <span className="text-[10px] text-slate-400">{notifications.length} alerte{notifications.length > 1 ? 's' : ''}</span>
+                <div className="absolute right-0 top-full mt-2 z-50 w-96 bg-slate-800/60 rounded-2xl shadow-2xl border border-white/10 max-h-96 overflow-y-auto">
+                  <div className="sticky top-0 bg-slate-800/60 px-4 py-3 border-b border-white/5 flex items-center justify-between rounded-t-2xl">
+                    <h3 className="text-xs font-bold text-white">Notifications</h3>
+                    <span className="text-[10px] text-white">{notifications.length} alerte{notifications.length > 1 ? 's' : ''}</span>
                   </div>
                   <div className="p-2 space-y-1">
-                    {notifications.length === 0 ? <p className="text-xs text-slate-400 italic p-3 text-center">Aucune notification</p>
+                    {notifications.length === 0 ? <p className="text-xs text-white italic p-3 text-center">Aucune notification</p>
                     : notifications.map((n, i) => (
                       <div key={i} className="px-3 py-2 rounded-xl hover:bg-white/[0.03] transition-all">
-                        <p className="text-xs font-medium text-gray-200">{n.msg}</p>
-                        <p className="text-[9px] text-slate-400 mt-0.5">{fmtFull(n.time)}</p>
+                        <p className="text-xs font-medium text-white">{n.msg}</p>
+                        <p className="text-[9px] text-white mt-0.5">{fmtFull(n.time)}</p>
                       </div>
                     ))}
                   </div>
@@ -244,13 +244,13 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
               </>
             )}
           </div>
-          {session && <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.06]"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-semibold text-gray-400">{session.name}</span></div>}
-          <span className="text-xs text-slate-400 font-medium">{orders.length} commandes</span>
+          {session && <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.06]"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-semibold text-white/80">{session.name}</span></div>}
+          <span className="text-xs text-white/80 font-semibold">{orders.length} commandes</span>
         </div>
       </header>
 
       {/* ═══ TABS ═══ */}
-      <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/10 px-6 flex gap-0 overflow-x-auto">
+      <div className="flex-shrink-0 bg-slate-800/60 border-b border-white/10 px-6 flex gap-0 overflow-x-auto">
         {engineerTabs.map(t => {
           const isActive = activeTab === t.id
           return (
@@ -289,42 +289,42 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                 { label: 'En Livraison', value: kpis.enLivraison, icon: '🚛' },
                 { label: 'Fichiers', value: kpis.fichiers, icon: '📁' },
               ].map(kpi => (
-                <div key={kpi.label} className="bg-white/[0.04] rounded-xl p-3 border border-white/10 flex items-center gap-3">
+                <div key={kpi.label} className="bg-slate-800/60 rounded-xl p-3 border border-white/10 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center text-base">{kpi.icon}</div>
                   <div>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{kpi.label}</p>
-                    <p className="text-lg font-bold text-gray-200">{kpi.value}</p>
+                    <p className="text-[10px] text-white/80 font-bold uppercase tracking-wider">{kpi.label}</p>
+                    <p className="text-lg font-bold text-white">{kpi.value}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Orders Table */}
-            <div className="bg-white/[0.04] rounded-2xl border border-white/10 overflow-hidden">
+            <div className="bg-slate-800/60 rounded-2xl border border-white/10 overflow-hidden">
               <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-gray-200">📋 Historique des Commandes</h3>
-                <span className="text-xs text-slate-400">{orders.length} commandes</span>
+                <h3 className="text-sm font-bold text-white">📋 Historique des Commandes</h3>
+                <span className="text-xs text-white">{orders.length} commandes</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/5 bg-slate-50/50">
-                      <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">N° Série</th>
-                      <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Client</th>
-                      <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Statut</th>
-                      <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Documents</th>
-                      <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Actions</th>
+                      <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">N° Série</th>
+                      <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Client</th>
+                      <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Statut</th>
+                      <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Documents</th>
+                      <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {orders.length === 0 ? (
-                      <tr><td colSpan={5} className="text-center py-12 text-sm text-slate-400 italic">Aucune commande.</td></tr>
+                      <tr><td colSpan={5} className="text-center py-12 text-sm text-white italic">Aucune commande.</td></tr>
                     ) : orders.map(order => {
                       const orderFiles = vaultFiles.filter(f => f.orderId === order.id)
                       return (
                         <tr key={order.id} className="hover:bg-primary-50/30 transition-colors">
-                          <td className="px-5 py-3"><span className="text-sm font-bold font-mono text-gray-200">{order.serialNumber}</span></td>
-                          <td className="px-5 py-3"><p className="text-sm font-semibold text-gray-200">{order.clientName}</p><p className="text-[10px] text-slate-400">{order.clientCity}</p></td>
+                          <td className="px-5 py-3"><span className="text-sm font-bold font-mono text-white">{order.serialNumber}</span></td>
+                          <td className="px-5 py-3"><p className="text-sm font-semibold text-white">{order.clientName}</p><p className="text-[10px] text-white">{order.clientCity}</p></td>
                           <td className="px-5 py-3"><StatusBadge status={order.status} /></td>
                           <td className="px-5 py-3"><span className="text-xs font-semibold">{orderFiles.length > 0 ? `📄 ${orderFiles.length}` : '—'}</span></td>
                           <td className="px-5 py-3 text-right">
@@ -351,25 +351,25 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
         <div className="flex-1 overflow-y-auto p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-extrabold text-gray-200">{currentPage.icon} {currentPage.title}</h2>
-              <p className="text-sm text-slate-400">{currentPage.subtitle} • {myOrders.length} commande{myOrders.length !== 1 ? 's' : ''}</p>
+              <h2 className="text-lg font-extrabold text-white">{currentPage.icon} {currentPage.title}</h2>
+              <p className="text-sm text-white">{currentPage.subtitle} • {myOrders.length} commande{myOrders.length !== 1 ? 's' : ''}</p>
             </div>
           </div>
           {myOrders.length === 0 ? (
-            <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-12 text-center">
-              <p className="text-sm font-semibold text-slate-500">Aucune commande assignee</p>
+            <div className="bg-slate-800/60 rounded-2xl border border-white/10 p-12 text-center">
+              <p className="text-sm font-semibold text-white/80">Aucune commande assignee</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {myOrders.map(order => (
                 <div key={order.id} onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
-                  className={`bg-white/[0.04] rounded-xl border-2 transition-all cursor-pointer ${selectedOrder?.id === order.id ? 'border-slate-800 shadow-lg' : 'border-white/5 hover:border-white/10 hover:shadow-sm'}`}>
+                  className={`bg-slate-800/60 rounded-xl border-2 transition-all cursor-pointer ${selectedOrder?.id === order.id ? 'border-slate-800 shadow-lg' : 'border-white/5 hover:border-white/10 hover:shadow-sm'}`}>
                   <div className={`px-4 py-3 border-b ${selectedOrder?.id === order.id ? 'border-slate-800' : 'border-white/5'}`}>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold font-mono text-gray-200">{order.serialNumber}</span>
+                      <span className="text-sm font-bold font-mono text-white">{order.serialNumber}</span>
                       <StatusBadge status={order.status} />
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">{order.clientName} — {order.clientCity}</p>
+                    <p className="text-xs text-white/80 mt-0.5">{order.clientName} — {order.clientCity}</p>
                   </div>
                   {selectedOrder?.id === order.id && (
                     <div className="px-4 py-3 space-y-2">
@@ -406,7 +406,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                         <button onClick={() => advanceStatus(order.id, currentPage.nextStatus!, '✅ ' + currentPage.nextLabel!.replace(/^[^\s]+\s/, ''))}
                           disabled={uploading} className="w-full py-2.5 rounded-lg text-sm font-bold text-white bg-sky-600 hover:bg-sky-700 shadow-md disabled:opacity-50">{currentPage.nextLabel}</button>
                       )}
-                      <button onClick={() => { setFileIndex(0); setShowFile(true) }} className="w-full py-1.5 rounded-lg text-xs font-semibold bg-white/[0.04] text-gray-400 hover:bg-white/[0.06]">👁️ Voir les fichiers</button>
+                      <button onClick={() => { setFileIndex(0); setShowFile(true) }} className="w-full py-1.5 rounded-lg text-xs font-semibold bg-slate-800/60 text-white/80 hover:bg-white/[0.06]">👁️ Voir les fichiers</button>
                       <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }} className="w-full py-1.5 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100">📄 Fiche Technique</button>
                     </div>
                   )}
@@ -425,14 +425,14 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
           <div className="max-w-6xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-extrabold text-gray-200">📦 Archive Documentaire</h2>
-                <p className="text-sm text-slate-400 mt-0.5">Toutes les commandes — consultable par les ingénieurs</p>
+                <h2 className="text-lg font-extrabold text-white">📦 Archive Documentaire</h2>
+                <p className="text-sm text-white mt-0.5">Toutes les commandes — consultable par les ingénieurs</p>
               </div>
               <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="🔍 Rechercher par série ou client..." className="w-56 px-3.5 py-2 rounded-xl border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200" />
             </div>
 
             {filteredOrders.length === 0 ? (
-              <div className="text-center py-12 text-sm text-slate-400">Aucune commande trouvée.</div>
+              <div className="text-center py-12 text-sm text-white">Aucune commande trouvée.</div>
             ) : (
               <div className="space-y-4">
                 {filteredOrders.map(order => {
@@ -441,20 +441,20 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                   const arch = archiveData[order.id]
 
                   return (
-                    <div key={order.id} className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
+                    <div key={order.id} className="bg-slate-800/60 rounded-xl border border-white/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
                       <div onClick={() => { setSelectedOrder(isExpanded ? null : order); if (!isExpanded && !arch) loadArchive(order.id) }}
                         className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition-all">
                         <div className="flex items-center gap-4">
                           <div className={`w-3 h-3 rounded-full ${order.status === 'LIVREE' || order.status === 'VALIDEE' ? 'bg-emerald-500' : order.status === 'PRET_POUR_PRODUCTION' ? 'bg-emerald-400' : order.status === 'EN_LIVRAISON' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
                           <div>
-                            <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
-                            <p className="text-xs text-slate-500">{order.clientName} — {order.clientCity}</p>
+                            <p className="text-sm font-bold text-white font-mono">{order.serialNumber}</p>
+                            <p className="text-xs text-white/80">{order.clientName} — {order.clientCity}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <StatusBadge status={order.status} />
-                          {orderFiles.length > 0 && <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded font-mono">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>}
-                          <svg className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                          {orderFiles.length > 0 && <span className="text-xs text-white bg-white/[0.06] px-2 py-0.5 rounded font-mono">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>}
+                          <svg className={`w-4 h-4 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
                         </div>
                       </div>
 
@@ -463,17 +463,17 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                           {/* Files from local vault */}
                           {orderFiles.length > 0 && (
                             <div className="mb-4">
-                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">📎 Fichiers attachés ({orderFiles.length})</p>
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-white mb-2">📎 Fichiers attachés ({orderFiles.length})</p>
                               <div className="space-y-1.5">
                                 {orderFiles.map(f => (
                                   <div key={f.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-white/5">
                                     <div className="flex items-center gap-2 min-w-0">
                                       <span>{f.type.includes('pdf') ? '📄' : '📐'}</span>
-                                      <span className="text-sm font-medium text-gray-200 truncate">{f.fileName}</span>
-                                      <span className="text-[10px] text-slate-400">• {f.size}</span>
-                                      <span className="text-[10px] text-slate-400">• {f.engineer}</span>
+                                      <span className="text-sm font-medium text-white truncate">{f.fileName}</span>
+                                      <span className="text-[10px] text-white">• {f.size}</span>
+                                      <span className="text-[10px] text-white">• {f.engineer}</span>
                                     </div>
-                                    <span className="text-[10px] text-slate-400">{fmtDate(f.uploadedAt)}</span>
+                                    <span className="text-[10px] text-white">{fmtDate(f.uploadedAt)}</span>
                                   </div>
                                 ))}
                               </div>
@@ -482,17 +482,17 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
 
                           {/* CAD Submissions from backend */}
                           {arch?.loading ? (
-                            <div className="text-sm text-slate-400 italic py-2">Chargement des documents...</div>
+                            <div className="text-sm text-white italic py-2">Chargement des documents...</div>
                           ) : arch?.data?.cadSubmissions && arch.data.cadSubmissions.length > 0 ? (
                             <div className="mb-4">
-                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">📐 Plans techniques ({arch.data.cadSubmissions.length})</p>
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-white mb-2">📐 Plans techniques ({arch.data.cadSubmissions.length})</p>
                               <div className="space-y-1.5">
                                 {arch.data.cadSubmissions.map((cad: any) => (
                                   <div key={cad.id} className="flex items-center justify-between bg-sky-50 rounded-lg px-3 py-2 border border-sky-100">
                                     <div className="flex items-center gap-2">
                                       <span>📐</span>
-                                      <span className="text-sm text-gray-200">{cad.engineeringType === 'DESSIN_TECH_1' ? "Plan d'Installation" : 'Dessin 2D Cabine'}</span>
-                                      <span className="text-[10px] text-slate-400">• {cad.engineerName}</span>
+                                      <span className="text-sm text-white">{cad.engineeringType === 'DESSIN_TECH_1' ? "Plan d'Installation" : 'Dessin 2D Cabine'}</span>
+                                      <span className="text-[10px] text-white">• {cad.engineerName}</span>
                                     </div>
                                     <span className={`text-[10px] font-semibold ${cad.status === 'APPROUVE' ? 'text-emerald-600' : cad.status === 'REJETE' ? 'text-red-600' : 'text-amber-600'}`}>
                                       {cad.status === 'APPROUVE' ? '✅ Approuvé' : cad.status === 'REJETE' ? '❌ Rejeté' : '⏳ En attente'}
@@ -502,12 +502,12 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                               </div>
                             </div>
                           ) : !arch?.loading ? (
-                            <p className="text-xs text-slate-400 italic mb-4">Aucun document backend trouvé.</p>
+                            <p className="text-xs text-white italic mb-4">Aucun document backend trouvé.</p>
                           ) : null}
 
                           {/* Quick actions */}
                           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
-                            <button onClick={() => loadArchive(order.id)} className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.12]">🔄 Recharger</button>
+                            <button onClick={() => loadArchive(order.id)} className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-white/[0.06] text-white/80 hover:bg-white/[0.12]">🔄 Recharger</button>
                             <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }} className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100">📄 Fiche Technique</button>
                           </div>
                         </div>
@@ -528,12 +528,12 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-6xl mx-auto space-y-6">
             <div>
-              <h2 className="text-lg font-extrabold text-gray-200">📁 Gestion des Documents</h2>
-              <p className="text-sm text-slate-400 mt-0.5">Ajoutez ou supprimez des fichiers pour chaque commande</p>
+              <h2 className="text-lg font-extrabold text-white">📁 Gestion des Documents</h2>
+              <p className="text-sm text-white mt-0.5">Ajoutez ou supprimez des fichiers pour chaque commande</p>
             </div>
 
             {filteredOrders.length === 0 ? (
-              <div className="text-center py-12 text-sm text-slate-400">Aucune commande trouvée.</div>
+              <div className="text-center py-12 text-sm text-white">Aucune commande trouvée.</div>
             ) : (
               <div className="space-y-4">
                 {filteredOrders.map(order => {
@@ -541,20 +541,20 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                   const isExpanded = selectedOrder?.id === order.id
 
                   return (
-                    <div key={order.id} className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
+                    <div key={order.id} className="bg-slate-800/60 rounded-xl border border-white/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
                       <div onClick={() => setSelectedOrder(isExpanded ? null : order)}
                         className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition-all">
                         <div className="flex items-center gap-4">
                           <div className="w-3 h-3 rounded-full bg-emerald-500" />
                           <div>
-                            <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
-                            <p className="text-xs text-slate-500">{order.clientName} — {order.clientCity}</p>
+                            <p className="text-sm font-bold text-white font-mono">{order.serialNumber}</p>
+                            <p className="text-xs text-white/80">{order.clientName} — {order.clientCity}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <StatusBadge status={order.status} />
-                          <span className="text-xs text-slate-400 bg-white/[0.06] px-2 py-0.5 rounded font-mono">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>
-                          <svg className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                          <span className="text-xs text-white bg-white/[0.06] px-2 py-0.5 rounded font-mono">{orderFiles.length} fichier{orderFiles.length > 1 ? 's' : ''}</span>
+                          <svg className={`w-4 h-4 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
                         </div>
                       </div>
 
@@ -562,22 +562,22 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                         <div className="px-5 pb-5 border-t border-white/5 pt-4">
                           {/* Upload zone */}
                           <div className="mb-4">
-                            <p className="text-xs font-semibold text-gray-400 mb-2">📤 Ajouter un fichier</p>
+                            <p className="text-xs font-semibold text-white/80 mb-2">📤 Ajouter un fichier</p>
                             <FileDropZone onDrop={f => handleFileDrop(order.id, f)} />
                           </div>
 
                           {/* Existing files with delete */}
                           {orderFiles.length > 0 ? (
                             <div>
-                              <p className="text-xs font-semibold text-gray-400 mb-2">📋 Fichiers existants ({orderFiles.length})</p>
+                              <p className="text-xs font-semibold text-white/80 mb-2">📋 Fichiers existants ({orderFiles.length})</p>
                               <div className="space-y-1.5">
                                 {orderFiles.map(f => (
-                                  <div key={f.id} className="flex items-center justify-between bg-white/[0.04] rounded-lg px-3 py-2.5 border border-white/10 hover:border-red-200 group transition-all">
+                                  <div key={f.id} className="flex items-center justify-between bg-slate-800/60 rounded-lg px-3 py-2.5 border border-white/10 hover:border-red-200 group transition-all">
                                     <div className="flex items-center gap-2 min-w-0">
                                       <span>{f.type.includes('pdf') ? '📄' : '📐'}</span>
                                       <div className="min-w-0">
-                                        <p className="text-sm font-medium text-gray-200 truncate">{f.fileName}</p>
-                                        <p className="text-[10px] text-slate-400">{f.engineer} • {f.size} • {fmtDate(f.uploadedAt)}</p>
+                                        <p className="text-sm font-medium text-white truncate">{f.fileName}</p>
+                                        <p className="text-[10px] text-white">{f.engineer} • {f.size} • {fmtDate(f.uploadedAt)}</p>
                                       </div>
                                     </div>
                                     <button onClick={() => deleteVaultFile(f.id)}
@@ -590,7 +590,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                             </div>
                           ) : (
                             <div className="bg-slate-50 rounded-xl px-4 py-3 text-center">
-                              <p className="text-xs text-slate-400 italic">Aucun fichier pour cette commande. Utilisez la zone ci-dessus pour ajouter un document.</p>
+                              <p className="text-xs text-white italic">Aucun fichier pour cette commande. Utilisez la zone ci-dessus pour ajouter un document.</p>
                             </div>
                           )}
                         </div>
@@ -614,8 +614,8 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
               <div className="flex items-center justify-between px-5 py-3 bg-[#111827] border-b border-slate-700 flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-white">{selectedOrder.serialNumber}</span>
-                  <span className="text-xs text-slate-400">|</span>
-                  <span className="text-xs text-slate-300">{allUploads.length} fichier{allUploads.length > 1 ? 's' : ''}</span>
+                  <span className="text-xs text-white">|</span>
+                  <span className="text-xs text-white/80">{allUploads.length} fichier{allUploads.length > 1 ? 's' : ''}</span>
                 </div>
                 <button onClick={() => setShowFile(false)} className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold">✕ Fermer</button>
               </div>
@@ -623,7 +623,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                 <div className="flex gap-1 px-4 pt-3 pb-0 bg-[#0d1520] border-b border-slate-700 flex-shrink-0">
                   {allUploads.map((f, i) => (
                     <button key={i} onClick={() => setFileIndex(i)}
-                      className={`px-3 py-1.5 rounded-t-lg text-xs font-semibold transition-all ${fileIndex === i ? 'bg-[#0a0f1a] text-white border border-slate-700 border-b-transparent' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                      className={`px-3 py-1.5 rounded-t-lg text-xs font-semibold transition-all ${fileIndex === i ? 'bg-[#0a0f1a] text-white border border-slate-700 border-b-transparent' : 'text-white hover:text-white bg-slate-800/50'}`}>
                       {f.name.length > 20 ? f.name.slice(0, 18) + '…' : f.name}
                     </button>
                   ))}
@@ -631,7 +631,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
               )}
               <div className="flex-1 overflow-hidden">
                 {currentFile ? <FileViewer fileData={currentFile.data} fileName={currentFile.name} fileType={currentFile.type} />
-                : <div className="h-full flex flex-col items-center justify-center text-slate-400"><span className="text-5xl mb-4">📁</span><p className="text-sm font-medium">Aucun fichier disponible</p></div>}
+                : <div className="h-full flex flex-col items-center justify-center text-white"><span className="text-5xl mb-4">📁</span><p className="text-sm font-medium">Aucun fichier disponible</p></div>}
               </div>
             </div>
           </div>
@@ -639,7 +639,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
       })()}
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/10 px-6 py-2 flex items-center justify-between text-[10px] text-slate-400">
+      <footer className="flex-shrink-0 bg-slate-800/60 border-t border-white/10 px-6 py-2 flex items-center justify-between text-[10px] text-white">
         <span>RMASC Factory — Bureau d'Études PLM v2.5.3</span>
         <span>{kpis.pretProd} prêtes prod • {kpis.fichiers} fichiers • {kpis.ingenieurs} ingénieurs</span>
       </footer>

@@ -7,6 +7,17 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Resolve file paths stored in the DB (may be relative to the uploads directory)
+const UPLOADS_DIR = path.resolve(__dirname, '../../uploads')
+function resolveFilePath(filePath) {
+  if (!filePath) return filePath
+  return path.isAbsolute(filePath) ? filePath : path.join(UPLOADS_DIR, filePath)
+}
 
 // ─── Stamp Layout Constants ────────────────────────────────────────────────
 // All measurements in PDF points (1 pt = 1/72 inch). A4 = 595 × 842 pts.
@@ -53,10 +64,13 @@ const STAMP = {
  * @returns {Promise<{ success: boolean, filePath: string, pagesStamped: number, error?: string }>}
  */
 export async function stampPdf(filePath, metadata = {}) {
+  // ── Resolve relative paths ──────────────────────────────────────────────
+  const resolvedPath = resolveFilePath(filePath)
   // ── Validate input ──────────────────────────────────────────────────────
-  if (!filePath || !fs.existsSync(filePath)) {
-    return { success: false, filePath, pagesStamped: 0, error: `Fichier introuvable : ${filePath}` }
+  if (!resolvedPath || !fs.existsSync(resolvedPath)) {
+    return { success: false, filePath, pagesStamped: 0, error: `Fichier introuvable : ${filePath || '(vide)'}` }
   }
+  filePath = resolvedPath
 
   const ext = path.extname(filePath).toLowerCase()
   if (ext !== '.pdf') {

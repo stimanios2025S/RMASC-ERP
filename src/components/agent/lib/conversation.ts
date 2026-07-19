@@ -18,7 +18,7 @@ export interface ConversationState {
 
 // ─── All available flows ──────────────────────────────────────────────────
 
-const FLOWS = {
+const FLOWS: Record<string, { title: string; steps: { key: string; question: string }[]; totalSteps: number }> = {
   create_order: {
     title: '📝 Création de commande',
     steps: [
@@ -34,6 +34,16 @@ const FLOWS = {
       { key: 'materiauPortes', question: "🚪 **Portes** — Type de portes palières ? (ex: automatiques, manuelles)" },
     ],
     totalSteps: 10,
+  },
+  stock_entry: {
+    title: '📦 Entrée de stock',
+    steps: [{ key: 'itemName', question: "📦 **Nom de l'article** ?" }, { key: 'quantity', question: "🔢 **Quantité** ?" }],
+    totalSteps: 2,
+  },
+  guided_search: {
+    title: '🔍 Recherche guidée',
+    steps: [{ key: 'query', question: "Que cherchez-vous ?" }],
+    totalSteps: 1,
   },
 }
 

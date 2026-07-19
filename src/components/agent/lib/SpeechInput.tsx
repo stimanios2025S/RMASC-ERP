@@ -104,7 +104,7 @@ export default function SpeechInput({ onResult, language = 'fr-FR', disabled = f
         className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
           isActive
             ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 animate-glow'
-            : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600 hover:text-white'
+            : 'bg-slate-700/50 text-white/60 hover:bg-slate-600 hover:text-white'
         }`}
         title={isActive ? 'Arrêter l\'écoute' : 'Parler à Salim'}
       >
@@ -130,7 +130,7 @@ export default function SpeechInput({ onResult, language = 'fr-FR', disabled = f
             {transcript || 'Parlez maintenant...'}
           </span>
           <button onClick={() => { try { recognitionRef.current?.stop() } catch {} setIsListening(false) }}
-            className="text-slate-400 hover:text-white text-xs ml-1">✕</button>
+            className="text-white/60 hover:text-white text-xs ml-1">✕</button>
         </div>
       )}
     </div>

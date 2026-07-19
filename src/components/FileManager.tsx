@@ -150,10 +150,10 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
       )}
 
       {loading ? (
-        <p className="text-[10px] text-gray-500 italic">Chargement...</p>
+        <p className="text-[10px] text-white/50 italic">Chargement...</p>
       ) : files.length > 0 ? (
         <div className="bg-white/[0.03] rounded-xl p-2.5 border border-white/5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-white/70 mb-1.5">
             📎 Documents ({files.length})
           </p>
           <div className="space-y-1">
@@ -164,8 +164,8 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
                   <button onClick={() => handleDownload(fid, f.originalname)} className="flex items-center gap-2 min-w-0 flex-1 text-left">
                     <span className="text-sm">{fileIcon(f.mimetype)}</span>
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-200 truncate">{f.originalname}</p>
-                      <p className="text-[9px] text-gray-500">{formatSize(f.size)} — {f.uploadedBy}</p>
+                      <p className="text-xs font-medium text-white truncate">{f.originalname}</p>
+                      <p className="text-[9px] text-white/50">{formatSize(f.size)} — {f.uploadedBy}</p>
                     </div>
                   </button>
                   <div className="flex items-center gap-1">
@@ -190,7 +190,7 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
         {uploading ? (
           <p className="text-sm text-amber-400 font-semibold">⏳ Upload en cours...</p>
         ) : (
-          <><p className="text-sm font-semibold text-gray-400 mb-0.5">📂 Ajouter un fichier</p><p className="text-xs text-gray-500">Cliquez ou glissez-déposez</p></>
+          <><p className="text-sm font-semibold text-white/70 mb-0.5">📂 Ajouter un fichier</p><p className="text-xs text-white/50">Cliquez ou glissez-déposez</p></>
         )}
       </div>
     </div>
@@ -200,11 +200,11 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
         <div className="flex items-center gap-2">
           <span className="text-lg">📁</span>
           <div>
-            <h3 className="text-sm font-bold text-gray-200">Gestion des Fichiers</h3>
-            {orderSerial && <p className="text-[10px] text-gray-500 font-mono">{orderSerial}</p>}
+            <h3 className="text-sm font-bold text-white">Gestion des Fichiers</h3>
+            {orderSerial && <p className="text-[10px] text-white/50 font-mono">{orderSerial}</p>}
           </div>
         </div>
-        <span className="text-xs text-gray-500 bg-white/[0.04] px-2 py-0.5 rounded font-mono">{files.length} fichier{files.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-white/50 bg-white/[0.04] px-2 py-0.5 rounded font-mono">{files.length} fichier{files.length !== 1 ? 's' : ''}</span>
       </div>
 
       {feedback && (
@@ -219,16 +219,16 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
           onDrop={e => { e.preventDefault(); Array.from(e.dataTransfer.files).forEach(f => handleUpload(f)) }}
           className="border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all bg-white/[0.02] border-white/10 hover:border-amber-500/30 hover:bg-amber-500/5">
           <span className="text-2xl block mb-2">📤</span>
-          <p className="text-sm font-semibold text-gray-400">Cliquez pour ajouter un fichier</p>
-          <p className="text-xs text-gray-500 mt-0.5">ou glissez-déposez ici — PDF, DWG, images, tout format • stockage serveur illimité</p>
+          <p className="text-sm font-semibold text-white/70">Cliquez pour ajouter un fichier</p>
+          <p className="text-xs text-white/50 mt-0.5">ou glissez-déposez ici — PDF, DWG, images, tout format • stockage serveur illimité</p>
           {uploading && <p className="text-xs text-amber-400 font-semibold mt-2">⏳ Upload en cours...</p>}
         </div>
 
         {loading ? (
-          <div className="text-center py-4"><p className="text-xs text-gray-500 italic">Chargement des fichiers...</p></div>
+          <div className="text-center py-4"><p className="text-xs text-white/50 italic">Chargement des fichiers...</p></div>
         ) : files.length > 0 ? (
           <div>
-            <p className="text-xs font-semibold text-gray-400 mb-2">📋 Fichiers ({files.length})</p>
+            <p className="text-xs font-semibold text-white/70 mb-2">📋 Fichiers ({files.length})</p>
             <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
               {files.map(f => {
                 const fid = f._id || f.id || ''
@@ -237,8 +237,8 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
                     <button onClick={() => handleDownload(fid, f.originalname)} className="flex items-center gap-3 min-w-0 flex-1 text-left">
                       <span className="text-lg">{fileIcon(f.mimetype)}</span>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-200 truncate">{f.originalname}</p>
-                        <p className="text-[10px] text-gray-500">{f.uploadedBy} • {formatSize(f.size)} • {new Date(f.uploadedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
+                        <p className="text-sm font-medium text-white truncate">{f.originalname}</p>
+                        <p className="text-[10px] text-white/50">{f.uploadedBy} • {formatSize(f.size)} • {new Date(f.uploadedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
                       </div>
                     </button>
                     <div className="flex items-center gap-1.5">
@@ -258,7 +258,7 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
           </div>
         ) : (
           <div className="bg-white/[0.02] rounded-xl px-4 py-5 text-center">
-            <p className="text-xs text-gray-500 italic">Aucun fichier pour cette commande. Ajoutez-en un ci-dessus.</p>
+            <p className="text-xs text-white/50 italic">Aucun fichier pour cette commande. Ajoutez-en un ci-dessus.</p>
           </div>
         )}
       </div>
@@ -277,7 +277,7 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
                 <span className="text-lg">{fileIcon(previewFile.mimetype)}</span>
                 <div>
                   <p className="text-sm font-bold text-white truncate max-w-md">{previewFile.originalname}</p>
-                  <p className="text-[10px] text-slate-400">{previewFile.uploadedBy} • {formatSize(previewFile.size)}</p>
+                  <p className="text-[10px] text-white/70">{previewFile.uploadedBy} • {formatSize(previewFile.size)}</p>
                 </div>
               </div>
               <button onClick={() => setPreviewFile(null)}
@@ -287,7 +287,7 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
             </div>
             <div className="flex-1 bg-[#0a0f1a] overflow-hidden">
               <FileViewer
-                fileUrl={getFileUrl(previewFile._id || previewFile.id)}
+                fileUrl={getFileUrl((previewFile._id || previewFile.id) as string)}
                 fileName={previewFile.originalname}
                 fileType={previewFile.mimetype}
               />

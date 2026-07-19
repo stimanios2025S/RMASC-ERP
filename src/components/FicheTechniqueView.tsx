@@ -590,11 +590,11 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
           <div className="w-10 h-10 rounded-full border-3 border-white/10 border-t-amber-500 animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-500">Generation de la Fiche Technique...</p>
+          <p className="text-sm text-white/50">Generation de la Fiche Technique...</p>
         </div>
       </div>
     )
-    if (isInline) return <div className="bg-white/[0.04] backdrop-blur-xl rounded-xl border border-white/10 p-6">{spinner}</div>
+    if (isInline) return <div className="bg-slate-800/70 rounded-xl border border-white/10 p-6">{spinner}</div>
     return <div className="flex items-center justify-center min-h-screen bg-slate-950">{spinner}</div>
   }
 
@@ -602,20 +602,20 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
     const errorBox = (
       <div className="text-center max-w-md mx-auto px-6 py-12">
         <p className="text-sm text-red-600 font-medium mb-2">{error || 'Fiche technique introuvable'}</p>
-        <p className="text-xs text-slate-400 mb-4">Verifiez que la commande existe et que les donnees sont completes.</p>
+        <p className="text-xs text-white/70 mb-4">Verifiez que la commande existe et que les donnees sont completes.</p>
         {onBack && <button onClick={onBack} className="text-xs text-blue-600 underline font-medium">&larr; Retour</button>}
       </div>
     )
-    if (isInline) return <div className="bg-white/[0.04] backdrop-blur-xl rounded-xl border border-white/10 p-6">{errorBox}</div>
+    if (isInline) return <div className="bg-slate-800/70 rounded-xl border border-white/10 p-6">{errorBox}</div>
     return <div className="flex items-center justify-center min-h-screen bg-slate-950">{errorBox}</div>
   }
 
   if (isInline) {
     if (!data || !data.serialNumber) {
       return (
-        <div className="bg-white/[0.04] backdrop-blur-xl rounded-xl border border-white/10 p-6">
+        <div className="bg-slate-800/70 rounded-xl border border-white/10 p-6">
           <div className="text-center py-8">
-            <p className="text-sm text-gray-300">Impossible de charger la fiche technique.</p>
+            <p className="text-sm text-white/80">Impossible de charger la fiche technique.</p>
             <button onClick={() => window.location.reload()} className="mt-3 text-xs text-amber-400 underline">Recharger</button>
           </div>
         </div>
@@ -627,8 +627,8 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
         {/* Inline toolbar — hidden on print */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03] no-print">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-gray-200">Fiche Technique</span>
-            <span className="text-xs font-mono text-gray-400 bg-white/[0.06] px-2 py-0.5 rounded">{data.serialNumber}</span>
+            <span className="text-sm font-bold text-white">Fiche Technique</span>
+            <span className="text-xs font-mono text-white/70 bg-white/[0.06] px-2 py-0.5 rounded">{data.serialNumber}</span>
           </div>
           <button onClick={handlePrint}
             className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-lg shadow-amber-500/25 flex items-center gap-1.5 no-print">
@@ -649,12 +649,12 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
       <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between shadow-sm no-print">
         <div className="flex items-center gap-3">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-gray-200 transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/70 hover:text-white transition-all">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-base font-extrabold text-gray-200">Fiche Technique</h1>
-          <span className="text-xs font-mono text-gray-400 bg-white/[0.06] px-2.5 py-1 rounded">{data.serialNumber}</span>
+          <h1 className="text-base font-extrabold text-white">Fiche Technique</h1>
+          <span className="text-xs font-mono text-white/70 bg-white/[0.06] px-2.5 py-1 rounded">{data.serialNumber}</span>
         </div>
         <button onClick={handlePrint}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-sm font-bold transition-all shadow-lg shadow-amber-500/25 no-print">

@@ -79,7 +79,7 @@ export default function SmartTips({ dismissable = true }: { dismissable?: boolea
   }
 
   return (
-    <div className={`mb-4 border rounded-2xl border-l-4 ${colorMap[currentTip.category]} ${borderMap[currentTip.category]} backdrop-blur-xl p-4 animate-fade-in relative`}>
+    <div className={`mb-4 border rounded-2xl border-l-4 ${colorMap[currentTip.category]} ${borderMap[currentTip.category]} p-4 animate-fade-in relative`}>
       <div className="flex items-start gap-3">
         <span className="text-lg flex-shrink-0 mt-0.5">{currentTip.icon}</span>
         <div className="flex-1 min-w-0">

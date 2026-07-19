@@ -60,10 +60,10 @@ export default function ImageInspector({ onClose, onAnalyze }: ImageInspectorPro
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white">👁️</div>
             <div>
               <h3 className="text-sm font-bold text-white">Inspecteur d'Image</h3>
-              <p className="text-[10px] text-slate-400">Salim analyse vos photos et plans techniques</p>
+              <p className="text-[10px] text-white/70">Salim analyse vos photos et plans techniques</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-white transition-all text-xs">✕</button>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-700 text-white/70 hover:text-white transition-all text-xs">✕</button>
         </div>
 
         <div className="p-5">
@@ -77,8 +77,8 @@ export default function ImageInspector({ onClose, onAnalyze }: ImageInspectorPro
             >
               <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📸</div>
               <p className="text-sm font-semibold text-white mb-1">Cliquez pour uploader une image</p>
-              <p className="text-xs text-slate-400">Photo de cabine, plan technique, schéma, document scanné...</p>
-              <p className="text-[10px] text-slate-500 mt-2">ou glissez-déposez ici • PNG, JPG, JPEG, WEBP</p>
+              <p className="text-xs text-white/70">Photo de cabine, plan technique, schéma, document scanné...</p>
+              <p className="text-[10px] text-white/50 mt-2">ou glissez-déposez ici • PNG, JPG, JPEG, WEBP</p>
               <input
                 ref={inputRef}
                 type="file"
@@ -98,14 +98,14 @@ export default function ImageInspector({ onClose, onAnalyze }: ImageInspectorPro
 
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400">{fileName}</span>
-                  <span className="text-slate-500">•</span>
-                  <span className="text-slate-400">{fileSize}</span>
+                  <span className="text-white/70">{fileName}</span>
+                  <span className="text-white/50">•</span>
+                  <span className="text-white/70">{fileSize}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => { setImage(null); setAnalysis(null) }}
-                    className="px-3 py-1.5 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all text-xs font-medium"
+                    className="px-3 py-1.5 rounded-lg bg-slate-700 text-white/80 hover:bg-slate-600 transition-all text-xs font-medium"
                   >
                     🔄 Changer
                   </button>
@@ -126,13 +126,13 @@ export default function ImageInspector({ onClose, onAnalyze }: ImageInspectorPro
                     <span>🤖</span>
                     <span className="text-xs font-bold text-amber-400">Salim — Analyse</span>
                   </div>
-                  <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">{analysis}</p>
+                  <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed">{analysis}</p>
                 </div>
               )}
 
               {!loading && !analysis && (
                 <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                  <p className="text-xs text-slate-400 text-center">
+                  <p className="text-xs text-white/70 text-center">
                     👆 Cliquez sur <strong className="text-amber-400">"Analyser avec Salim"</strong> pour que j'inspecte cette image.
                   </p>
                 </div>
@@ -142,7 +142,7 @@ export default function ImageInspector({ onClose, onAnalyze }: ImageInspectorPro
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-slate-700 flex items-center justify-between text-[9px] text-slate-500">
+        <div className="px-5 py-3 border-t border-slate-700 flex items-center justify-between text-[9px] text-white/50">
           <span>📸 Formats supportés : PNG, JPG, JPEG, WEBP</span>
           <span>Protection : Images non partagées</span>
         </div>

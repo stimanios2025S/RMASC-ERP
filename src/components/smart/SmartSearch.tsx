@@ -168,7 +168,7 @@ export default function SmartSearch({ onNavigate }: Props) {
       >
         {/* Search Input */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
-          <svg className="w-5 h-5 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="w-5 h-5 text-white/50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8"/>
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
@@ -179,11 +179,11 @@ export default function SmartSearch({ onNavigate }: Props) {
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Recherchez des commandes, clients, articles, actions... (ex: 'commande urgent', 'stock bas')"
-            className="flex-1 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none bg-transparent"
+            className="flex-1 text-sm text-white placeholder:text-white/40 focus:outline-none bg-transparent"
           />
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-semibold text-gray-400 bg-white/[0.08] px-1.5 py-0.5 rounded">⌘K</span>
-            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-200 text-sm ml-1">✕</button>
+            <span className="text-[10px] font-semibold text-white/50 bg-white/[0.08] px-1.5 py-0.5 rounded">⌘K</span>
+            <button onClick={() => setIsOpen(false)} className="text-white/50 hover:text-white text-sm ml-1">✕</button>
           </div>
         </div>
 
@@ -194,7 +194,7 @@ export default function SmartSearch({ onNavigate }: Props) {
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" style={{ animationDelay: '0.2s' }} />
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" style={{ animationDelay: '0.4s' }} />
-              <span className="text-xs text-gray-400 ml-1">Recherche intelligente...</span>
+              <span className="text-xs text-white/50 ml-1">Recherche intelligente...</span>
             </div>
           </div>
         )}
@@ -205,8 +205,8 @@ export default function SmartSearch({ onNavigate }: Props) {
             {results.length === 0 ? (
               <div className="text-center py-8">
                 <span className="text-2xl block mb-2">🔍</span>
-                <p className="text-sm text-gray-400">Aucun résultat pour "{query}"</p>
-                <p className="text-xs text-gray-500 mt-1">Essayez un autre terme ou utilisez les actions rapides</p>
+                <p className="text-sm text-white/50">Aucun résultat pour "{query}"</p>
+                <p className="text-xs text-white/40 mt-1">Essayez un autre terme ou utilisez les actions rapides</p>
               </div>
             ) : (
               <div className="space-y-0.5">
@@ -216,24 +216,24 @@ export default function SmartSearch({ onNavigate }: Props) {
                     onClick={result.action}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                       i === selectedIndex
-                        ? 'bg-amber-500/15 text-gray-200'
-                        : 'hover:bg-white/[0.04] text-gray-300'
+                        ? 'bg-amber-500/15 text-white'
+                        : 'hover:bg-white/[0.04] text-white/60'
                     }`}
                   >
                     <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
                       i === selectedIndex ? 'bg-amber-500/20' : 'bg-white/[0.06]'
                     }`}>{result.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold truncate ${i === selectedIndex ? 'text-amber-400' : 'text-gray-200'}`}>
+                      <p className={`text-sm font-semibold truncate ${i === selectedIndex ? 'text-amber-400' : 'text-white'}`}>
                         {result.title}
                       </p>
-                      <p className="text-[11px] text-gray-500 truncate">{result.subtitle}</p>
+                      <p className="text-[11px] text-white/40 truncate">{result.subtitle}</p>
                     </div>
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                       result.type === 'order' ? 'bg-blue-500/15 text-blue-400' :
                       result.type === 'stock' ? 'bg-emerald-500/15 text-emerald-400' :
                       result.type === 'action' ? 'bg-amber-500/15 text-amber-400' :
-                      'bg-white/[0.06] text-gray-400'
+                      'bg-white/[0.06] text-white/50'
                     }`}>
                       {result.type === 'order' ? 'Commande' : result.type === 'stock' ? 'Stock' : result.type === 'action' ? 'Action' : 'Aide'}
                     </span>
@@ -244,7 +244,7 @@ export default function SmartSearch({ onNavigate }: Props) {
 
             {/* Footer hints */}
             <div className="px-3 py-2.5 mt-2 border-t border-white/5">
-              <div className="flex items-center justify-center gap-4 text-[10px] text-gray-500">
+              <div className="flex items-center justify-center gap-4 text-[10px] text-white/40">
                 <span><kbd className="bg-white/[0.08] px-1 py-0.5 rounded text-[9px] font-mono">↑↓</kbd> Navigation</span>
                 <span><kbd className="bg-white/[0.08] px-1 py-0.5 rounded text-[9px] font-mono">↵</kbd> Ouvrir</span>
                 <span><kbd className="bg-white/[0.08] px-1 py-0.5 rounded text-[9px] font-mono">Esc</kbd> Fermer</span>

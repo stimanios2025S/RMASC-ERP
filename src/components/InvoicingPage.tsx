@@ -151,12 +151,12 @@ export default function InvoicingPage({ onBack }: Props) {
     <div className="flex-1 flex flex-col overflow-hidden print:overflow-visible">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03] print:hidden">
-        <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-all">
+        <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-white hover:text-white transition-all">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Retour
         </button>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400 font-medium">Salim Hamoun AI — Facturation</span>
+          <span className="text-xs text-white/80 font-semibold">Salim Hamoun AI — Facturation</span>
           <button onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-sm font-bold transition-all shadow-lg shadow-amber-500/25">
             📥 Exporter / Imprimer
@@ -170,13 +170,13 @@ export default function InvoicingPage({ onBack }: Props) {
           {/* ── LEFT PANEL ───────────────────────────────────────────────── */}
           <div className="w-80 flex-shrink-0 space-y-5 print:hidden">
             {/* Order selector */}
-            <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-5 border border-white/5 shadow-lg">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Commande</h3>
-              {loading ? <div className="text-sm text-gray-400 italic">Chargement...</div> : orders.length === 0 ? (
-                <div className="text-sm text-gray-400 italic">Aucune commande</div>
+            <div className="bg-slate-800/70 rounded-2xl p-5 border border-white/5 shadow-lg">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white mb-3">Commande</h3>
+              {loading ? <div className="text-sm text-white italic">Chargement...</div> : orders.length === 0 ? (
+                <div className="text-sm text-white italic">Aucune commande</div>
               ) : (
                 <select value={selectedOrderId} onChange={e => setSelectedOrderId(e.target.value)}
-                  className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+                  className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30">
                   {orders.map(o => <option key={o.id} value={o.id}>{o.serialNumber} — {o.clientName}</option>)}
                 </select>
               )}
@@ -187,14 +187,14 @@ export default function InvoicingPage({ onBack }: Props) {
             </div>
 
             {/* Paramètres */}
-            <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-5 border border-white/5 shadow-lg space-y-4">
+            <div className="bg-slate-800/70 rounded-2xl p-5 border border-white/5 shadow-lg space-y-4">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center"><span className="text-xs font-bold text-amber-400">$</span></div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Paramètres</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white">Paramètres</h3>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-300">Marge commerciale</label>
+                  <label className="text-xs font-medium text-white/80">Marge commerciale</label>
                   <input type="number" min={0} max={100} value={marginPct}
                     onChange={e => setMarginPct(Math.max(0, Math.min(100, Number(e.target.value))))}
                     className="w-20 h-8 px-2 rounded-lg border border-white/10 text-xs text-center font-bold text-amber-400 bg-white/[0.06]" />
@@ -202,12 +202,12 @@ export default function InvoicingPage({ onBack }: Props) {
                 <input type="range" min={0} max={80} step={1} value={marginPct}
                   onChange={e => setMarginPct(Number(e.target.value))}
                   className="w-full h-2 rounded-full bg-white/[0.08] accent-amber-500 cursor-pointer" />
-                <p className="text-[10px] text-gray-400 mt-1">{marginPct === 0 ? '✅ Aucune marge appliquée' : `Marge: ${marginPct}%`}</p>
+                <p className="text-[10px] text-white mt-1">{marginPct === 0 ? '✅ Aucune marge appliquée' : `Marge: ${marginPct}%`}</p>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-300 block mb-1">Ajouter une ligne</label>
+                <label className="text-xs font-medium text-white/80 block mb-1">Ajouter une ligne</label>
                 <button onClick={addLine}
-                  className="w-full py-2 rounded-xl border-2 border-dashed border-white/10 text-gray-400 text-xs font-semibold hover:border-amber-500/30 hover:text-amber-400 transition-all">
+                  className="w-full py-2 rounded-xl border-2 border-dashed border-white/10 text-white text-xs font-semibold hover:border-amber-500/30 hover:text-amber-400 transition-all">
                   + Ajouter un article
                 </button>
               </div>
@@ -220,15 +220,15 @@ export default function InvoicingPage({ onBack }: Props) {
                   <span className="text-lg">🤖</span>
                   <div>
                     <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Salim Hamoun AI</span>
-                    <p className="text-[9px] text-gray-400">{selectedOrder.typeCabine} — {detectChargeKg(selectedOrder.typeCabine)} KG</p>
+                    <p className="text-[9px] text-white">{selectedOrder.typeCabine} — {detectChargeKg(selectedOrder.typeCabine)} KG</p>
                   </div>
                 </div>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span className="text-gray-400">Production</span><span className="font-bold text-gray-200">{fmt(totals.prodWithoutTransport)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Marge ({marginPct}%)</span><span className="font-bold text-gray-200">{fmt(totals.profit)}</span></div>
+                  <div className="flex justify-between"><span className="text-white">Production</span><span className="font-bold text-white">{fmt(totals.prodWithoutTransport)}</span></div>
+                  <div className="flex justify-between"><span className="text-white">Marge ({marginPct}%)</span><span className="font-bold text-white">{fmt(totals.profit)}</span></div>
                   <hr className="border-white/10" />
-                  <div className="flex justify-between text-sm"><span className="font-bold text-gray-200">Total HT</span><span className="font-bold text-gray-200">{fmt(totals.totalHT)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">TVA 19%</span><span className="font-bold text-gray-200">{fmt(totals.tva)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="font-bold text-white">Total HT</span><span className="font-bold text-white">{fmt(totals.totalHT)}</span></div>
+                  <div className="flex justify-between"><span className="text-white">TVA 19%</span><span className="font-bold text-white">{fmt(totals.tva)}</span></div>
                   <hr className="border-white/10" />
                   <div className="flex justify-between"><span className="text-sm font-extrabold text-amber-400">TOTAL TTC</span><span className="text-lg font-extrabold text-amber-400">{fmt(totals.totalTTC)}</span></div>
                 </div>
@@ -238,9 +238,9 @@ export default function InvoicingPage({ onBack }: Props) {
 
           {/* ── RIGHT PANEL: Facture ──────────────────────────────────────── */}
           <div className="flex-1 print:flex-none print:w-full">
-            <div id="invoice-content" className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden shadow-lg print:rounded-none print:shadow-none print:border-0 print:bg-white">
+            <div id="invoice-content" className="bg-slate-800/70 rounded-2xl border border-white/5 overflow-hidden shadow-lg print:rounded-none print:shadow-none print:border-0 print:bg-white">
               {!selectedOrder ? (
-                <div className="flex items-center justify-center h-96 text-gray-400 text-sm">{loading ? 'Chargement...' : 'Sélectionnez une commande'}</div>
+                <div className="flex items-center justify-center h-96 text-white text-sm">{loading ? 'Chargement...' : 'Sélectionnez une commande'}</div>
               ) : (
                 <>
                   {/* HEADER */}
@@ -250,10 +250,10 @@ export default function InvoicingPage({ onBack }: Props) {
                         <h2 className="text-xl font-extrabold text-white tracking-tight">
                           <span className="text-amber-400">RM</span><span className="text-orange-400">ASC</span> <span className="text-amber-400">FACTORY</span>
                         </h2>
-                        <p className="text-[10px] text-slate-400 tracking-widest uppercase mt-0.5">Devis d'Ingénierie & Facturation</p>
+                        <p className="text-[10px] text-white/60 tracking-widest uppercase mt-0.5">Devis d'Ingénierie & Facturation</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] text-slate-400">N° Devis</p>
+                        <p className="text-[10px] text-white/60">N° Devis</p>
                         <p className="text-sm font-mono text-amber-400 font-bold">{serialForDisplay}</p>
                       </div>
                     </div>
@@ -262,33 +262,33 @@ export default function InvoicingPage({ onBack }: Props) {
                   {/* METADATA */}
                   <div className="px-8 py-4 border-b border-white/5 flex items-center justify-between text-xs">
                     <div className="space-y-1">
-                      <p><span className="font-medium text-gray-300">Client:</span> <span className="text-gray-200">{selectedOrder.clientName}</span></p>
-                      <p><span className="font-medium text-gray-300">Ville:</span> <span className="text-gray-200">{selectedOrder.clientCity}</span></p>
-                      <p><span className="font-medium text-gray-300">Contact:</span> <span className="text-gray-200">{selectedOrder.clientPhone}{selectedOrder.clientEmail ? ` | ${selectedOrder.clientEmail}` : ''}</span></p>
+                      <p><span className="font-medium text-white/80">Client:</span> <span className="text-white">{selectedOrder.clientName}</span></p>
+                      <p><span className="font-medium text-white/80">Ville:</span> <span className="text-white">{selectedOrder.clientCity}</span></p>
+                      <p><span className="font-medium text-white/80">Contact:</span> <span className="text-white">{selectedOrder.clientPhone}{selectedOrder.clientEmail ? ` | ${selectedOrder.clientEmail}` : ''}</span></p>
                     </div>
                     <div className="text-right space-y-1">
-                      <p><span className="font-medium text-gray-300">Type:</span> <span className="text-gray-200">{selectedOrder.typeMotorisation}</span></p>
-                      <p><span className="font-medium text-gray-300">Cabine:</span> <span className="text-gray-200">{selectedOrder.typeCabine}</span></p>
+                      <p><span className="font-medium text-white/80">Type:</span> <span className="text-white">{selectedOrder.typeMotorisation}</span></p>
+                      <p><span className="font-medium text-white/80">Cabine:</span> <span className="text-white">{selectedOrder.typeCabine}</span></p>
                     </div>
                   </div>
 
                   {/* TABLEAU DÉTAILLÉ — EDITABLE */}
                   <div className="px-8 py-5">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-bold text-gray-200">Articles & Équipements</h3>
-                      <span className="text-[10px] text-gray-400 font-mono">{serialForDisplay}</span>
+                      <h3 className="text-sm font-bold text-white">Articles & Équipements</h3>
+                      <span className="text-[10px] text-white font-mono">{serialForDisplay}</span>
                     </div>
 
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b-2 border-white/10">
-                          <th className="text-left pb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-[5%]">#</th>
-                          <th className="text-left pb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-[12%]">Catégorie</th>
-                          <th className="text-left pb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-[30%]">Désignation</th>
-                          <th className="text-center pb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-[8%]">Qté</th>
-                          <th className="text-right pb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-[22%]">Prix Unitaire</th>
-                          <th className="text-right pb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-[18%]">Prix Total</th>
-                          <th className="text-center pb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-[5%]"></th>
+                          <th className="text-left pb-3 text-[10px] font-bold uppercase tracking-wider text-white w-[5%]">#</th>
+                          <th className="text-left pb-3 text-[10px] font-bold uppercase tracking-wider text-white w-[12%]">Catégorie</th>
+                          <th className="text-left pb-3 text-[10px] font-bold uppercase tracking-wider text-white w-[30%]">Désignation</th>
+                          <th className="text-center pb-3 text-[10px] font-bold uppercase tracking-wider text-white w-[8%]">Qté</th>
+                          <th className="text-right pb-3 text-[10px] font-bold uppercase tracking-wider text-white w-[22%]">Prix Unitaire</th>
+                          <th className="text-right pb-3 text-[10px] font-bold uppercase tracking-wider text-white w-[18%]">Prix Total</th>
+                          <th className="text-center pb-3 text-[10px] font-bold uppercase tracking-wider text-white w-[5%]"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
@@ -298,25 +298,25 @@ export default function InvoicingPage({ onBack }: Props) {
                               const globalIdx = customLines.findIndex(l => l.id === line.id)
                               return (
                                 <tr key={line.id} className="hover:bg-white/[0.04] transition-colors group">
-                                  <td className="py-2 text-xs text-gray-500 font-mono">{globalIdx + 1}</td>
+                                  <td className="py-2 text-xs text-white/50 font-mono">{globalIdx + 1}</td>
                                   <td className="py-2">
                                     <input value={line.categorie} onChange={e => updateLine(line.id, 'categorie', e.target.value)}
-                                      className="w-full text-[10px] font-semibold bg-white/[0.06] text-gray-300 px-2 py-0.5 rounded-full border-0 focus:ring-2 focus:ring-amber-500/30 focus:bg-white/[0.08]" />
+                                      className="w-full text-[10px] font-semibold bg-white/[0.06] text-white/80 px-2 py-0.5 rounded-full border-0 focus:ring-2 focus:ring-amber-500/30 focus:bg-white/[0.08]" />
                                   </td>
                                   <td className="py-2">
                                     <input value={line.designation} onChange={e => updateLine(line.id, 'designation', e.target.value)}
-                                      className="w-full text-sm font-medium text-gray-200 bg-transparent border-0 border-b border-dashed border-white/10 focus:border-amber-400 focus:outline-none focus:bg-amber-500/5 px-1 py-0.5" />
+                                      className="w-full text-sm font-medium text-white bg-transparent border-0 border-b border-dashed border-white/10 focus:border-amber-400 focus:outline-none focus:bg-amber-500/5 px-1 py-0.5" />
                                   </td>
                                   <td className="py-2 text-center">
                                     <input type="number" min={0} value={line.qte} onChange={e => updateLine(line.id, 'qte', parseInt(e.target.value) || 0)}
-                                      className="w-14 text-center text-sm font-semibold text-gray-200 bg-white/[0.06] border border-white/10 rounded-lg px-1 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
+                                      className="w-14 text-center text-sm font-semibold text-white bg-white/[0.06] border border-white/10 rounded-lg px-1 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
                                   </td>
                                   <td className="py-2 text-right">
                                     <input type="number" min={0} value={line.prixUnitaire} onChange={e => updateLine(line.id, 'prixUnitaire', parseFloat(e.target.value) || 0)}
-                                      className="w-full text-right text-sm text-gray-300 font-mono bg-white/[0.06] border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
+                                      className="w-full text-right text-sm text-white/80 font-mono bg-white/[0.06] border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
                                   </td>
                                   <td className="py-2 text-right">
-                                    <span className="text-sm font-bold text-gray-200 font-mono">{fmt(line.prixTotal)}</span>
+                                    <span className="text-sm font-bold text-white font-mono">{fmt(line.prixTotal)}</span>
                                   </td>
                                   <td className="py-2 text-center">
                                     <button onClick={() => removeLine(line.id)}
@@ -329,10 +329,10 @@ export default function InvoicingPage({ onBack }: Props) {
                             {group.lines.length > 1 && (
                               <tr className="bg-white/[0.02]">
                                 <td colSpan={5} className="py-2 text-right pr-4">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sous-total {group.categorie}</span>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-white">Sous-total {group.categorie}</span>
                                 </td>
                                 <td className="py-2 text-right pr-4">
-                                  <span className="text-sm font-bold text-gray-300 font-mono">{fmt(group.sousTotal)}</span>
+                                  <span className="text-sm font-bold text-white/80 font-mono">{fmt(group.sousTotal)}</span>
                                 </td>
                                 <td></td>
                               </tr>
@@ -343,7 +343,7 @@ export default function InvoicingPage({ onBack }: Props) {
                     </table>
 
                     <button onClick={addLine}
-                      className="mt-4 px-4 py-2 rounded-xl border-2 border-dashed border-white/10 text-gray-400 text-xs font-semibold hover:border-amber-500/30 hover:text-amber-400 transition-all w-full">
+                      className="mt-4 px-4 py-2 rounded-xl border-2 border-dashed border-white/10 text-white text-xs font-semibold hover:border-amber-500/30 hover:text-amber-400 transition-all w-full">
                       + Ajouter une ligne
                     </button>
                   </div>
@@ -354,26 +354,26 @@ export default function InvoicingPage({ onBack }: Props) {
                     <div className="flex justify-end">
                       <div className="w-80 space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-semibold text-gray-400">Total Production</span>
-                          <span className="font-bold text-gray-200 font-mono">{fmt(totals.prodWithoutTransport)}</span>
+                          <span className="font-semibold text-white">Total Production</span>
+                          <span className="font-bold text-white font-mono">{fmt(totals.prodWithoutTransport)}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-1">
-                            <span className="font-semibold text-gray-400">Marge Commerciale</span>
+                            <span className="font-semibold text-white">Marge Commerciale</span>
                             <input type="number" min={0} max={100} value={marginPct} onChange={e => setMarginPct(Math.max(0, Math.min(100, Number(e.target.value))))}
                               className="w-14 text-center text-xs font-bold text-amber-400 bg-white/[0.06] border border-white/10 rounded-lg px-1 py-0.5" />
-                            <span className="text-xs text-gray-400">%</span>
+                            <span className="text-xs text-white">%</span>
                           </div>
-                          <span className="font-bold text-gray-200 font-mono">{fmt(totals.profit)}</span>
+                          <span className="font-bold text-white font-mono">{fmt(totals.profit)}</span>
                         </div>
                         <hr className="border-white/10" />
                         <div className="flex items-center justify-between">
-                          <span className="text-base font-bold text-gray-200">TOTAL HT</span>
-                          <span className="text-base font-bold text-gray-200 font-mono">{fmt(totals.totalHT)}</span>
+                          <span className="text-base font-bold text-white">TOTAL HT</span>
+                          <span className="text-base font-bold text-white font-mono">{fmt(totals.totalHT)}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">TVA 19%</span>
-                          <span className="font-bold text-gray-300 font-mono">{fmt(totals.tva)}</span>
+                          <span className="text-white">TVA 19%</span>
+                          <span className="font-bold text-white/80 font-mono">{fmt(totals.tva)}</span>
                         </div>
                         <hr className="border-white/10 border-t-2" />
                         <div className="flex items-center justify-between pt-1">
@@ -387,18 +387,18 @@ export default function InvoicingPage({ onBack }: Props) {
                   {/* FOOTER */}
                   <div className="px-8 py-5 border-t border-white/5 bg-white/[0.02] print:bg-gray-50/50">
                     <div className="flex items-start justify-between">
-                      <div className="space-y-1 text-[10px] text-gray-400">
-                        <p className="font-semibold text-gray-300 text-xs">Notes & Conditions</p>
+                      <div className="space-y-1 text-[10px] text-white">
+                        <p className="font-semibold text-white/80 text-xs">Notes & Conditions</p>
                         <p>• Prix modifiables par l'administrateur — calcul automatique</p>
                         <p>• Marge commerciale: {marginPct}% {marginPct === 0 ? '(Aucune marge)' : ''}</p>
                         <p>• Délai de validité: 30 jours. TVA 19% applicable.</p>
                       </div>
                       <div className="text-center">
                         <div className="w-32 h-14 border-b border-white/10 mb-1" />
-                        <p className="text-[10px] text-gray-400">Cachet & Signature</p>
+                        <p className="text-[10px] text-white">Cachet & Signature</p>
                       </div>
                     </div>
-                    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[9px] text-gray-400">
+                    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[9px] text-white">
                       <p>RMASC FACTORY — ERP Intégré</p>
                       <p className="font-mono">SHAI-v1.5-{serialForDisplay.slice(-6)}</p>
                     </div>

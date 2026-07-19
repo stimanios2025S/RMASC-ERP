@@ -86,10 +86,10 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
 
   if (!displaySrc) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-[#0a0f1a] text-slate-400 rounded-xl border border-slate-700">
+      <div className="h-full flex flex-col items-center justify-center bg-[#0a0f1a] text-white rounded-xl border border-slate-700">
         <span className="text-5xl mb-4">📄</span>
         <p className="text-sm font-medium">Aucun fichier déposé pour cette commande</p>
-        <p className="text-xs mt-1 text-slate-500">Déposez un fichier pour le visualiser ici</p>
+        <p className="text-xs mt-1 text-white/60">Déposez un fichier pour le visualiser ici</p>
       </div>
     )
   }
@@ -112,7 +112,7 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
           </div>
           <div className="min-w-0">
             <p className="text-[12px] font-bold text-white truncate max-w-[280px]">{fileName || 'Document'}</p>
-            <p className="text-[9px] text-slate-400">{fileType || 'inconnu'} {fileUrl ? '• Serveur' : ''}</p>
+            <p className="text-[9px] text-white">{fileType || 'inconnu'} {fileUrl ? '• Serveur' : ''}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -120,7 +120,7 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom avant">+</button>
           <button onClick={() => setZoom(z => Math.max(z - 0.25, 0.25))}
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom arrière">−</button>
-          <span className="text-[10px] text-slate-400 font-mono min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
+          <span className="text-[10px] text-white font-mono min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
           <div className="w-px h-6 bg-slate-600 mx-1" />
           <button onClick={toggleFullscreen}
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-xs flex items-center justify-center transition-colors" title="Plein écran">⛶</button>
@@ -140,9 +140,9 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
           ) : isPDF ? (
             <embed src={displaySrc} type="application/pdf" className="w-full rounded-lg shadow-2xl" style={{ minWidth: 600, height: '80vh' }} />
           ) : (
-            <div className="flex flex-col items-center justify-center p-12 text-slate-400">
+            <div className="flex flex-col items-center justify-center p-12 text-white">
               <span className="text-6xl mb-4">📁</span>
-              <p className="text-sm font-medium text-slate-300">{fileName || 'Fichier'}</p>
+              <p className="text-sm font-medium text-white/80">{fileName || 'Fichier'}</p>
               <p className="text-xs mt-1">Type de fichier non affichable directement</p>
               <button onClick={handleDownload}
                 className="mt-4 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
       </div>
 
       <div className="flex-shrink-0 px-4 py-2 bg-[#0d1520] border-t border-slate-700 flex items-center justify-between text-[10px]">
-        <span className="flex items-center gap-1.5 text-slate-500 font-medium">
+        <span className="flex items-center gap-1.5 text-white/60 font-medium">
           <span>🔒</span> {fileName || 'Document'}
         </span>
         <button onClick={handleDownload} className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-medium transition-colors">

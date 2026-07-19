@@ -5,12 +5,20 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover: rgba(255, 255, 255, 0.07);
+    --amber-500-rgb: 249, 115, 22;
   }
 
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
@@ -21,40 +29,13 @@
     overflow: hidden;
     height: 100vh;
     text-rendering: geometricPrecision;
+    background: #0F172A;
   }
 
   #root {
     height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    background: #0F172A;
-    position: relative;
-  }
-
-  #root::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background-image: url('/images/login-bg.jpg');
-    background-size: cover;
-    background-position: center;
-    filter: brightness(0.55);
-  }
-
-  #root::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: linear-gradient(90deg, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.5) 50%, rgba(15,23,42,0.08) 100%);
-  }
-
-  .app-content {
-    position: relative;
-    z-index: 1;
-    height: 100vh;
-    overflow: visible;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0F172A 0%, #0B1120 50%, #0F172A 100%);
   }
 
   ::-webkit-scrollbar {
@@ -89,56 +70,94 @@
 }
 
 @layer components {
+  /* ── Sidebar Item ──────────────────────────────────────────────────── */
   .sidebar-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-bold text-white/70 transition-all duration-200 hover:bg-white/[0.06] hover:text-white cursor-pointer;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold text-white/60 transition-all duration-200 hover:bg-white/[0.06] hover:text-white cursor-pointer;
   }
 
   .sidebar-item.active {
-    @apply bg-amber-500/15 text-white font-bold border border-amber-500/20;
+    @apply bg-gradient-to-r from-amber-500/20 to-amber-600/10 text-white font-bold border border-amber-500/20 shadow-sm shadow-amber-500/10;
   }
 
   .sidebar-item.active svg {
     @apply text-amber-400;
   }
 
-  .kpi-card {
-    @apply bg-white/[0.06] backdrop-blur-xl rounded-2xl p-5 border border-white/10 transition-all duration-200 hover:bg-white/[0.09] shadow-lg;
+  /* ── Glass Cards ───────────────────────────────────────────────────── */
+  .glass-card {
+    @apply bg-slate-800/60 rounded-2xl border border-white/10 shadow-glass transition-all duration-200 hover:bg-slate-700/60 hover:border-white/20 hover:shadow-glass-lg;
   }
 
-  .kpi-card.dark {
-    @apply bg-white/[0.08] text-white border-amber-500/20;
+  .glass-card-accent {
+    @apply glass-card border-l-4 hover:border-l-amber-400/60;
+  }
+
+  .glass-card-solid {
+    @apply bg-slate-800/80 rounded-2xl border border-white/10 shadow-glass;
+  }
+
+  /* ── Buttons ───────────────────────────────────────────────────────── */
+  .btn-primary {
+    @apply bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 active:scale-[0.97];
+  }
+
+  .btn-outline {
+    @apply border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white hover:border-white/20 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 active:scale-[0.97];
+  }
+
+  .btn-ghost {
+    @apply text-white/50 hover:text-white hover:bg-white/[0.06] px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200;
+  }
+
+  .btn-success {
+    @apply bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 active:scale-[0.97];
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 active:scale-[0.97];
+  }
+
+  /* ── Badges ────────────────────────────────────────────────────────── */
+  .badge {
+    @apply px-2.5 py-0.5 rounded-full text-[11px] font-bold;
+  }
+
+  .badge-success {
+    @apply bg-emerald-500/15 text-emerald-400 border border-emerald-500/20;
+  }
+
+  .badge-warning {
+    @apply bg-amber-500/15 text-amber-400 border border-amber-500/20;
+  }
+
+  .badge-danger {
+    @apply bg-red-500/15 text-red-400 border border-red-500/20;
+  }
+
+  .badge-info {
+    @apply bg-sky-500/15 text-sky-400 border border-sky-500/20;
+  }
+
+  /* ── Inputs ────────────────────────────────────────────────────────── */
+  .glass-input {
+    @apply w-full h-10 px-3.5 rounded-xl border border-white/[0.10] bg-white/[0.04] text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 transition-all;
+  }
+
+  .glass-select {
+    @apply w-full h-10 px-3.5 rounded-xl border border-white/[0.10] bg-white/[0.04] text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 transition-all appearance-none;
+  }
+
+  .glass-textarea {
+    @apply w-full px-3.5 py-2 rounded-xl border border-white/[0.10] bg-white/[0.04] text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 transition-all resize-none;
+  }
+
+  /* ── KPI Stats ────────────────────────────────────────────────────── */
+  .kpi-card {
+    @apply glass-card p-5;
   }
 
   .stat-number {
     @apply text-3xl font-bold tracking-tight;
-  }
-
-  .btn-primary {
-    @apply bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg shadow-amber-500/25 active:scale-[0.98];
-  }
-
-  .btn-outline {
-    @apply border border-white/10 bg-white/[0.06] text-gray-300 hover:bg-white/[0.1] hover:text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 active:scale-[0.98];
-  }
-
-  .btn-ghost {
-    @apply text-gray-400 hover:text-white hover:bg-white/[0.06] px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200;
-  }
-
-  .badge {
-    @apply px-2 py-0.5 rounded-full text-xs font-medium;
-  }
-
-  .badge-success {
-    @apply bg-emerald-500/20 text-emerald-400;
-  }
-
-  .badge-warning {
-    @apply bg-amber-500/20 text-amber-400;
-  }
-
-  .badge-danger {
-    @apply bg-gray-500/20 text-gray-400;
   }
 
   .progress-ring-circle {
@@ -151,10 +170,10 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-primary-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500;
   }
 
-  /* ── Bell animation for alert notifications ── */
+  /* ── Animations ───────────────────────────────────────────────────── */
   @keyframes bell-shake {
     0%, 100% { transform: rotate(0deg); }
     20% { transform: rotate(15deg); }
@@ -166,7 +185,6 @@
     animation: bell-shake 0.8s ease-in-out;
   }
 
-  /* ── Fade in ── */
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -175,7 +193,6 @@
     animation: fade-in 0.4s ease-out both;
   }
 
-  /* ── Slide up ── */
   @keyframes slide-up {
     from { opacity: 0; transform: translateY(40px); }
     to { opacity: 1; transform: translateY(0); }
@@ -184,7 +201,6 @@
     animation: slide-up 0.5s ease-out both;
   }
 
-  /* ── Scale in (cards et éléments) ── */
   @keyframes scale-in {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
@@ -193,16 +209,14 @@
     animation: scale-in 0.35s ease-out both;
   }
 
-  /* ── Glow pulse (pour les éléments importants) ── */
   @keyframes glow-pulse {
-    0%, 100% { box-shadow: 0 0 5px rgba(249,115,22,0.2); }
-    50% { box-shadow: 0 0 20px rgba(249,115,22,0.4); }
+    0%, 100% { box-shadow: 0 0 5px rgba(var(--amber-500-rgb), 0.2); }
+    50% { box-shadow: 0 0 20px rgba(var(--amber-500-rgb), 0.4); }
   }
   .animate-glow {
     animation: glow-pulse 2s ease-in-out infinite;
   }
 
-  /* ── Slide in from left (sidebar items) ── */
   @keyframes slide-in-left {
     from { opacity: 0; transform: translateX(-20px); }
     to { opacity: 1; transform: translateX(0); }
@@ -211,25 +225,6 @@
     animation: slide-in-left 0.3s ease-out both;
   }
 
-  /* ── Counter up (pour les chiffres KPI) ── */
-  @keyframes count-up {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .animate-count-up {
-    animation: count-up 0.6s ease-out both;
-  }
-
-  /* ── Float (pour les icônes) ── */
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-5px); }
-  }
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-
-  /* ── Shimmer loading effect ── */
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
@@ -240,7 +235,6 @@
     animation: shimmer 1.5s infinite;
   }
 
-  /* ── Progress bar animation ── */
   @keyframes progress-fill {
     from { width: 0%; }
   }
@@ -248,7 +242,38 @@
     animation: progress-fill 1.2s ease-out both;
   }
 
-  /* ── Stagger children animation ── */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+  }
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
+
+  @keyframes border-glow {
+    0%, 100% { border-color: rgba(251, 146, 60, 0.2); }
+    50% { border-color: rgba(251, 146, 60, 0.5); }
+  }
+  .animate-border-glow {
+    animation: border-glow 2s ease-in-out infinite;
+  }
+
   .stagger-children > * {
     animation: fade-in 0.4s ease-out both;
   }
@@ -263,7 +288,6 @@
   .stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
   .stagger-children > *:nth-child(10) { animation-delay: 0.50s; }
 
-  /* ── Safe area for notched phones ── */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -271,9 +295,67 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* ── PRINT RULES ──────────────────────────────────────────────────── */
+  /* ── Glass morphism backgrounds ──────────────────────────────────── */
+  .login-bg-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: url('/images/login-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.55);
+  }
+  .login-bg-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(90deg, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.5) 50%, rgba(15,23,42,0.08) 100%);
+  }
+
+  /* ── Hover card elevation ── */
+  .card-hover {
+    @apply transition-all duration-200 hover:bg-white/[0.07] hover:shadow-glass-xl hover:-translate-y-0.5;
+  }
+
+  /* ── Orange glow dot ── */
+  .glow-dot {
+    @apply w-2 h-2 rounded-full bg-amber-500 animate-pulse-soft shadow-lg shadow-amber-500/40;
+  }
+
+  /* ── Glass divider ── */
+  .glass-divider {
+    @apply h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent;
+  }
+
+  /* ── Loading spinner ── */
+  .loading-spinner {
+    @apply w-5 h-5 rounded-full border-2 border-white/20 border-t-amber-400 animate-spin;
+  }
+
+  /* ── Truncate text with ellipsis ── */
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── Line clamp for clean text truncation ── */
+  .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+  .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+  /* ── Scrollbar for webkit (thin) ── */
+  .scrollbar-thin::-webkit-scrollbar { width: 3px; height: 3px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+  /* ── Fade overlay for bottom of scrollable area ── */
+  .scroll-fade-bottom {
+    mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
+  }
+
+  /* ── Print rules ── */
   @media print {
-    /* Hide all chrome: sidebar, header, nav, buttons */
     aside, header, nav, .no-print,
     button:not(.print-keep),
     .sidebar-item, .btn-primary, .btn-outline, .btn-ghost,
@@ -282,21 +364,13 @@
       display: none !important;
     }
 
-    /* Reset body & root for clean printing */
     body, #root {
       overflow: visible !important;
       height: auto !important;
-      min-height: auto !important;
       background: white !important;
       color: #1f2937 !important;
     }
 
-    #root::before,
-    #root::after {
-      display: none !important;
-    }
-
-    /* Force all containers to fill the page */
     .app-content {
       position: static !important;
       height: auto !important;
@@ -304,30 +378,18 @@
       background: white !important;
     }
 
-    /* Scale to A4 */
     @page {
       margin: 10mm;
       size: A4 portrait;
     }
 
-    /* Ensure dark backgrounds print cleanly */
-    .bg-slate-900, .bg-slate-950, .bg-slate-800,
-    .bg-gray-900, .bg-gray-950, .bg-gray-800,
-    .bg-surface-50, .bg-surface-100, .bg-surface-200,
     [class*="bg-slate-9"], [class*="bg-gray-9"] {
       background: white !important;
       color: #1f2937 !important;
     }
 
-    /* Remove backdrop filters */
     [class*="backdrop-blur"] {
       backdrop-filter: none !important;
-    }
-
-    /* Keep fiche technique content visible */
-    .fiche-document,
-    .fiche-document * {
-      visibility: visible !important;
     }
   }
 }

@@ -26,7 +26,7 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
   if (!data) {
     return (
       <div className="flex items-center justify-center h-64 bg-slate-800/60 rounded-xl border border-slate-700/50">
-        <p className="text-gray-400 text-sm">Aucun PDF à afficher.</p>
+        <p className="text-white/70 text-sm">Aucun PDF à afficher.</p>
       </div>
     )
   }
@@ -65,7 +65,7 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
           <div className="w-8 h-8 rounded-lg bg-slate-700/50 flex items-center justify-center text-sm flex-shrink-0">📄</div>
           <div className="min-w-0">
             <p className="text-[12px] font-bold text-white truncate max-w-[200px]">{fileName || 'Document PDF'}</p>
-            <p className="text-[9px] text-slate-400">PDF • {isValid ? 'Prêt' : 'Format inconnu'}</p>
+            <p className="text-[9px] text-white/70">PDF • {isValid ? 'Prêt' : 'Format inconnu'}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -74,7 +74,7 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom avant">+</button>
           <button onClick={() => setZoom(z => Math.max(z - 0.25, 0.25))}
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom arrière">−</button>
-          <span className="text-[10px] text-slate-400 font-mono min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
+          <span className="text-[10px] text-white/70 font-mono min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
 
           <div className="w-px h-6 bg-slate-600 mx-1" />
 
@@ -111,9 +111,9 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
             />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-12 text-slate-400">
+          <div className="flex flex-col items-center justify-center p-12 text-white/70">
             <span className="text-6xl mb-4">📄</span>
-            <p className="text-sm font-medium text-slate-300">{fileName || 'Document'}</p>
+            <p className="text-sm font-medium text-white/80">{fileName || 'Document'}</p>
             <p className="text-xs mt-1 mb-4">Ce fichier ne peut pas être affiché directement.</p>
             <button onClick={handleDownload}
               className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
@@ -130,7 +130,7 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
 
       {/* ─── Footer ─── */}
       <div className="flex-shrink-0 px-4 py-2 bg-[#0d1520] border-t border-slate-700 flex items-center justify-between text-[10px]">
-        <span className="text-slate-500 font-medium">📄 {fileName || 'Document PDF'}</span>
+        <span className="text-white/50 font-medium">📄 {fileName || 'Document PDF'}</span>
         <button onClick={handleDownload} className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
           ⬇️ Télécharger
         </button>

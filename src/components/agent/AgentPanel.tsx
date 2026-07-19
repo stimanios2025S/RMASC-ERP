@@ -572,14 +572,14 @@ export default function AgentPanel({ onClose }: { onClose?: () => void }) {
               <span className="text-lg">{pendingPermission.icon}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-amber-400 mb-1">⚠️ T'es sûr ?</p>
-                <p className="text-[11px] text-slate-300">{pendingPermission.summary}</p>
+                <p className="text-[11px] text-white/80">{pendingPermission.summary}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 mt-3">
               <button onClick={() => handlePermissionResponse(true)}
                 className="flex-1 px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-sm">✅ Oui vas-y</button>
               <button onClick={() => handlePermissionResponse(false)}
-                className="flex-1 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-medium transition-all">✕ Non, laisse</button>
+                className="flex-1 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white/80 text-xs font-medium transition-all">✕ Non, laisse</button>
             </div>
           </div>
         )}
@@ -589,20 +589,20 @@ export default function AgentPanel({ onClose }: { onClose?: () => void }) {
           {messages.map((msg, idx) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`} style={{ animationDelay: `${idx * 0.03}s` }}>
               {msg.role === 'system' ? (
-                <div className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-3 py-2"><p className="text-[10px] text-slate-400 text-center">{msg.content}</p></div>
+                <div className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-3 py-2"><p className="text-[10px] text-white/70 text-center">{msg.content}</p></div>
               ) : (
                 <div className={`max-w-[92%] rounded-2xl px-4 py-2.5 ${
                   msg.role === 'user'
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-br-md shadow-lg shadow-amber-500/20'
-                    : 'bg-slate-800/80 text-slate-200 border border-slate-700/50 rounded-bl-md backdrop-blur-sm'
+                    : 'bg-slate-800/80 text-white/90 border border-slate-700/50 rounded-bl-md backdrop-blur-sm'
                 }`}>
                   {msg.lang && msg.lang !== 'fr' && msg.lang !== 'unknown' && (
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-[8px] font-medium px-1 py-0.5 rounded bg-slate-700 text-slate-400 uppercase">{msg.lang}</span>
+                      <span className="text-[8px] font-medium px-1 py-0.5 rounded bg-slate-700 text-white/70 uppercase">{msg.lang}</span>
                     </div>
                   )}
                   <p className="text-xs whitespace-pre-wrap leading-relaxed agent-response">{msg.content}</p>
-                  <p className={`text-[8px] mt-1 ${msg.role === 'user' ? 'text-amber-200' : 'text-slate-500'}`}>
+                  <p className={`text-[8px] mt-1 ${msg.role === 'user' ? 'text-amber-200' : 'text-white/50'}`}>
                     {msg.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -616,7 +616,7 @@ export default function AgentPanel({ onClose }: { onClose?: () => void }) {
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" style={{ animationDelay: '0s' }} />
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" style={{ animationDelay: '0.15s' }} />
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" style={{ animationDelay: '0.3s' }} />
-                  <span className="text-[10px] text-slate-400 ml-1">Salim réfléchit...</span>
+                  <span className="text-[10px] text-white/70 ml-1">Salim réfléchit...</span>
                 </div>
               </div>
             </div>
@@ -631,20 +631,20 @@ export default function AgentPanel({ onClose }: { onClose?: () => void }) {
             <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
               placeholder="Pose ta question — en français, arabe, kabyle..."
               disabled={loading}
-              className="flex-1 h-10 px-4 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/30 transition-all disabled:opacity-50" />
+              className="flex-1 h-10 px-4 rounded-xl bg-slate-700/50 border border-slate-600/50 text-white text-sm placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/30 transition-all disabled:opacity-50" />
             <button onClick={() => handleSend()} disabled={loading || !input.trim()}
               className="w-10 h-10 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white flex items-center justify-center transition-all duration-200 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 hover:scale-105 active:scale-95">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
           <div className="flex items-center justify-center gap-2 mt-1.5">
-            <span className="text-[8px] text-gray-400">🇫🇷 🇦🇪 🇩🇿 🇬🇧</span>
-            <span className="text-[8px] text-gray-400">·</span>
-            <span className="text-[8px] text-gray-400">🎤 Micro</span>
-            <span className="text-[8px] text-gray-400">·</span>
-            <span className="text-[8px] text-gray-400">📸 Image</span>
-            <span className="text-[8px] text-gray-400">·</span>
-            <span className="text-[8px] text-gray-400">⚡ Actions</span>
+            <span className="text-[8px] text-white/50">🇫🇷 🇦🇪 🇩🇿 🇬🇧</span>
+            <span className="text-[8px] text-white/50">·</span>
+            <span className="text-[8px] text-white/50">🎤 Micro</span>
+            <span className="text-[8px] text-white/50">·</span>
+            <span className="text-[8px] text-white/50">📸 Image</span>
+            <span className="text-[8px] text-white/50">·</span>
+            <span className="text-[8px] text-white/50">⚡ Actions</span>
           </div>
         </div>
       </div>

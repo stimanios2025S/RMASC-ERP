@@ -33,7 +33,7 @@ function statusBadge(status: string) {
     case 'EN_ATTENTE':    return { label: 'En Attente',   cls: 'bg-amber-500/20 text-amber-400 border border-amber-500/20' }
     case 'EN_PRODUCTION': return { label: 'Découpe — En Cours', cls: 'bg-sky-500/20 text-sky-400 border border-sky-500/20' }
     case 'TERMINE':       return { label: 'Terminé',      cls: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' }
-    default:              return { label: status,          cls: 'bg-white/10 text-gray-400' }
+    default:              return { label: status,          cls: 'bg-white/10 text-white/80' }
   }
 }
 
@@ -150,15 +150,15 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
         <div className="flex items-center gap-3">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-gray-200 transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/80 hover:text-white transition-all">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-base font-extrabold text-gray-200 flex items-center gap-2">
+          <h1 className="text-base font-extrabold text-white flex items-center gap-2">
             <Icon name="Wrench" className="w-5 h-5 text-amber-400" />
             Atelier Pièces Solo
           </h1>
-          <span className="text-[10px] text-gray-400 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full">Ingénieur CAD</span>
+          <span className="text-[10px] text-white/80 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full">Ingénieur CAD</span>
         </div>
       </div>
 
@@ -172,60 +172,60 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                 <div className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center">
                   <Icon name="Wrench" className="w-4 h-4 text-amber-400" />
                 </div>
-                <h3 className="text-sm font-bold text-gray-200">Nouvelle Pièce Solo</h3>
+                <h3 className="text-sm font-bold text-white">Nouvelle Pièce Solo</h3>
               </div>
 
               {/* Project Name */}
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Nom du Projet *</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Nom du Projet *</label>
                 <input
                   type="text"
                   value={projectName}
                   onChange={e => setProjectName(e.target.value)}
                   placeholder="ex: Support Moteur Custom"
-                  className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/30 transition-all"
+                  className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/30 transition-all"
                 />
               </div>
 
               {/* Material + Thickness row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Matériau</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Matériau</label>
                   <input
                     type="text"
                     value={material}
                     onChange={e => setMaterial(e.target.value)}
                     placeholder="Acier / Inox..."
-                    className="w-full h-10 px-3 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all"
+                    className="w-full h-10 px-3 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Épaisseur</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Épaisseur</label>
                   <input
                     type="text"
                     value={thickness}
                     onChange={e => setThickness(e.target.value)}
                     placeholder="2mm / 3mm..."
-                    className="w-full h-10 px-3 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all"
+                    className="w-full h-10 px-3 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all"
                   />
                 </div>
               </div>
 
               {/* Quantity */}
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Quantité</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Quantité</label>
                 <input
                   type="number"
                   min={1}
                   value={quantity}
                   onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all"
+                  className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all"
                 />
               </div>
 
               {/* File upload zone */}
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Plan 2D (DXF/DWG/PDF)</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Plan 2D (DXF/DWG/PDF)</label>
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
@@ -245,13 +245,13 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                     <div className="space-y-1">
                       <span className="text-lg">📄</span>
                       <p className="text-xs font-semibold text-amber-400 truncate">{file.name}</p>
-                      <p className="text-[10px] text-gray-500">{(file.size / 1024).toFixed(1)} KB — Cliquez pour changer</p>
+                      <p className="text-[10px] text-white/50">{(file.size / 1024).toFixed(1)} KB — Cliquez pour changer</p>
                     </div>
                   ) : (
                     <div className="space-y-1">
                       <span className="text-2xl">📂</span>
-                      <p className="text-xs font-semibold text-gray-400">Glissez-déposez votre fichier</p>
-                      <p className="text-[10px] text-gray-500">DXF, DWG, PDF — Cliquez pour parcourir</p>
+                      <p className="text-xs font-semibold text-white/80">Glissez-déposez votre fichier</p>
+                      <p className="text-[10px] text-white/50">DXF, DWG, PDF — Cliquez pour parcourir</p>
                     </div>
                   )}
                 </div>
@@ -287,31 +287,31 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
           <div className="flex-1 min-w-0">
             <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 shadow-lg overflow-hidden">
               <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-gray-200 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Icon name="Package" className="w-4 h-4 text-amber-400" />
                   Historique des Pièces Solo
                 </h3>
-                <span className="text-[10px] text-gray-400 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full">{allParts.length} pièce(s)</span>
+                <span className="text-[10px] text-white/80 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full">{allParts.length} pièce(s)</span>
               </div>
 
               {allParts.length === 0 ? (
                 <div className="text-center py-16">
                   <span className="text-4xl block mb-3">📦</span>
-                  <p className="text-sm text-gray-400 font-medium">Aucune pièce solo créée.</p>
-                  <p className="text-xs text-gray-500 mt-1">Soumettez votre première pièce via le formulaire.</p>
+                  <p className="text-sm text-white/80 font-medium">Aucune pièce solo créée.</p>
+                  <p className="text-xs text-white/50 mt-1">Soumettez votre première pièce via le formulaire.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-white/5 bg-white/[0.02]">
-                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">N° Pièce</th>
-                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Projet</th>
-                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Matériau</th>
-                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Épaisseur</th>
-                        <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Qté</th>
-                        <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Statut</th>
-                        <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Date</th>
+                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">N° Pièce</th>
+                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Projet</th>
+                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Matériau</th>
+                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Épaisseur</th>
+                        <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Qté</th>
+                        <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Statut</th>
+                        <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -323,19 +323,19 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                               <span className="text-sm font-mono font-bold text-amber-400">{part.partNumber}</span>
                             </td>
                             <td className="px-5 py-3">
-                              <span className="text-sm font-medium text-gray-200">{part.projectName}</span>
+                              <span className="text-sm font-medium text-white">{part.projectName}</span>
                               {part.createdBy && (
-                                <p className="text-[10px] text-gray-500">{part.createdBy}</p>
+                                <p className="text-[10px] text-white/50">{part.createdBy}</p>
                               )}
                             </td>
                             <td className="px-5 py-3">
-                              <span className="text-xs text-gray-300">{part.material || '—'}</span>
+                              <span className="text-xs text-white/80">{part.material || '—'}</span>
                             </td>
                             <td className="px-5 py-3">
-                              <span className="text-xs text-gray-300">{part.thickness || '—'}</span>
+                              <span className="text-xs text-white/80">{part.thickness || '—'}</span>
                             </td>
                             <td className="px-5 py-3 text-center">
-                              <span className="text-sm font-bold text-gray-200">{part.quantity}</span>
+                              <span className="text-sm font-bold text-white">{part.quantity}</span>
                             </td>
                             <td className="px-5 py-3 text-center">
                               <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${badge.cls}`}>
@@ -343,7 +343,7 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                               </span>
                             </td>
                             <td className="px-5 py-3 text-right">
-                              <span className="text-xs text-gray-400 font-mono">{fmtDate(part.createdAt)}</span>
+                              <span className="text-xs text-white/80 font-mono">{fmtDate(part.createdAt)}</span>
                             </td>
                           </tr>
                         )
@@ -416,18 +416,18 @@ function ProductionView({ onBack }: { onBack?: () => void }) {
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
         <div className="flex items-center gap-3">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-gray-200 transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/80 hover:text-white transition-all">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-base font-extrabold text-gray-200 flex items-center gap-2">
+          <h1 className="text-base font-extrabold text-white flex items-center gap-2">
             <Icon name="Play" className="w-4 h-4 text-amber-400" />
             Commandes Pièces Solo
           </h1>
-          <span className="text-[10px] text-gray-400 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full">Atelier — Production</span>
+          <span className="text-[10px] text-white/80 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full">Atelier — Production</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-white/80">
             <span className="text-amber-400 font-bold">{enAttente.length}</span> en attente ·{' '}
             <span className="text-sky-400 font-bold">{enProduction.length}</span> en cours
           </span>
@@ -485,8 +485,8 @@ function ProductionView({ onBack }: { onBack?: () => void }) {
             <div className="flex items-center justify-center py-24">
               <div className="text-center">
                 <span className="text-5xl block mb-4">🏭</span>
-                <p className="text-lg font-bold text-gray-300">Aucune pièce en attente</p>
-                <p className="text-sm text-gray-500 mt-1">L'atelier est vide. En attente de nouvelles soumissions de l'ingénieur.</p>
+                <p className="text-lg font-bold text-white/80">Aucune pièce en attente</p>
+                <p className="text-sm text-white/50 mt-1">L'atelier est vide. En attente de nouvelles soumissions de l'ingénieur.</p>
               </div>
             </div>
           )}
@@ -524,14 +524,14 @@ function PartCard({ part, updating, onStart, onComplete }: {
 
       {/* Details */}
       <div className="space-y-1.5 mb-4">
-        <p className="text-sm font-bold text-gray-200">{part.projectName}</p>
-        <div className="flex items-center gap-3 text-xs text-gray-400">
+        <p className="text-sm font-bold text-white">{part.projectName}</p>
+        <div className="flex items-center gap-3 text-xs text-white/80">
           {part.material && <span>🧱 {part.material}</span>}
           {part.thickness && <span>📏 {part.thickness}</span>}
-          <span className="font-bold text-gray-200">×{part.quantity}</span>
+          <span className="font-bold text-white">×{part.quantity}</span>
         </div>
         {part.createdBy && (
-          <p className="text-[10px] text-gray-500">Par: {part.createdBy}</p>
+          <p className="text-[10px] text-white/50">Par: {part.createdBy}</p>
         )}
       </div>
 
@@ -541,7 +541,7 @@ function PartCard({ part, updating, onStart, onComplete }: {
           href={part.cadFileUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.10] hover:border-amber-500/30 text-gray-300 hover:text-amber-400 text-xs font-bold transition-all mb-3"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.10] hover:border-amber-500/30 text-white/80 hover:text-amber-400 text-xs font-bold transition-all mb-3"
         >
           <Icon name="Download" className="w-3.5 h-3.5" />
           Télécharger Plan 2D
@@ -602,7 +602,7 @@ export default function PiecesSoloWorkspace({ onBack, session }: Props) {
     <div className="flex-1 flex items-center justify-center bg-slate-950">
       <div className="text-center">
         <span className="text-4xl block mb-3">🔒</span>
-        <p className="text-sm text-gray-400 font-medium">Accès réservé à l'Ingénieur 2 et à la Production.</p>
+        <p className="text-sm text-white/80 font-medium">Accès réservé à l'Ingénieur 2 et à la Production.</p>
       </div>
     </div>
   )

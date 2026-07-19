@@ -93,21 +93,21 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
   return (
     <PageBackground className="flex-1 overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-lg font-extrabold text-gray-200">✅ Validations</h1>
-          <span className="text-xs font-mono text-gray-500 font-semibold">{pending.length + pendingDelivery.length} en attente</span>
+          <h1 className="text-lg font-extrabold text-white">✅ Validations</h1>
+          <span className="text-xs font-mono text-white/80 font-semibold">{pending.length + pendingDelivery.length} en attente</span>
         </div>
         {actionMsg && <span className={`text-sm font-medium ${actionMsg.includes('✅') ? 'text-emerald-400' : 'text-amber-400'}`}>{actionMsg}</span>}
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-[57px] z-10 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 flex gap-0">
+      <div className="sticky top-[57px] z-10 bg-slate-800/70 border-b border-white/5 px-6 flex gap-0">
         {TABS.map(t => {
           const isActive = tab === t.key
           const count = t.key === 'plans' ? pending.length : pendingDelivery.length
@@ -135,23 +135,23 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
         {tab === 'plans' && (
           <div>
             {loading ? (
-              <div className="text-sm text-gray-500 italic p-4 text-center">Chargement...</div>
+              <div className="text-sm text-white/80 italic p-4 text-center">Chargement...</div>
             ) : pending.length === 0 ? (
-              <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 p-12 text-center">
+              <div className="bg-slate-800/70 rounded-2xl border border-white/5 p-12 text-center">
                 <span className="text-5xl block mb-4">✅</span>
-                <h3 className="text-base font-bold text-gray-200">Tous les plans sont approuvés</h3>
-                <p className="text-sm text-gray-500 mt-1">Aucune approbation de plan en attente.</p>
+                <h3 className="text-base font-bold text-white">Tous les plans sont approuvés</h3>
+                <p className="text-sm text-white/80 mt-1">Aucune approbation de plan en attente.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {pending.map(order => (
-                  <div key={order.id} className="bg-white/[0.04] backdrop-blur-xl rounded-xl border border-amber-500/20 p-5 flex items-center justify-between hover:shadow-md hover:border-amber-500/30 transition-all">
+                  <div key={order.id} className="bg-slate-800/70 rounded-xl border border-amber-500/20 p-5 flex items-center justify-between hover:shadow-md hover:border-amber-500/30 transition-all">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-xl flex-shrink-0">📐</div>
                       <div>
-                        <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
-                        <p className="text-xs text-gray-400">{order.clientName} <span className="text-gray-400">—</span> {order.clientCity}</p>
-                        <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-500">
+                        <p className="text-sm font-bold text-white font-mono">{order.serialNumber}</p>
+                        <p className="text-xs text-white">{order.clientName} <span className="text-white">—</span> {order.clientCity}</p>
+                        <div className="flex items-center gap-2 mt-1 text-[10px] text-white/80">
                           <span>{order.typeMotorisation}</span>
                           <span>•</span>
                           <span>Gaine: {order.largeurGaineMm}×{order.profondeurGaineMm}</span>
@@ -166,7 +166,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
                       </button>
                       {onFiche && (
                         <button onClick={() => onFiche(order.id)}
-                          className="px-2.5 py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.1] transition-all">📄</button>
+                          className="px-2.5 py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-white hover:bg-white/[0.1] transition-all">📄</button>
                       )}
                     </div>
                   </div>
@@ -177,18 +177,18 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
             {/* Recent orders */}
             {recent.length > 0 && (
               <div className="mt-8">
-                <h3 className="text-sm font-bold text-gray-400 mb-3">⚙️ En cours de traitement ({recent.length})</h3>
+                <h3 className="text-sm font-bold text-white mb-3">⚙️ En cours de traitement ({recent.length})</h3>
                 <div className="space-y-2">
                   {recent.slice(0, 5).map(order => (
-                    <div key={order.id} className="bg-white/[0.04] backdrop-blur-xl rounded-xl border border-white/5 p-3.5 flex items-center justify-between">
+                    <div key={order.id} className="bg-slate-800/70 rounded-xl border border-white/5 p-3.5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-lg">⚙️</span>
                         <div>
-                          <p className="text-xs font-bold text-gray-300 font-mono">{order.serialNumber}</p>
-                          <p className="text-[10px] text-gray-500">{order.clientName}</p>
+                          <p className="text-xs font-bold text-white/80 font-mono">{order.serialNumber}</p>
+                          <p className="text-[10px] text-white/80">{order.clientName}</p>
                         </div>
                       </div>
-                      <span className="text-[10px] font-semibold text-gray-500 bg-white/10 px-2.5 py-1 rounded">
+                      <span className="text-[10px] font-semibold text-white/80 bg-white/10 px-2.5 py-1 rounded">
                         {order.status === 'ATTENTE_DESSIN_2D' ? 'Dessin 2D' : 'Vérification'}
                       </span>
                     </div>
@@ -212,23 +212,23 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
               </h2>
 
               {loading ? (
-                <div className="text-sm text-gray-500 italic p-4 text-center">Chargement...</div>
+                <div className="text-sm text-white/80 italic p-4 text-center">Chargement...</div>
               ) : pendingDelivery.length === 0 ? (
-                <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 p-12 text-center">
+                <div className="bg-slate-800/70 rounded-2xl border border-white/5 p-12 text-center">
                   <span className="text-5xl block mb-4">🚚</span>
-                  <h3 className="text-base font-bold text-gray-200">Aucune livraison en attente</h3>
-                  <p className="text-sm text-gray-500 mt-1">Les livraisons prêtes apparaîtront ici pour validation.</p>
+                  <h3 className="text-base font-bold text-white">Aucune livraison en attente</h3>
+                  <p className="text-sm text-white/80 mt-1">Les livraisons prêtes apparaîtront ici pour validation.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {pendingDelivery.map(order => (
-                    <div key={order.id} className="bg-white/[0.04] backdrop-blur-xl rounded-xl border border-cyan-500/20 p-5 flex items-center justify-between hover:shadow-md hover:border-cyan-500/30 transition-all">
+                    <div key={order.id} className="bg-slate-800/70 rounded-xl border border-cyan-500/20 p-5 flex items-center justify-between hover:shadow-md hover:border-cyan-500/30 transition-all">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center text-xl flex-shrink-0">🚛</div>
                         <div>
-                          <p className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</p>
-                          <p className="text-xs text-gray-400">{order.clientName} <span className="text-gray-400">—</span> {order.clientCity}</p>
-                          <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-500">
+                          <p className="text-sm font-bold text-white font-mono">{order.serialNumber}</p>
+                          <p className="text-xs text-white">{order.clientName} <span className="text-white">—</span> {order.clientCity}</p>
+                          <div className="flex items-center gap-2 mt-1 text-[10px] text-white/80">
                             <span>{order.typeMotorisation}</span>
                             <span>•</span>
                             <span>Gaine: {order.largeurGaineMm}×{order.profondeurGaineMm}</span>
@@ -243,7 +243,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
                         </button>
                         {onFiche && (
                           <button onClick={() => onFiche(order.id)}
-                            className="px-2.5 py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.1] transition-all">📄</button>
+                            className="px-2.5 py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-white hover:bg-white/[0.1] transition-all">📄</button>
                         )}
                       </div>
                     </div>
@@ -260,12 +260,12 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
                 </h3>
                 <div className="space-y-2">
                   {delivered.slice(0, 5).map(order => (
-                    <div key={order.id} className="bg-white/[0.04] backdrop-blur-xl rounded-xl border border-emerald-500/20 p-3.5 flex items-center justify-between">
+                    <div key={order.id} className="bg-slate-800/70 rounded-xl border border-emerald-500/20 p-3.5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-sm">✅</span>
                         <div>
-                          <p className="text-xs font-bold text-gray-300 font-mono">{order.serialNumber}</p>
-                          <p className="text-[10px] text-gray-500">{order.clientName} — {order.clientCity}</p>
+                          <p className="text-xs font-bold text-white/80 font-mono">{order.serialNumber}</p>
+                          <p className="text-[10px] text-white/80">{order.clientName} — {order.clientCity}</p>
                         </div>
                       </div>
                       <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/15 px-2.5 py-1 rounded">Livrée</span>
@@ -292,14 +292,14 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
 }) {
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex-shrink-0 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
+      <div className="flex-shrink-0 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400">
+          <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           </button>
           <div>
-            <h2 className="text-sm font-extrabold text-gray-200 font-mono">{order.serialNumber}</h2>
-            <p className="text-[11px] text-gray-500">{order.clientName} — {order.clientCity} • {order.typeMotorisation}</p>
+            <h2 className="text-sm font-extrabold text-white font-mono">{order.serialNumber}</h2>
+            <p className="text-[11px] text-white/80">{order.clientName} — {order.clientCity} • {order.typeMotorisation}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -311,7 +311,7 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
             className="px-5 py-2.5 rounded-xl text-sm font-bold bg-red-600 hover:bg-red-700 text-white shadow-md disabled:opacity-50 flex items-center gap-2">
             ❌ Rejeter
           </button>
-          {onFiche && <button onClick={() => onFiche(order.id)} className="px-3 py-2.5 rounded-xl text-xs font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.1]">📄 Fiche</button>}
+          {onFiche && <button onClick={() => onFiche(order.id)} className="px-3 py-2.5 rounded-xl text-xs font-semibold bg-white/[0.06] text-white hover:bg-white/[0.1]">📄 Fiche</button>}
         </div>
       </div>
 
@@ -333,12 +333,12 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
       {showReject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 w-[420px] border border-white/10">
-            <h3 className="text-base font-bold text-gray-200 mb-3">Motif du rejet</h3>
+            <h3 className="text-base font-bold text-white mb-3">Motif du rejet</h3>
             <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
               placeholder="Décrivez la raison du rejet..." rows={3}
-              className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 resize-none"/>
+              className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white placeholder:text-white/80 focus:outline-none focus:ring-2 focus:ring-red-500/30 resize-none"/>
             <div className="flex items-center gap-2 mt-4 justify-end">
-              <button onClick={() => setShowReject(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:bg-white/[0.06]">Annuler</button>
+              <button onClick={() => setShowReject(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/[0.06]">Annuler</button>
               <button onClick={() => onReject(order.id)} disabled={submitting}
                 className="px-4 py-2 rounded-xl text-sm font-bold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">Confirmer le rejet</button>
             </div>
@@ -368,19 +368,19 @@ function DeliveryDetail({ order, onBack, onConfirm, submitting, actionMsg, setAc
   return (
     <div className="h-screen flex flex-col">
       {/* Top bar */}
-      <div className="flex-shrink-0 bg-white/[0.04] backdrop-blur-xl border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
+      <div className="flex-shrink-0 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-gray-400">
+          <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           </button>
           <div>
-            <h2 className="text-sm font-extrabold text-gray-200 font-mono">{order.serialNumber}</h2>
-            <p className="text-[11px] text-gray-500">{order.clientName} — {order.clientCity}</p>
+            <h2 className="text-sm font-extrabold text-white font-mono">{order.serialNumber}</h2>
+            <p className="text-[11px] text-white/80">{order.clientName} — {order.clientCity}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {onFiche && <button onClick={() => onFiche(order.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-gray-400 hover:bg-white/[0.1]">📄 Fiche Technique</button>}
-          <button onClick={onBack} className="px-3 py-2 rounded-lg text-xs font-semibold border border-white/10 text-gray-400 hover:bg-white/[0.06]">Retour</button>
+          {onFiche && <button onClick={() => onFiche(order.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-white hover:bg-white/[0.1]">📄 Fiche Technique</button>}
+          <button onClick={onBack} className="px-3 py-2 rounded-lg text-xs font-semibold border border-white/10 text-white hover:bg-white/[0.06]">Retour</button>
         </div>
       </div>
 
@@ -398,9 +398,9 @@ function DeliveryDetail({ order, onBack, onConfirm, submitting, actionMsg, setAc
             <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-5">
               <span className="text-4xl">✅</span>
             </div>
-            <h2 className="text-xl font-bold text-gray-200 mb-2">Livraison confirmée !</h2>
-            <p className="text-sm text-gray-500">La commande {order.serialNumber} est marquée comme livrée.</p>
-            <p className="text-sm text-gray-500 mt-1">Le cycle de vie de cette commande est terminé.</p>
+            <h2 className="text-xl font-bold text-white mb-2">Livraison confirmée !</h2>
+            <p className="text-sm text-white/80">La commande {order.serialNumber} est marquée comme livrée.</p>
+            <p className="text-sm text-white/80 mt-1">Le cycle de vie de cette commande est terminé.</p>
             <button onClick={onBack}
               className="mt-6 px-6 py-2.5 rounded-xl bg-white/[0.08] text-white text-sm font-bold hover:bg-white/[0.12] transition-all">
               ← Retour aux validations
@@ -409,35 +409,35 @@ function DeliveryDetail({ order, onBack, onConfirm, submitting, actionMsg, setAc
         ) : (
           <div className="max-w-2xl mx-auto space-y-6">
             {/* Delivery summary card */}
-            <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-sm">
+            <div className="bg-slate-800/70 rounded-2xl border border-white/5 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center text-2xl">🚛</div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-200">Confirmation de Livraison</h3>
-                  <p className="text-xs text-gray-500">Veuillez vérifier et confirmer la livraison de cette commande.</p>
+                  <h3 className="text-base font-bold text-white">Confirmation de Livraison</h3>
+                  <p className="text-xs text-white/80">Veuillez vérifier et confirmer la livraison de cette commande.</p>
                 </div>
               </div>
 
-              <div className="bg-white/[0.04] border border-white/5 rounded-xl p-4 space-y-3 mb-4">
+              <div className="bg-slate-800/60 border border-white/10 rounded-xl p-4 space-y-3 mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Commande</span>
-                  <span className="text-sm font-bold text-gray-200 font-mono">{order.serialNumber}</span>
+                  <span className="text-xs text-white/80">Commande</span>
+                  <span className="text-sm font-bold text-white font-mono">{order.serialNumber}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Client</span>
-                  <span className="text-sm font-semibold text-gray-200">{order.clientName}</span>
+                  <span className="text-xs text-white/80">Client</span>
+                  <span className="text-sm font-semibold text-white">{order.clientName}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Ville</span>
-                  <span className="text-sm font-semibold text-gray-200">{order.clientCity}</span>
+                  <span className="text-xs text-white/80">Ville</span>
+                  <span className="text-sm font-semibold text-white">{order.clientCity}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Motorisation</span>
-                  <span className="text-sm font-semibold text-gray-200">{order.typeMotorisation}</span>
+                  <span className="text-xs text-white/80">Motorisation</span>
+                  <span className="text-sm font-semibold text-white">{order.typeMotorisation}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Date de création</span>
-                  <span className="text-sm font-semibold text-gray-200">{createdAt}</span>
+                  <span className="text-xs text-white/80">Date de création</span>
+                  <span className="text-sm font-semibold text-white">{createdAt}</span>
                 </div>
               </div>
 
@@ -454,7 +454,7 @@ function DeliveryDetail({ order, onBack, onConfirm, submitting, actionMsg, setAc
                   {submitting ? '⏳ Confirmation...' : '✅ Confirmer la livraison'}
                 </button>
                 <button onClick={onBack}
-                  className="px-6 py-3 rounded-xl border border-white/10 text-gray-400 text-sm font-semibold hover:bg-white/[0.06] transition-all">
+                  className="px-6 py-3 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/[0.06] transition-all">
                   Annuler
                 </button>
               </div>

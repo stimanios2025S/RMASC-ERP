@@ -75,8 +75,8 @@ export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
-          <h2 className="text-lg font-extrabold text-gray-200">📦 Archives</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-lg font-extrabold text-white">📦 Archives</h2>
+          <p className="text-xs text-white/60 mt-0.5">
             {orders.length} commande{orders.length !== 1 ? 's' : ''} archivée{orders.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -84,7 +84,7 @@ export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: 
           <select
             value={statusFilter}
             onChange={e => { setStatusFilter(e.target.value); setLoading(true) }}
-            className="h-9 px-3 rounded-xl border border-white/10 bg-white/[0.04] text-xs text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            className="h-9 px-3 rounded-xl border border-white/10 bg-slate-800/60 text-xs text-white/80 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
           >
             <option value="">Tous les statuts</option>
             <option value="LIVREE">Livrée</option>
@@ -96,7 +96,7 @@ export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: 
 
       {/* Search Bar */}
       <div className="relative mb-4">
-        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
@@ -105,10 +105,10 @@ export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: 
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Rechercher par nom de projet, client, ville ou N° de série..."
-          className="w-full h-10 pl-10 pr-4 rounded-xl border border-white/10 bg-white/[0.04] text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/30 transition-all"
+          className="w-full h-10 pl-10 pr-4 rounded-xl border border-white/10 bg-slate-800/60 text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/30 transition-all"
         />
         {search && (
-          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 text-sm">✕</button>
+          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white text-sm">✕</button>
         )}
       </div>
 
@@ -116,15 +116,15 @@ export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: 
       {loading ? (
         <div className="text-center py-12">
           <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-amber-400 animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Chargement des archives...</p>
+          <p className="text-sm text-white/60">Chargement des archives...</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
           <span className="text-4xl block mb-3">📭</span>
-          <p className="text-sm text-gray-500 font-medium">
+          <p className="text-sm text-white/60 font-medium">
             {search ? `Aucun résultat pour "${search}"` : 'Aucune commande archivée'}
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-white/60 mt-1">
             {search ? 'Essayez un autre terme de recherche.' : 'Les commandes terminées apparaîtront ici.'}
           </p>
         </div>
@@ -133,27 +133,27 @@ export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: 
           {filtered.map(order => (
             <div key={order.id}
               onClick={() => onSelectOrder?.(order.id)}
-              className="bg-white/[0.03] rounded-xl border border-white/5 px-4 py-3.5 hover:bg-white/[0.06] transition-all cursor-pointer group">
+              className="bg-slate-800/60 rounded-xl border border-white/5 px-4 py-3.5 hover:bg-white/[0.06] transition-all cursor-pointer group">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-bold font-mono text-gray-200">{order.serialNumber}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[order.status] || 'bg-white/10 text-gray-400'}`}>
+                    <span className="text-sm font-bold font-mono text-white">{order.serialNumber}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[order.status] || 'bg-white/15 text-white/80'}`}>
                       {STATUS_LABELS[order.status] || order.status}
                     </span>
                     {order.priority === 'URGENT' && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-400">🔴 Urgent</span>
                     )}
                   </div>
-                  <p className="text-sm font-semibold text-gray-300">{order.clientName} — {order.clientCity}</p>
-                  <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+                  <p className="text-sm font-semibold text-white/80">{order.clientName} — {order.clientCity}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-white/60">
                     {order.projectName && <span>🏗️ {order.projectName}</span>}
                     <span>⚡ {order.typeMotorisation}</span>
                     <span>📐 {order.largeurGaineMm}×{order.profondeurGaineMm}×{order.hauteurGaineMm} mm</span>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-[10px] text-gray-500">Créé le {fmtDate(order.createdAt)}</p>
+                  <p className="text-[10px] text-white/60">Créé le {fmtDate(order.createdAt)}</p>
                   {order.completedAt && (
                     <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">✅ {fmtDate(order.completedAt)}</p>
                   )}
@@ -166,7 +166,7 @@ export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: 
 
       {/* Count summary */}
       {!loading && filtered.length > 0 && (
-        <p className="text-[10px] text-gray-500 text-center mt-4">
+        <p className="text-[10px] text-white/60 text-center mt-4">
           {search ? `${filtered.length} résultat${filtered.length > 1 ? 's' : ''} trouvé${filtered.length > 1 ? 's' : ''}` : `${filtered.length} commande${filtered.length > 1 ? 's' : ''} affichée${filtered.length > 1 ? 's' : ''}`}
         </p>
       )}

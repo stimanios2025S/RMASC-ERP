@@ -1,62 +1,210 @@
-// RMASC FACTORY — Service Worker (PWA)
-// Enables offline caching and "Add to Home Screen" capability.
-const CACHE = 'rmasc-erp-v2'
+// ─── RMASC FACTORY — Service Worker v2.6.0 ──────────────────────────────
+// Stratégie : Cache-first pour les assets, réseau d'abord pour l'API.
+// File d'attente offline pour les mutations (POST/PATCH/DELETE).
+// Sync automatique via Background Sync API quand la connexion revient.
 
-// Core assets to pre-cache on install
-const PRE_CACHE = [
+const SW_VERSION = 'v2.6.0'
+const CACHE_STATIC = 'rmasc-static'
+const CACHE_DYNAMIC = 'rmasc-dynamic'
+const CACHE_ASSETS = 'rmasc-assets'
+
+const STATIC_URLS = [
   '/',
+  '/index.html',
   '/manifest.json',
   '/images/icon-192.svg',
   '/images/icon-512.svg',
+  '/images/rmasc-logo.svg',
+  '/images/rmasc-logo.png',
 ]
 
+const API_PREFIX = '/api'
+
+// ─── INSTALL ───────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
+  self.skipWaiting()
   event.waitUntil(
-    caches.open(CACHE).then((cache) => {
-      // Pre-cache assets (non-blocking — failures are silent)
+    caches.open(CACHE_STATIC).then((cache) => {
       return Promise.allSettled(
-        PRE_CACHE.map((url) =>
-          cache.add(url).catch(() => {
-            /* asset may not exist yet; skip */
-          })
-        )
+        STATIC_URLS.map((url) => cache.add(url).catch(() => {}))
       )
     })
   )
-  self.skipWaiting()
 })
 
+// ─── ACTIVATE ──────────────────────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-  // Clean old caches
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))
+        keys
+          .filter((k) => k.startsWith('rmasc-') && k !== CACHE_STATIC && k !== CACHE_DYNAMIC && k !== CACHE_ASSETS)
+          .map((k) => caches.delete(k))
       )
-    )
+    ).then(() => self.clients.claim())
   )
-  event.waitUntil(clients.claim())
 })
 
+// ─── FETCH ─────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests to our own origin
-  if (event.request.method !== 'GET') return
+  const { request } = event
+  const url = new URL(request.url)
 
-  // Skip API calls — never cache dynamic data
-  if (event.request.url.includes('/api/')) return
+  // API calls: Network First with cache fallback
+  if (url.pathname.startsWith(API_PREFIX)) {
+    event.respondWith(networkFirstWithQueue(request))
+    return
+  }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200 && response.type === 'basic') {
-            const clone = response.clone()
-            caches.open(CACHE).then((cache) => cache.put(event.request, clone))
-          }
-          return response
-        })
-        .catch(() => cached || new Response('Offline', { status: 503 }))
-      return cached || fetchPromise
-    })
-  )
+  // Static assets (JS, CSS, images): Cache First
+  if (isStaticAsset(request)) {
+    event.respondWith(cacheFirst(request))
+    return
+  }
+
+  // Navigation: Network First with offline fallback
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirstWithOfflineFallback(request))
+    return
+  }
+
+  // Default: Network only
+  event.respondWith(fetch(request).catch(() => new Response('Offline', { status: 503 })))
 })
+
+// ─── STRATÉGIES ─────────────────────────────────────────────────────────────
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
+  try {
+    const response = await fetch(request)
+    if (response.ok && request.method === 'GET') {
+      const cache = await caches.open(CACHE_ASSETS)
+      cache.put(request, response.clone())
+    }
+    return response
+  } catch {
+    return new Response('Resource offline', { status: 503 })
+  }
+}
+
+async function networkFirstWithQueue(request) {
+  try {
+    const response = await fetch(request)
+    if (response.ok && request.method === 'GET') {
+      const cache = await caches.open(CACHE_DYNAMIC)
+      cache.put(request, response.clone())
+    }
+    return response
+  } catch {
+    const cached = await caches.match(request)
+    if (cached) return cached
+    // Queue mutations for later sync
+    if (request.method !== 'GET') {
+      await addToQueue(request)
+      return new Response(JSON.stringify({ offline: true, queued: true, message: 'File d\'attente offline' }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+    return new Response(JSON.stringify({ offline: true, error: 'Hors-ligne' }), {
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+}
+
+async function networkFirstWithOfflineFallback(request) {
+  try {
+    const response = await fetch(request)
+    if (response.ok) {
+      const cache = await caches.open(CACHE_DYNAMIC)
+      cache.put(request, response.clone())
+    }
+    return response
+  } catch {
+    const cached = await caches.match(request)
+    if (cached) return cached
+    return caches.match('/index.html') || new Response('Hors-ligne', { status: 503 })
+  }
+}
+
+// ─── FILE D'ATTENTE OFFLINE (IndexedDB) ────────────────────────────────────
+async function addToQueue(request) {
+  try {
+    const db = await openDB()
+    const tx = db.transaction('queue', 'readwrite')
+    const store = tx.objectStore('queue')
+    const clone = request.clone()
+    const body = await clone.text()
+    store.add({
+      id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      url: request.url,
+      method: request.method,
+      headers: JSON.stringify(Array.from(request.headers.entries())),
+      body: body || null,
+      createdAt: new Date().toISOString(),
+      retries: 0,
+    })
+  } catch (err) {
+    console.error('[SW] Queue error:', err)
+  }
+}
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('rmasc-offline-queue', 1)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains('queue')) {
+        db.createObjectStore('queue', { keyPath: 'id' })
+      }
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+// ─── SYNC ──────────────────────────────────────────────────────────────────
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-rmasc') event.waitUntil(processQueue())
+})
+
+async function processQueue() {
+  try {
+    const db = await openDB()
+    const tx = db.transaction('queue', 'readonly')
+    const entries = await new Promise((resolve) => {
+      const req = tx.objectStore('queue').getAll()
+      req.onsuccess = () => resolve(req.result || [])
+      req.onerror = () => resolve([])
+    })
+    for (const entry of entries) {
+      try {
+        await fetch(entry.url, {
+          method: entry.method,
+          headers: JSON.parse(entry.headers).reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}),
+          body: entry.body || undefined,
+        })
+        const delTx = db.transaction('queue', 'readwrite')
+        delTx.objectStore('queue').delete(entry.id)
+      } catch {
+        entry.retries++
+        if (entry.retries < 5) {
+          const updTx = db.transaction('queue', 'readwrite')
+          updTx.objectStore('queue').put(entry)
+        }
+      }
+    }
+  } catch {}
+}
+
+// ─── MESSAGE HANDLER ────────────────────────────────────────────────────────
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting()
+})
+
+// ─── UTILITIES ──────────────────────────────────────────────────────────────
+function isStaticAsset(request) {
+  const ext = new URL(request.url).pathname.split('.').pop()?.toLowerCase()
+  return ['js', 'css', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'woff', 'woff2', 'ttf'].includes(ext || '')
+}
