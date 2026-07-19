@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import FileViewer from './FileViewer'
 import { apiFetch } from '../config/api'
 import { getUploads } from '../config/runtime-store'
-import { getSession } from '../data/portalUsers'
 import { PageBackground } from './PageBackground'
 
 interface OrderRow {
@@ -11,6 +10,16 @@ interface OrderRow {
   largeurGaineMm: string; profondeurGaineMm: string; hauteurGaineMm: string
   materiauCabine: string | null; materiauPortes: string | null
   _count: { cadSubmissions: number }
+}
+
+interface ServerFile {
+  _id: string
+  originalname: string
+  mimetype: string
+  size: number
+  uploadedBy: string
+  uploadedAt: string
+  filename: string
 }
 
 interface Props {
@@ -45,6 +54,15 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
   }
 
   useEffect(() => { load() }, [])
+
+  // Auto-refresh every 6 seconds (like engineer portal) so admin sees new submissions
+  useEffect(() => {
+    const iv = setInterval(load, 6000)
+    const onFocus = () => load()
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) load() })
+    return () => { clearInterval(iv); window.removeEventListener('focus', onFocus) }
+  }, [])
 
   const pending = orders.filter(o => o.status === 'ATTENTE_APPROBATION_ADMIN')
   const pendingDelivery = orders.filter(o => o.status === 'EN_LIVRAISON')
@@ -282,7 +300,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  CAD REVIEW OVERLAY
+//  CAD REVIEW OVERLAY — Server-backed file viewer
 // ═══════════════════════════════════════════════════════════════════════════
 
 function CadReview({ order, onBack, onApprove, onReject, rejectReason, setRejectReason, showReject, setShowReject, submitting, actionMsg, setActionMsg, onFiche }: {
@@ -290,8 +308,97 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
   rejectReason: string; setRejectReason: (v: string) => void; showReject: boolean; setShowReject: (v: boolean) => void
   submitting: boolean; actionMsg: string | null; setActionMsg: (v: string | null) => void; onFiche?: (id: string) => void
 }) {
+  const [files, setFiles] = useState<ServerFile[]>([])
+  const [filesLoading, setFilesLoading] = useState(true)
+  const [selectedFile, setSelectedFile] = useState<ServerFile | null>(null)
+  const [listView, setListView] = useState(true)
+  // Blob URL for the selected file (auth-fetched via API)
+  const [fileBlobUrl, setFileBlobUrl] = useState<string | null>(null)
+
+  // Fetch files list from server on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const data: { files: ServerFile[] } = await apiFetch(`/orders/${order.id}/files`)
+        setFiles(data.files || [])
+        // Auto-select first PDF if available
+        const firstPdf = (data.files || []).find(f => f.mimetype === 'application/pdf')
+        if (firstPdf) { setSelectedFile(firstPdf); setListView(false) }
+      } catch {}
+      finally { setFilesLoading(false) }
+    })()
+  }, [order.id])
+
+  // When selected file changes, fetch its binary (with auth) and create blob URL
+  useEffect(() => {
+    if (!selectedFile) { setFileBlobUrl(null); return }
+    let cancelled = false
+    let currentBlobUrl: string | null = null
+    const token = localStorage.getItem('rmasc_token')
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/orders/${order.id}/files/${selectedFile._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const blob = await res.blob()
+        if (!cancelled) {
+          currentBlobUrl = URL.createObjectURL(blob)
+          setFileBlobUrl(currentBlobUrl)
+        }
+      } catch {}
+    })()
+    return () => {
+      cancelled = true
+      if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl)
+    }
+  }, [selectedFile?._id])
+
+  // Also check legacy local uploads
+  const localUploads = (() => { try { return getUploads(order.id) } catch { return [] } })()
+
+  const formatSize = (bytes: number) => {
+    if (!bytes) return '—'
+    if (bytes < 1024) return `${bytes} o`
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} Ko`
+    return `${(bytes / 1048576).toFixed(1)} Mo`
+  }
+
+  const formatDate = (d: string) => {
+    try { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }
+    catch { return d }
+  }
+
+  const downloadFile = async (f: ServerFile) => {
+    try {
+      const token = localStorage.getItem('rmasc_token')
+      const res = await fetch(`/api/orders/${order.id}/files/${f._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) return
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = f.originalname
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch {}
+  }
+
+  const getFileIcon = (mime: string) => {
+    if (mime === 'application/pdf') return '📄'
+    if (mime?.startsWith('image/')) return '🖼️'
+    if (mime?.includes('dwg') || mime?.includes('dxf')) return '📐'
+    if (mime?.includes('zip') || mime?.includes('rar')) return '🗜️'
+    return '📁'
+  }
+
   return (
     <div className="h-screen flex flex-col">
+      {/* ── Top bar ── */}
       <div className="flex-shrink-0 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white">
@@ -302,7 +409,14 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
             <p className="text-[11px] text-white/80">{order.clientName} — {order.clientCity} • {order.typeMotorisation}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Toggle: file list / viewer */}
+          {selectedFile && (
+            <button onClick={() => { setListView(!listView); if (listView) setFileBlobUrl(null) }}
+              className="px-3 py-2 rounded-xl text-xs font-semibold bg-white/[0.08] text-white hover:bg-white/[0.12] transition-all">
+              {listView ? '👁️ Voir le document' : '📋 Liste des fichiers'}
+            </button>
+          )}
           <button onClick={() => onApprove(order.id)} disabled={submitting}
             className="px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md disabled:opacity-50 flex items-center gap-2">
             ✅ Approuver le Plan
@@ -322,12 +436,94 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
         </div>
       )}
 
-      <div className="flex-1 overflow-hidden p-4">
-        {(() => {
-          let uploadData: { data: string; name: string; type: string } | null = null
-          try { const uploads = getUploads(order.id); uploadData = uploads[0] || null } catch {}
-          return <FileViewer fileData={uploadData?.data} fileName={uploadData?.name} fileType={uploadData?.type} />
-        })()}
+      {/* ── Main content area ── */}
+      <div className="flex-1 overflow-hidden">
+        {filesLoading ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-sm text-white/60">Chargement des fichiers...</div>
+          </div>
+        ) : listView || !selectedFile ? (
+          /* ── FILE LIST VIEW ── */
+          <div className="h-full overflow-y-auto p-6">
+            <div className="max-w-4xl mx-auto">
+              {/* Section: Server files */}
+              <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                📂 Fichiers du dossier
+                <span className="text-xs font-normal text-white/60">({files.length} fichier{files.length > 1 ? 's' : ''})</span>
+              </h3>
+
+              {files.length === 0 && localUploads.length === 0 ? (
+                <div className="bg-slate-800/70 rounded-2xl border border-white/5 p-12 text-center">
+                  <span className="text-5xl block mb-4">📄</span>
+                  <h3 className="text-base font-bold text-white">Aucun fichier trouvé</h3>
+                  <p className="text-sm text-white/80 mt-1">L'ingénieur n'a pas encore déposé de fichier pour cette commande.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {files.map(f => (
+                    <div key={f._id}
+                      className={`bg-slate-800/70 rounded-xl border transition-all p-4 flex items-center justify-between cursor-pointer hover:shadow-md ${
+                        selectedFile?._id === f._id ? 'border-amber-500/50 bg-slate-700/70' : 'border-white/5 hover:border-white/10'
+                      }`}
+                      onClick={() => { setSelectedFile(f); setListView(false) }}>
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center text-lg flex-shrink-0">
+                          {getFileIcon(f.mimetype)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-white truncate max-w-[400px]">{f.originalname}</p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-[10px] text-white/60">
+                            <span>📤 {f.uploadedBy || 'Ingénieur'}</span>
+                            <span>📅 {formatDate(f.uploadedAt)}</span>
+                            <span>📦 {formatSize(f.size)}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-white/5 text-[9px]">{f.mimetype}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedFile(f); setListView(false) }}
+                          className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all">
+                          👁️ Voir
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); downloadFile(f) }}
+                          className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 transition-all flex items-center gap-1">
+                          ⬇️ Télécharger
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Legacy local uploads (same-browser) */}
+              {localUploads.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-xs font-semibold text-white/60 mb-2 flex items-center gap-2">
+                    🖥️ Fichiers locaux (ce navigateur uniquement)
+                    <span className="text-[10px] text-white/40">({localUploads.length})</span>
+                  </h4>
+                  <div className="space-y-1.5">
+                    {localUploads.map((u, i) => (
+                      <div key={i} className="bg-slate-800/50 rounded-lg border border-white/5 p-3 flex items-center justify-between">
+                        <span className="text-xs text-white/70 truncate max-w-[300px]">{u.name}</span>
+                        <span className="text-[10px] text-white/40">{u.type}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* ── FILE VIEWER ── */
+          <div className="h-full p-4">
+            <FileViewer
+              fileUrl={fileBlobUrl || undefined}
+              fileName={selectedFile?.originalname}
+              fileType={selectedFile?.mimetype}
+            />
+          </div>
+        )}
       </div>
 
       {showReject && (

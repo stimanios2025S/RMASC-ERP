@@ -8,6 +8,7 @@ import FileManager from './FileManager'
 import AgentPanel from './agent/AgentPanel'
 import SmartSearch from './smart/SmartSearch'
 import ArchiveOrders from './ArchiveOrders'
+import PiecesSoloWorkspace from './PiecesSoloWorkspace'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -31,7 +32,7 @@ const PHASES = [
 ]
 
 export default function ProductionWorkspace({ onBack, session }: Props) {
-  const [tab, setTab] = useState<'production' | 'archives'>('production')
+  const [tab, setTab] = useState<'production' | 'pieces-solo' | 'archives'>('production')
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [activePhase, setActivePhase] = useState('decoupe')
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null)
@@ -127,10 +128,41 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         </header>
         <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0">
           <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🏭 Production</button>
+          <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🔧 Pièces Solo</button>
           <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white">📦 Archives</button>
         </div>
         <div className="flex-1 overflow-y-auto">
           <ArchiveOrders />
+        </div>
+      </PageBackground>
+    )
+  }
+
+  // ── Pièces Solo tab (embedded within main layout like IngenieurPortal) ─
+  if (tab === 'pieces-solo') {
+    // This replaces the main production view — swaps in the solo-parts workspace
+    // instead of the phase-browser. The header/tabs still show but the content
+    // area is given entirely to PiecesSoloWorkspace.
+    return (
+      <PageBackground className="h-full flex flex-col">
+        <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🏭</span></div>
+              <div><h1 className="text-lg font-extrabold text-white">Production & Atelier</h1><p className="text-[11px] text-white font-semibold">{orders.length} commandes actives</p></div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setTab('production')} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all flex items-center gap-1">🏭 Retour Production</button>
+            <button onClick={() => setShowAgent(p => !p)}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
+              title="Assistant IA Salim (⌘I)"><span className="text-base">🤖</span></button>
+            {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
+          </div>
+        </header>
+        <div className="flex-1 overflow-hidden">
+          <PiecesSoloWorkspace session={session} />
         </div>
       </PageBackground>
     )
@@ -160,8 +192,9 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
 
       {/* Tabs */}
       <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0">
-        <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white">🏭 Production</button>
-        <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">📦 Archives</button>
+        <button onClick={() => setTab('production')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${tab === 'production' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🏭 Production</button>
+        <button onClick={() => setTab('pieces-solo')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${tab === 'pieces-solo' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🔧 Pièces Solo</button>
+        <button onClick={() => setTab('archives')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${tab === 'archives' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>📦 Archives</button>
       </div>
 
       {/* Phase tabs */}
