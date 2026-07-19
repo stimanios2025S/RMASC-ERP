@@ -19,7 +19,29 @@ export async function initPortalUsers(): Promise<void> {
 }
 
 export async function login(loginId: string, password: string): Promise<PortalSession | null> {
-  // 1. D'abord essayer localStorage (instantané, pas de backend nécessaire)
+  // 1. D'abord essayer l'API backend pour obtenir un vrai token JWT
+  //    (timeout court de 3s pour ne pas bloquer si le serveur est hors-ligne)
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 3000)
+    const user: any = await fetch('/api/users/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ loginId, password }),
+      signal: controller.signal,
+    }).then(r => r.ok ? r.json() : Promise.reject())
+    clearTimeout(timeout)
+    if (user?.token) {
+      try { localStorage.setItem('rmasc_token', user.token) } catch {}
+    }
+    if (user?.userId && user?.name && user?.role) {
+      currentSession = { userId: user.userId, name: user.name, role: user.role, loggedInAt: user.loggedInAt || new Date().toISOString() }
+      saveSession(currentSession)
+      return currentSession
+    }
+  } catch { /* Backend indisponible, fallback vers localStorage */ }
+
+  // 2. Fallback : authentification locale via localStorage (hors-ligne/demo)
   const localUser = localApi.login(loginId, password)
   if (localUser) {
     currentSession = {
@@ -29,27 +51,14 @@ export async function login(loginId: string, password: string): Promise<PortalSe
       loggedInAt: new Date().toISOString(),
     }
     saveSession(currentSession)
-    // 2. En arrière-plan, essayer l'API backend pour avoir un token JWT
-    api.post('/users/login', { loginId, password }).then((user: any) => {
-      if (user?.token) {
-        try { localStorage.setItem('rmasc_token', user.token) } catch {}
-      }
+    // Tenter d'obtenir un token JWT en arrière-plan (non-bloquant)
+    api.post('/users/login', { loginId, password }).then((u: any) => {
+      if (u?.token) { try { localStorage.setItem('rmasc_token', u.token) } catch {} }
     }).catch(() => {})
     return currentSession
   }
 
-  // 3. Fallback : essayer l'API backend (peut prendre du temps si hors-ligne)
-  try {
-    const user: any = await api.post('/users/login', { loginId, password })
-    currentSession = { userId: user.userId, name: user.name, role: user.role, loggedInAt: user.loggedInAt }
-    saveSession(currentSession)
-    if (user.token) {
-      try { localStorage.setItem('rmasc_token', user.token) } catch {}
-    }
-    return currentSession
-  } catch {
-    return null
-  }
+  return null
 }
 
 export function logout(): void {
