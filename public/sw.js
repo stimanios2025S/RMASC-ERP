@@ -1,12 +1,10 @@
-// ─── RMASC FACTORY — Service Worker v2.6.0 ──────────────────────────────
-// Stratégie : Cache-first pour les assets, réseau d'abord pour l'API.
+// ─── RMASC FACTORY — Service Worker v2.7.0 ──────────────────────────────
+// Stratégie : Network-first pour toujours servir le JS le plus récent.
 // File d'attente offline pour les mutations (POST/PATCH/DELETE).
-// Sync automatique via Background Sync API quand la connexion revient.
 
-const SW_VERSION = 'v2.6.0'
-const CACHE_STATIC = 'rmasc-static'
-const CACHE_DYNAMIC = 'rmasc-dynamic'
-const CACHE_ASSETS = 'rmasc-assets'
+const SW_VERSION = 'v2.7.0'
+const CACHE_STATIC = 'rmasc-static-v2'
+const CACHE_DYNAMIC = 'rmasc-dynamic-v2'
 
 const STATIC_URLS = [
   '/',
@@ -38,7 +36,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((k) => k.startsWith('rmasc-') && k !== CACHE_STATIC && k !== CACHE_DYNAMIC && k !== CACHE_ASSETS)
+          .filter((k) => k !== CACHE_STATIC && k !== CACHE_DYNAMIC)
           .map((k) => caches.delete(k))
       )
     ).then(() => self.clients.claim())
@@ -50,19 +48,19 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // API calls: Network First with cache fallback
+  // API calls: Network First
   if (url.pathname.startsWith(API_PREFIX)) {
     event.respondWith(networkFirstWithQueue(request))
     return
   }
 
-  // Static assets (JS, CSS, images): Cache First
+  // Static assets (JS, CSS, images): NETWORK FIRST — always try fresh, cache as fallback
   if (isStaticAsset(request)) {
-    event.respondWith(cacheFirst(request))
+    event.respondWith(networkFirstWithCache(request))
     return
   }
 
-  // Navigation: Network First with offline fallback
+  // Navigation: Network First
   if (request.mode === 'navigate') {
     event.respondWith(networkFirstWithOfflineFallback(request))
     return
@@ -74,18 +72,18 @@ self.addEventListener('fetch', (event) => {
 
 // ─── STRATÉGIES ─────────────────────────────────────────────────────────────
 
-async function cacheFirst(request) {
-  const cached = await caches.match(request)
-  if (cached) return cached
+// Network-first for static assets — always get fresh JS/CSS, fall back to cache
+async function networkFirstWithCache(request) {
   try {
     const response = await fetch(request)
-    if (response.ok && request.method === 'GET') {
-      const cache = await caches.open(CACHE_ASSETS)
+    if (response.ok) {
+      const cache = await caches.open(CACHE_DYNAMIC)
       cache.put(request, response.clone())
     }
     return response
   } catch {
-    return new Response('Resource offline', { status: 503 })
+    const cached = await caches.match(request)
+    return cached || new Response('Offline', { status: 503 })
   }
 }
 

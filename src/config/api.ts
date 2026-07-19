@@ -49,7 +49,9 @@ export async function apiFetch<T = any>(
       clearTimeout(timeout)
 
       if (res.status === 401) {
+        // Token invalid — clear and force re-login
         localStorage.removeItem('rmasc_token')
+        localStorage.removeItem('rmasc_portal_session')
         throw new Error('Session expirée')
       }
 

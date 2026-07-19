@@ -69,19 +69,47 @@ export async function listOrders(req, res) {
 // GET /api/orders/:id
 export async function getOrder(req, res) {
   try {
-    const order = await Order.findById(req.params.id).populate('cadSubmissions')
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'ID de commande invalide.' })
+    }
+    const order = await Order.findById(req.params.id).populate('cadSubmissions').lean()
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    order.id = order._id.toString()
+    if (order.cadSubmissions) {
+      order.cadSubmissions = order.cadSubmissions.map(sub => ({
+        ...sub, id: sub._id ? sub._id.toString() : sub.id,
+      }))
+    }
     res.json(order)
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) {
+    console.error('[getOrder]', e.message)
+    res.status(500).json({ error: 'Erreur lors de la récupération de la commande.' })
+  }
 }
 
 // GET /api/orders/:id/datasheet
 export async function getOrderDatasheet(req, res) {
   try {
-    const order = await Order.findById(req.params.id).populate({ path: 'cadSubmissions', options: { sort: { engineeringType: 1 } } })
+    // Validate MongoDB ObjectId before querying
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'ID de commande invalide.' })
+    }
+    const order = await Order.findById(req.params.id)
+      .populate({ path: 'cadSubmissions', options: { sort: { engineeringType: 1 } } })
+      .lean() // Use lean() for better performance and to avoid circular references
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    // Ensure id field is present for frontend
+    order.id = order._id.toString()
+    if (order.cadSubmissions) {
+      order.cadSubmissions = order.cadSubmissions.map(sub => ({
+        ...sub, id: sub._id ? sub._id.toString() : sub.id,
+      }))
+    }
     res.json(order)
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) {
+    console.error('[getOrderDatasheet]', e.message)
+    res.status(500).json({ error: 'Erreur lors de la récupération des données de la commande.' })
+  }
 }
 
 // POST /api/orders/create-and-sync
