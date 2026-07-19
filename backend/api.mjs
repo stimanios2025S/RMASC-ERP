@@ -224,19 +224,13 @@ app.get('/api/admin/audit-logs/actions', authenticate, requireAdmin, getAuditAct
 app.post('/api/admin/reset-data', authenticate, requireAdmin, resetAllData)
 
 // ═══ SPA FALLBACK — sert le frontend React ═══════════════════════════════
-// Toute requête non-API sera servie par index.html (SPA routing)
+// IMPORTANT: Ce block doit être APRÈS toutes les routes API
 if (SPA_DIR) {
-  // 1. Servir les fichiers statiques (CSS, JS, images)
-  app.use(express.static(SPA_DIR, { index: 'index.html' }))
-  // 2. Fallback SPA — toutes les autres routes → index.html
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api/')) return next()
-    if (req.path.startsWith('/uploads/')) return next()
-    res.sendFile(path.join(SPA_DIR, 'index.html'), (err) => {
-      if (err) next(err)
-    })
+  app.use(express.static(SPA_DIR))
+  app.get(/^(?!\/(api|uploads)\/).*/, (req, res) => {
+    res.sendFile(path.join(SPA_DIR, 'index.html'))
   })
-  console.log(`  🏠 SPA prêt — toutes les routes non-API servent index.html`)
+  console.log(`  🏠 SPA prêt — ${SPA_DIR}`)
 }
 
 // ═══ ERROR HANDLER ═════════════════════════════════════════════════════
