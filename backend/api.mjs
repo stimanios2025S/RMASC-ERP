@@ -77,13 +77,16 @@ for (const dir of CANDIDATES) {
   if (fs.existsSync(dir) && fs.existsSync(indexFile)) {
     console.log(`  📁 Frontend statique: ${dir}`)
     SPA_DIR = dir
-    app.use(express.static(dir))
     break
   }
 }
 if (!SPA_DIR) {
   console.warn(`  ⚠️  Aucun dossier frontend trouvé (dist ou rmasc-dashboard)`)
 }
+
+// ─── SPA middleware (tout ce qui n'est pas /api/ ou /uploads/ sert index.html) ──
+// Ce middleware doit être placé APRÈS toutes les routes API
+// mais AVANT le error handler
 
 // ─── Request timeout (30s) ──────────────────────────────────────────────
 app.use((req, res, next) => {
@@ -220,11 +223,20 @@ app.get('/api/admin/audit-logs/actions', authenticate, requireAdmin, getAuditAct
 // ═══ DATA RESET (admin only) ═══════════════════════════════════════════
 app.post('/api/admin/reset-data', authenticate, requireAdmin, resetAllData)
 
-// ═══ SPA FALLBACK (APRÈS toutes les API) ═══════════════════════════════
+// ═══ SPA FALLBACK — sert le frontend React ═══════════════════════════════
+// Toute requête non-API sera servie par index.html (SPA routing)
 if (SPA_DIR) {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(SPA_DIR, 'index.html'))
+  // 1. Servir les fichiers statiques (CSS, JS, images)
+  app.use(express.static(SPA_DIR, { index: 'index.html' }))
+  // 2. Fallback SPA — toutes les autres routes → index.html
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) return next()
+    if (req.path.startsWith('/uploads/')) return next()
+    res.sendFile(path.join(SPA_DIR, 'index.html'), (err) => {
+      if (err) next(err)
+    })
   })
+  console.log(`  🏠 SPA prêt — toutes les routes non-API servent index.html`)
 }
 
 // ═══ ERROR HANDLER ═════════════════════════════════════════════════════
