@@ -353,6 +353,9 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
           </div>
         </div>
 
+        {/* ── Reset Test Data (Admin only) ── */}
+        {isAdmin && <ResetDataPanel showFeedback={showFeedback} />}
+
         </div>
         )}
       </div>
@@ -361,8 +364,78 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  SEPARATE COMPONENT — Password Manager (avoids React hooks in .map())
+//  RESET TEST DATA PANEL
 // ═══════════════════════════════════════════════════════════════════════════
+
+function ResetDataPanel({ showFeedback }: { showFeedback: (ok: boolean, msg: string) => void }) {
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [resetting, setResetting] = useState(false)
+
+  const handleReset = async () => {
+    setResetting(true)
+    try {
+      // 1. Vider le localStorage (fallback offline)
+      localStorage.removeItem('rmasc_local_orders')
+      localStorage.removeItem('rmasc_vault_files')
+      localStorage.removeItem('rmasc_uploads_cache')
+      localStorage.removeItem('rmasc_seen_tips')
+      localStorage.removeItem('rmasc_local_seeded_v3')
+
+      // 2. Vider MongoDB via l'API
+      const token = localStorage.getItem('rmasc_token')
+      let apiResult = ''
+      try {
+        const res = await fetch('/api/admin/reset-data', {
+          method: 'POST',
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'application/json' },
+        })
+        const data = await res.json()
+        if (res.ok) apiResult = data.message
+        else apiResult = `API: ${data.error || 'Erreur'}`
+      } catch { apiResult = '⚠️ Backend non joignable — localStorage nettoyé' }
+
+      showFeedback(true, `🧹 Données effacées. ${apiResult}`)
+      setShowConfirm(false)
+
+      // 3. Recharger la page pour rafraîchir tous les composants
+      setTimeout(() => window.location.reload(), 1500)
+    } catch (err: any) {
+      showFeedback(false, `❌ ${err.message}`)
+    }
+    setResetting(false)
+  }
+
+  return (
+    <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0 text-lg">🧹</div>
+        <div className="flex-1">
+          <h2 className="text-base font-bold text-white">🧹 Réinitialiser les données de test</h2>
+          <p className="text-xs text-white/60 mt-1">Supprime toutes les commandes, pièces solo, mouvements de stock et logs d'audit.</p>
+          <p className="text-xs text-emerald-400/80 mt-1">✅ Les comptes utilisateurs, articles en stock, fournisseurs et catalogue sont conservés.</p>
+        </div>
+      </div>
+      {!showConfirm ? (
+        <button onClick={() => setShowConfirm(true)}
+          className="mt-4 px-5 py-2.5 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-bold hover:bg-red-500/30 transition-all">
+          🧹 Réinitialiser les données
+        </button>
+      ) : (
+        <div className="mt-4 flex items-center gap-3">
+          <p className="text-xs text-red-400 font-semibold">⚠️ Cette action est irréversible. Confirmer ?</p>
+          <button onClick={handleReset} disabled={resetting}
+            className="px-4 py-2 rounded-lg bg-red-500 text-white text-xs font-bold hover:bg-red-400 transition-all disabled:opacity-50">
+            {resetting ? '⏳...' : '✅ Oui, tout effacer'}
+          </button>
+          <button onClick={() => setShowConfirm(false)}
+            className="px-4 py-2 rounded-lg bg-white/10 text-white text-xs font-medium hover:bg-white/15 transition-all">
+            Annuler
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function UserPasswordManager({ users, roleLabels, showFeedback }: {
   users: PortalUser[]

@@ -90,7 +90,7 @@ const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot:
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_MAP[status] || { label: status, bg: 'bg-gray-50', text: 'text-white/50', dot: 'bg-white/40' }
+  const s = STATUS_MAP[status] || { label: status, bg: 'bg-white/10', text: 'text-white/70', dot: 'bg-white/50' }
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${s.bg} ${s.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
@@ -208,8 +208,8 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-slate-950">
+      <header className="sticky top-0 z-40 bg-slate-900 border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
             <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/60 hover:text-white transition-all">

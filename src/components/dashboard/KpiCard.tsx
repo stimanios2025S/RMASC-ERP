@@ -50,3 +50,5 @@ const KpiCard = React.memo(function KpiCard({ title, value, subtext, icon }: Kpi
     </div>
   )
 })
+
+export default KpiCard

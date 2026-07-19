@@ -42,6 +42,7 @@ import {
 import { sendWhatsApp } from './src/controllers/notifications.js'
 import { subscribe, sendEvent } from './src/controllers/realtime.js'
 import { getAuditLogs, getAuditActions } from './src/controllers/audit.js'
+import { resetAllData } from './src/controllers/reset.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -193,6 +194,9 @@ app.post('/api/realtime/broadcast', authenticate, requireAdmin, sendEvent)
 // Audit Logs (admin only)
 app.get('/api/admin/audit-logs', authenticate, requireAdmin, getAuditLogs)
 app.get('/api/admin/audit-logs/actions', authenticate, requireAdmin, getAuditActions)
+
+// ═══ DATA RESET (admin only) ═══════════════════════════════════════════
+app.post('/api/admin/reset-data', authenticate, requireAdmin, resetAllData)
 
 // ═══ ERROR HANDLER ═════════════════════════════════════════════════════
 app.use((err, _req, res, _next) => {

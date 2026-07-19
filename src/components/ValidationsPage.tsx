@@ -91,7 +91,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
   if (deliveryOrder) return <DeliveryDetail order={deliveryOrder} onBack={() => setDeliveryOrder(null)} onConfirm={confirmDelivery} submitting={submitting} actionMsg={actionMsg} setActionMsg={setActionMsg} onFiche={onFiche} />
 
   return (
-    <PageBackground className="flex-1 overflow-y-auto">
+    <PageBackground className="min-h-full">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
