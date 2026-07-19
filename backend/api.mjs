@@ -63,6 +63,23 @@ app.use(express.json({ limit: '100mb' }))
 app.use(express.urlencoded({ limit: '100mb', extended: true }))
 app.use(auditMiddleware)
 
+// ─── Serve static files (SPA frontend) ────────────────────────────────────
+// Try multiple possible locations for the dist folder
+const STATIC_DIRS = [
+  path.join(__dirname, '..', 'dist'),                    // ~/rmasc-erp/dist
+  path.join(__dirname, '..', '..', 'rmasc-dashboard'),    // ~/rmasc-dashboard
+  path.join(__dirname, '..', '..', 'dist'),               // fallback
+]
+let SPA_DIR = null
+for (const dir of STATIC_DIRS) {
+  if (fs.existsSync(dir) && fs.existsSync(path.join(dir, 'index.html'))) {
+    console.log(`  📁 Frontend statique: ${dir}`)
+    SPA_DIR = dir
+    app.use(express.static(dir))
+    break
+  }
+}
+
 // ─── Request timeout (30s) ──────────────────────────────────────────────
 app.use((req, res, next) => {
   res.setTimeout(30000, () => {
@@ -197,6 +214,13 @@ app.get('/api/admin/audit-logs/actions', authenticate, requireAdmin, getAuditAct
 
 // ═══ DATA RESET (admin only) ═══════════════════════════════════════════
 app.post('/api/admin/reset-data', authenticate, requireAdmin, resetAllData)
+
+// ═══ SPA FALLBACK (APRÈS toutes les API) ═══════════════════════════════
+if (SPA_DIR) {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(SPA_DIR, 'index.html'))
+  })
+}
 
 // ═══ ERROR HANDLER ═════════════════════════════════════════════════════
 app.use((err, _req, res, _next) => {
