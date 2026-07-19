@@ -64,20 +64,25 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }))
 app.use(auditMiddleware)
 
 // ─── Serve static files (SPA frontend) ────────────────────────────────────
-// Try multiple possible locations for the dist folder
-const STATIC_DIRS = [
-  path.join(__dirname, '..', 'dist'),                    // ~/rmasc-erp/dist
-  path.join(__dirname, '..', '..', 'rmasc-dashboard'),    // ~/rmasc-dashboard
-  path.join(__dirname, '..', '..', 'dist'),               // fallback
-]
+// Cherche le dossier dist dans l'ordre
 let SPA_DIR = null
-for (const dir of STATIC_DIRS) {
-  if (fs.existsSync(dir) && fs.existsSync(path.join(dir, 'index.html'))) {
+const CANDIDATES = [
+  path.join(__dirname, '..', 'dist'),
+  path.join(__dirname, '..', '..', 'rmasc-dashboard'),
+  path.join('/home/sarlrmasc', 'rmasc-dashboard'),
+  path.join('/home/sarlrmasc', 'rmasc-erp', 'dist'),
+]
+for (const dir of CANDIDATES) {
+  const indexFile = path.join(dir, 'index.html')
+  if (fs.existsSync(dir) && fs.existsSync(indexFile)) {
     console.log(`  📁 Frontend statique: ${dir}`)
     SPA_DIR = dir
     app.use(express.static(dir))
     break
   }
+}
+if (!SPA_DIR) {
+  console.warn(`  ⚠️  Aucun dossier frontend trouvé (dist ou rmasc-dashboard)`)
 }
 
 // ─── Request timeout (30s) ──────────────────────────────────────────────
