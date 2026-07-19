@@ -490,6 +490,21 @@ function ProductionView({ onBack }: { onBack?: () => void }) {
               </div>
             </div>
           )}
+
+          {/* ── RÉCEMMENT TERMINÉES ────────────────────────────────────── */}
+          {enAttente.length === 0 && enProduction.length === 0 && parts.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-white/5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">
+                  ✅ Toutes les pièces terminées · {parts.length} pièce{parts.length > 1 ? 's' : ''}
+                </h3>
+              </div>
+              <p className="text-xs text-white/60 ml-4">
+                Ces pièces ont été archivées. Elles ne sont plus visibles dans les files actives. L'Ingénieur 2 peut les consulter dans son historique.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -505,8 +520,39 @@ function PartCard({ part, updating, onStart, onComplete }: {
 }) {
   const isPending = part.status === 'EN_ATTENTE'
   const isActive = part.status === 'EN_PRODUCTION'
+  const isDone = part.status === 'TERMINE'
+  const [downloading, setDownloading] = useState(false)
 
   const badge = statusBadge(part.status)
+
+  // ── Authenticated download for /uploads/... paths ──
+  const handleDownloadPlan = async () => {
+    if (!part.cadFileUrl) return
+    setDownloading(true)
+    try {
+      const token = localStorage.getItem('rmasc_token')
+      const res = await fetch(part.cadFileUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      // Extract filename from path: /uploads/123456-file.pdf → file.pdf
+      const fileName = part.cadFileUrl.split('/').pop() || part.projectName
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch {
+      // Fallback: open in new tab (browser may prompt login)
+      window.open(part.cadFileUrl, '_blank')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <div className={`rounded-2xl p-5 shadow-lg transition-all border ${
@@ -535,17 +581,20 @@ function PartCard({ part, updating, onStart, onComplete }: {
         )}
       </div>
 
-      {/* Download CAD button */}
+      {/* Download CAD button — authenticated fetch */}
       {part.cadFileUrl && (
-        <a
-          href={part.cadFileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.10] hover:border-amber-500/30 text-white/80 hover:text-amber-400 text-xs font-bold transition-all mb-3"
+        <button
+          onClick={handleDownloadPlan}
+          disabled={downloading}
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.10] hover:border-amber-500/30 text-white/80 hover:text-amber-400 text-xs font-bold transition-all mb-3 disabled:opacity-50"
         >
-          <Icon name="Download" className="w-3.5 h-3.5" />
+          {downloading ? (
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+          ) : (
+            <Icon name="Download" className="w-3.5 h-3.5" />
+          )}
           Télécharger Plan 2D
-        </a>
+        </button>
       )}
 
       {/* Status toggles */}
