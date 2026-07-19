@@ -517,11 +517,25 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
         ) : (
           /* ── FILE VIEWER ── */
           <div className="h-full p-4">
-            <FileViewer
-              fileUrl={fileBlobUrl || undefined}
-              fileName={selectedFile?.originalname}
-              fileType={selectedFile?.mimetype}
-            />
+            {!fileBlobUrl && selectedFile ? (
+              <div className="h-full flex items-center justify-center bg-[#0a0f1a] rounded-xl border border-slate-700">
+                <div className="text-center">
+                  <div className="w-10 h-10 rounded-full border-3 border-white/10 border-t-amber-400 animate-spin mx-auto mb-4" />
+                  <p className="text-sm font-medium text-white/80">Chargement du document...</p>
+                  <p className="text-xs mt-1 text-white/60">{selectedFile.originalname}</p>
+                  <button onClick={() => downloadFile(selectedFile)}
+                    className="mt-4 px-4 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 text-xs font-bold hover:bg-emerald-600/30 transition-all">
+                    ⬇️ Télécharger directement
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <FileViewer
+                fileUrl={fileBlobUrl || undefined}
+                fileName={selectedFile?.originalname}
+                fileType={selectedFile?.mimetype}
+              />
+            )}
           </div>
         )}
       </div>

@@ -134,23 +134,30 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
 
       {/* ─── Content ─── */}
       <div className="flex-1 overflow-auto flex items-start justify-center p-4 bg-[#0b1120] relative" style={{ height: fullscreen ? 'calc(100vh - 46px)' : 'calc(100% - 46px)' }}>
-        <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', transition: 'transform 0.15s ease-out' }}>
-          {isImage ? (
-            <img src={displaySrc} alt={fileName || 'Upload'} className="max-w-full rounded-lg shadow-2xl" style={{ maxHeight: '80vh' }} />
-          ) : isPDF ? (
-            <embed src={displaySrc} type="application/pdf" className="w-full rounded-lg shadow-2xl" style={{ minWidth: 600, height: '80vh' }} />
-          ) : (
-            <div className="flex flex-col items-center justify-center p-12 text-white">
-              <span className="text-6xl mb-4">📁</span>
-              <p className="text-sm font-medium text-white/80">{fileName || 'Fichier'}</p>
-              <p className="text-xs mt-1">Type de fichier non affichable directement</p>
-              <button onClick={handleDownload}
-                className="mt-4 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
-                ⬇️ Télécharger le fichier
-              </button>
-            </div>
-          )}
-        </div>
+        {isPDF ? (
+          <iframe
+            src={displaySrc}
+            title={fileName || 'PDF'}
+            className="w-full max-w-full rounded-lg shadow-2xl"
+            style={{ height: '85vh', border: 'none' }}
+          />
+        ) : (
+          <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', transition: 'transform 0.15s ease-out' }}>
+            {isImage ? (
+              <img src={displaySrc} alt={fileName || 'Upload'} className="max-w-full rounded-lg shadow-2xl" style={{ maxHeight: '80vh' }} />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-12 text-white">
+                <span className="text-6xl mb-4">📁</span>
+                <p className="text-sm font-medium text-white/80">{fileName || 'Fichier'}</p>
+                <p className="text-xs mt-1">Type de fichier non affichable directement</p>
+                <button onClick={handleDownload}
+                  className="mt-4 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
+                  ⬇️ Télécharger le fichier
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {stampApproved && (
           <div className="absolute pointer-events-none select-none"
