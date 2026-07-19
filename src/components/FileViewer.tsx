@@ -1,11 +1,12 @@
 // ─── RMASC FACTORY — Professional File Viewer ──────────────────────────
-// Supports both base64 (legacy) and server URLs (new backend-stored files).
+// Supports base64 (legacy), blob URLs (pre-fetched), and server API paths.
+// Automatically fetches /api/* URLs with JWT auth and creates blob URLs.
 // Used by Admin, Ingénieurs, Production, Stock — all roles can view/download.
 
 import { useEffect, useRef, useState } from 'react'
 
 interface Props {
-  fileData?: string | null      // base64 data URL (legacy) or server API path
+  fileData?: string | null      // base64 data URL (legacy) or blob URL (pre-fetched)
   fileName?: string
   fileType?: string
   stampApproved?: boolean
@@ -18,9 +19,43 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
   const containerRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
+  // Auth-fetched blob URL for server API paths
+  const [authBlobUrl, setAuthBlobUrl] = useState<string | null>(null)
+  const [fetchingAuth, setFetchingAuth] = useState(false)
+  const [fetchError, setFetchError] = useState(false)
 
-  // Resolve display source: server URL takes precedence over base64
-  const displaySrc = fileUrl || fileData
+  // ── Auto-fetch /api/ URLs with JWT auth since <iframe>/<embed> can't send headers ──
+  useEffect(() => {
+    if (!fileUrl) { setAuthBlobUrl(null); setFetchError(false); return }
+    // Already a blob URL or base64 — pass through
+    if (fileUrl.startsWith('blob:') || fileUrl.startsWith('data:')) {
+      setAuthBlobUrl(null); setFetchError(false); return
+    }
+    // Only fetch API paths
+    if (!fileUrl.startsWith('/api/')) { setAuthBlobUrl(null); setFetchError(false); return }
+
+    let cancelled = false
+    setFetchingAuth(true)
+    setFetchError(false)
+    const token = localStorage.getItem('rmasc_token')
+    ;(async () => {
+      try {
+        const res = await fetch(fileUrl, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const blob = await res.blob()
+        if (!cancelled) { setAuthBlobUrl(URL.createObjectURL(blob)); setFetchingAuth(false) }
+      } catch {
+        if (!cancelled) { setFetchError(true); setFetchingAuth(false) }
+      }
+    })()
+    return () => { cancelled = true }
+  }, [fileUrl])
+
+  // Resolve display source: auth blob > server URL > base64
+  const displaySrc = authBlobUrl || fileUrl || fileData
+  const isFetching = fetchingAuth && !authBlobUrl
 
   useEffect(() => {
     const el = containerRef.current
@@ -42,16 +77,34 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
 
   const handleDownload = () => {
     if (!fileName) return
-    if (fileUrl) {
-      // Server-stored file — direct download via API
+
+    // Use auth-fetched blob URL for download if available
+    if (authBlobUrl) {
       const a = document.createElement('a')
-      a.href = fileUrl
+      a.href = authBlobUrl
       a.download = fileName
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       return
     }
+
+    // Fallback for server URLs: fetch with auth then download
+    if (fileUrl && fileUrl.startsWith('/api/')) {
+      const token = localStorage.getItem('rmasc_token')
+      fetch(fileUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        .then(r => r.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url; a.download = fileName
+          document.body.appendChild(a); a.click(); document.body.removeChild(a)
+          setTimeout(() => URL.revokeObjectURL(url), 1000)
+        })
+        .catch(() => {})
+      return
+    }
+
     if (!fileData) return
     // Legacy base64 download
     try {
@@ -68,20 +121,42 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
       }
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url
-      a.download = fileName
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      a.href = url; a.download = fileName
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch {
       const a = document.createElement('a')
-      a.href = fileData
-      a.download = fileName
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      a.href = fileData; a.download = fileName
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
     }
+  }
+
+  // ── Loading state while fetching auth URL ──
+  if (isFetching) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-[#0a0f1a] text-white rounded-xl border border-slate-700">
+        <div className="w-12 h-12 rounded-full border-3 border-white/10 border-t-amber-400 animate-spin mb-4" />
+        <p className="text-sm font-medium">Chargement du document...</p>
+        <p className="text-xs mt-1 text-white/60">{fileName}</p>
+      </div>
+    )
+  }
+
+  // ── Auth fetch failed ──
+  if (fetchError) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-[#0a0f1a] text-white rounded-xl border border-slate-700">
+        <span className="text-5xl mb-4">⚠️</span>
+        <p className="text-sm font-medium">Impossible de charger le document</p>
+        <p className="text-xs mt-1 text-white/60">
+          Vérifiez que vous êtes connecté — le téléchargement nécessite une authentification.
+        </p>
+        <button onClick={handleDownload}
+          className="mt-4 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
+          ⬇️ Réessayer le téléchargement
+        </button>
+      </div>
+    )
   }
 
   if (!displaySrc) {

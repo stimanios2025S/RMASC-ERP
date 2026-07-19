@@ -119,10 +119,7 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
     } catch { /* silent */ }
   }
 
-  const getFileUrl = (fileId: string) => {
-    const token = localStorage.getItem('rmasc_token')
-    return `/api/orders/${orderId}/files/${fileId}?token=${encodeURIComponent(token || '')}`
-  }
+  const getFileUrl = (fileId: string) => `/api/orders/${orderId}/files/${fileId}`
 
   const openFilePicker = () => {
     const input = document.createElement('input')
