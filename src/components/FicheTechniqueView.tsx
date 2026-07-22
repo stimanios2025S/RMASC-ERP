@@ -622,7 +622,7 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
       )
     }
     return (
-      <div className="bg-slate-900/95 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden shadow-lg">
+      <div className="bg-slate-900/95 backdrop-blur-xl rounded-xl border border-white/10 overflow-y-auto shadow-lg" style={{ maxHeight: '90vh' }}>
         <style>{FICHE_STYLES}</style>
         {/* Inline toolbar — hidden on print */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03] no-print">
@@ -644,9 +644,9 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
   }
 
   return (
-    <div className="bg-slate-950 min-h-screen">
+    <div className="bg-slate-950 h-screen flex flex-col">
       <style>{FICHE_STYLES}</style>
-      <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between shadow-sm no-print">
+      <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between shadow-sm no-print flex-shrink-0">
         <div className="flex items-center gap-3">
           {onBack && (
             <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/70 hover:text-white transition-all">
@@ -661,7 +661,7 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
           Imprimer / PDF
         </button>
       </div>
-      <div className="py-8 px-4 md:px-8 flex justify-center no-print">
+      <div className="flex-1 overflow-y-auto py-8 px-4 md:px-8 flex justify-center no-print">
         <div className="bg-slate-900/90 backdrop-blur-xl shadow-2xl rounded-2xl w-full max-w-[210mm] border border-white/5">
           <div className="p-6 md:p-8" ref={docRef}>
             <FicheDocument data={data} />

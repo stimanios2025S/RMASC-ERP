@@ -534,6 +534,8 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   const [showNotifPanel, setShowNotifPanel] = useState(false)
   const [showAgent, setShowAgent] = useState(false)
   const [showSmartSearch, setShowSmartSearch] = useState(false)
+  const [apiOnline, setApiOnline] = useState<boolean | null>(null) // null = checking, true = online, false = offline
+  const [apiError, setApiError] = useState<string | null>(null)
 
   useEffect(() => { const t = setTimeout(() => setShowAgent(true), 2000); requestNotificationPermission(); return () => clearTimeout(t) }, [])
   useEffect(() => {
@@ -549,6 +551,25 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     let cancelled = false
     async function load() {
       try {
+        // ── Step 1: Health ping (verifies backend is reachable) ──────────
+        const health: any = await apiFetch('/health')
+        if (cancelled) return
+        if (health?.status === 'ok' || health?.status === 'degraded') {
+          setApiOnline(true)
+          setApiError(null)
+        } else {
+          setApiOnline(false)
+          setApiError(health?.databaseError || 'Backend injoignable')
+          return
+        }
+      } catch {
+        if (cancelled) return
+        setApiOnline(false)
+        setApiError('Impossible de contacter le serveur.')
+        return
+      }
+
+      try {
         const data: OrderSummary[] = await apiFetch('/orders')
         if (cancelled) return
         setOrders(data)
@@ -558,7 +579,11 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
           triggerAlert('🚨 Nouvelle alerte RMASC', `${newNotifs.length - prevNotifCount.current} commande(s) en attente.`, newNotifs[0]?.serialNumber)
         }
         prevNotifCount.current = newNotifs.length
-      } catch { /* silent */ }
+      } catch (err: any) {
+        if (cancelled) return
+        setApiError(err?.message || 'Erreur de chargement des données')
+        console.error('[Dashboard] Échec de chargement des commandes:', err?.message)
+      }
     }
     load()
     const iv = setInterval(load, 8000)
@@ -618,10 +643,31 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
         <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={currentUserData} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">
-          {orders.length === 0 && (
+          {apiOnline === false && (
+            <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-sm">
+              <span className="text-2xl">🔌</span>
+              <div className="flex-1">
+                <p className="font-bold text-red-400">Serveur injoignable</p>
+                <p className="text-[11px] text-red-300/80 mt-0.5">
+                  {apiError || 'Le backend ne répond pas. Vérifiez que le serveur et MongoDB sont démarrés.'}
+                </p>
+              </div>
+              <button onClick={() => { setApiOnline(null); setApiError(null) }}
+                className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-bold transition-all">
+                Réessayer
+              </button>
+            </div>
+          )}
+          {apiOnline === true && orders.length === 0 && (
             <div className="mb-4 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-center gap-3 text-sm">
-              <span className="text-lg">📡</span>
-              <div><p className="font-semibold text-amber-400">Mode déconnecté</p><p className="text-[11px] text-amber-300/70">Connexion au serveur indisponible.</p></div>
+              <span className="text-lg">📋</span>
+              <div><p className="font-semibold text-amber-400">Aucune commande enregistrée</p><p className="text-[11px] text-amber-300/70">Créez votre première commande pour commencer.</p></div>
+            </div>
+          )}
+          {apiOnline === null && orders.length === 0 && (
+            <div className="mb-4 bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 text-sm">
+              <div className="w-4 h-4 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
+              <div><p className="font-semibold text-white/70">Connexion au serveur...</p><p className="text-[11px] text-white/40">Vérification de l'API et chargement des données.</p></div>
             </div>
           )}
           <SmartTips />

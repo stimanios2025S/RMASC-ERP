@@ -57,7 +57,7 @@ if (!process.env.JWT_SECRET) {
 // ═══ MIDDLEWARE ═════════════════════════════════════════════════════════
 app.set('trust proxy', 1)
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: false }))
-app.use(cors({ origin: ['https://sarl-rmasc.com', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:4000', 'http://localhost:4001'], credentials: true }))
+app.use(cors({ origin: ['https://sarl-rmasc.com', 'https://192.168.1.95', 'http://192.168.1.95', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:4000', 'http://localhost:4001'], credentials: true }))
 app.use(express.json({ limit: '100mb' }))
 app.use(express.urlencoded({ limit: '100mb', extended: true }))
 app.use(auditMiddleware)
