@@ -181,7 +181,7 @@ export default function CatalogSettings() {
               {/* Add new item form */}
               <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4">
                 <p className="text-xs font-bold text-white mb-3">➕ Ajouter un élément</p>
-                <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className="text-[10px] font-medium text-white/60 block mb-1">Valeur technique *</label>
                     <input type="text" value={editValue} onChange={e => setEditValue(e.target.value)}

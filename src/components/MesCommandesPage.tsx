@@ -75,7 +75,7 @@ interface ArchiveDoc {
   lines?: Array<{ item: { name: string; reference: string }; quantity: number; unitPrice: number; totalPrice: number }>
 }
 
-// ─── Status helpers ───────────────────────────────────────────────────────
+// ─── Status helpers (dark theme) ──────────────────────────────────────────
 const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot: string }> = {
   BROUILLON:               { label: 'Brouillon', bg: 'bg-white/[0.06]', text: 'text-white/60', dot: 'bg-white/50' },
   ATTENTE_DESSIN_TECH:     { label: 'Attente Plan', bg: 'bg-sky-500/15', text: 'text-sky-400', dot: 'bg-sky-400' },
@@ -90,7 +90,7 @@ const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot:
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_MAP[status] || { label: status, bg: 'bg-gray-50', text: 'text-white/50', dot: 'bg-white/40' }
+  const s = STATUS_MAP[status] || { label: status, bg: 'bg-white/[0.06]', text: 'text-white/60', dot: 'bg-white/50' }
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${s.bg} ${s.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
@@ -208,60 +208,68 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-slate-950 p-6 space-y-6 text-slate-100">
+
+      {/* ── Header Card ── */}
+      <header className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
         <div className="flex items-center gap-4">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/60 hover:text-white transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <div>
-            <h1 className="text-lg font-extrabold text-white tracking-tight">📋 Mes Commandes</h1>
-            <p className="text-[11px] text-white/50 font-semibold">{stats.total} commandes au total</p>
-          </div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">📋 Mes Commandes</h1>
+          <span className="px-3 py-1 rounded-lg bg-amber-500/15 text-amber-400 text-xs font-bold border border-amber-500/20">{stats.total}</span>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher par série ou client..."
-              className="w-56 px-3.5 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
+              className="w-56 px-3.5 py-2 rounded-xl bg-white/[0.08] border border-slate-700 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
           </div>
         </div>
       </header>
 
-      <div className="px-6 py-4 grid grid-cols-4 gap-4">
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
-          { label: 'Total', value: stats.total, color: 'text-amber-400', bg: 'bg-white/[0.06] border border-white/10' },
-          { label: 'En cours', value: stats.actives, color: 'text-blue-400', bg: 'bg-blue-500/10 border border-blue-500/20' },
-          { label: 'Prêts Livraison', value: stats.pret, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border border-cyan-500/20' },
-          { label: 'Terminées', value: stats.validees, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border border-emerald-500/20' },
+          { label: 'Total', value: stats.total, color: 'text-amber-400' },
+          { label: 'En cours', value: stats.actives, color: 'text-blue-400' },
+          { label: 'Prêts Livraison', value: stats.pret, color: 'text-cyan-400' },
+          { label: 'Terminées', value: stats.validees, color: 'text-emerald-400' },
         ].map(kpi => (
-          <div key={kpi.label} className={`rounded-xl px-4 py-3 flex items-center justify-between ${kpi.bg}`}>
-            <span className="text-xs font-semibold text-white/60">{kpi.label}</span>
-            <span className={`text-xl font-extrabold ${kpi.color}`}>{kpi.value}</span>
+          <div key={kpi.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm">
+            <p className="text-sm font-medium text-slate-400 mb-1">{kpi.label}</p>
+            <p className={`text-2xl font-bold text-white ${kpi.color}`}>{kpi.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="px-6 pb-3 flex items-center gap-2 flex-wrap">
+      {/* ── Filter Tabs ── */}
+      <div className="bg-slate-900/80 p-1 border border-slate-800 rounded-lg inline-flex items-center gap-1 flex-wrap">
         <button onClick={() => setFilterStatus('all')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === 'all' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/[0.06] border border-white/10 text-white/60 hover:bg-white/[0.1]'}`}>
+          className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
+            filterStatus === 'all' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-white/10'
+          }`}>
           Tous
         </button>
         {uniqueStatuses.map(s => (
           <button key={s} onClick={() => setFilterStatus(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === s ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/[0.06] border border-white/10 text-white/60 hover:bg-white/[0.1]'}`}>
+            className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
+              filterStatus === s ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}>
             {STATUS_MAP[s]?.label || s}
           </button>
         ))}
       </div>
 
-      <div className="px-6 pb-8">
-        <div className="bg-slate-800/70 rounded-2xl border border-white/5 overflow-hidden shadow-lg">
+      {/* ── Table ── */}
+      <div className="pb-2">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-lg">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5 bg-white/[0.02]">
+              <tr className="bg-slate-800/80 border-b border-slate-700">
                 {[
                   { key: 'serialNumber', label: 'N° Série' },
                   { key: 'clientName', label: 'Client' },
@@ -276,43 +284,47 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
                         else { setSortField(col.key); setSortDir('desc') }
                       }
                     }}
-                    className={`px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider text-left ${col.key === 'serialNumber' || col.key === 'createdAt' ? 'cursor-pointer hover:text-white/80 select-none' : ''}`}>
-                    <span className="inline-flex items-center gap-1">
+                    className={`px-4 py-3.5 text-xs font-semibold text-slate-300 uppercase tracking-wider text-left ${
+                      col.key === 'serialNumber' || col.key === 'createdAt' ? 'cursor-pointer hover:text-white select-none' : ''
+                    }`}>
+                    <span className="inline-flex items-center gap-1.5">
                       {col.label}
                       {sortField === col.key && <span className="text-[10px]">{sortDir === 'asc' ? '↑' : '↓'}</span>}
                     </span>
                   </th>
                 ))}
-                <th className="px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider text-left">Actions</th>
+                <th className="px-4 py-3.5 text-xs font-semibold text-slate-300 uppercase tracking-wider text-left">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-white/5">
               {loading ? (
-                <tr><td colSpan={6} className="text-center py-12 text-sm text-white/50">Chargement...</td></tr>
+                <tr><td colSpan={6} className="text-center py-12 text-sm text-white/50 font-medium">Chargement...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-12 text-sm text-white/50">Aucune commande trouvée.</td></tr>
+                <tr><td colSpan={6} className="text-center py-12 text-sm text-white/50 font-medium">Aucune commande trouvée.</td></tr>
               ) : (
                 filtered.map(order => (
                   <tr key={order.id} onClick={() => setSelectedOrder(order)}
-                    className={`hover:bg-white/[0.03] transition-all cursor-pointer ${order.status === 'LIVREE' ? 'bg-emerald-500/[0.04]' : order.status === 'ANNULEE' ? 'bg-red-500/[0.03]' : ''}`}>
-                    <td className="px-4 py-3">
+                    className={`bg-slate-900 hover:bg-white/[0.03] border-b border-white/5 transition-all cursor-pointer ${
+                      order.status === 'LIVREE' ? 'bg-emerald-900/20' : order.status === 'ANNULEE' ? 'bg-red-900/20' : ''
+                    }`}>
+                    <td className="px-4 py-3.5">
                       <span className="text-sm font-bold text-white font-mono">{order.serialNumber}</span>
                     </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-semibold text-white/80">{order.clientName}</p>
-                      <p className="text-[11px] text-white/50">{order.clientCity}</p>
+                    <td className="px-4 py-3.5">
+                      <p className="text-sm font-bold text-white">{order.clientName}</p>
+                      <p className="text-xs font-medium text-white/50">{order.clientCity}</p>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-white/60">{order.typeMotorisation}</span>
+                    <td className="px-4 py-3.5">
+                      <span className="text-sm font-bold text-white/80">{order.typeMotorisation}</span>
                     </td>
-                    <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs text-white/50 font-mono">{formatDate(order.createdAt)}</span>
+                    <td className="px-4 py-3.5"><StatusBadge status={order.status} /></td>
+                    <td className="px-4 py-3.5">
+                      <span className="text-xs font-medium text-white/50 font-mono">{formatDate(order.createdAt)}</span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-1.5">
                         <button onClick={(e) => { e.stopPropagation(); setSelectedOrder(order) }}
-                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-all">
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-all">
                           Détails
                         </button>
                         <button onClick={async (e) => {
@@ -322,16 +334,19 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
                             setEditingOrder(d)
                           } catch {}
                         }}
-                          className="px-3 py-1 rounded-lg text-xs font-semibold bg-white/[0.06] text-white/60 hover:bg-white/[0.1] transition-all">
+                          className="w-8 h-7 rounded-lg text-xs font-bold bg-slate-800 text-white/70 border border-slate-700 hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center"
+                          title="Modifier">
                           ✏️
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(order) }}
-                          className="px-2 py-1 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">
+                          className="w-8 h-7 rounded-lg text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all flex items-center justify-center"
+                          title="Supprimer">
                           🗑️
                         </button>
                         {onFiche && (
                           <button onClick={(e) => { e.stopPropagation(); onFiche(order.id) }}
-                            className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-all">📄</button>
+                            className="w-8 h-7 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20 hover:bg-amber-500/25 transition-all flex items-center justify-center"
+                            title="Fiche Technique">📄</button>
                         )}
                       </div>
                     </td>
@@ -340,6 +355,7 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
               )}
             </tbody>
           </table>
+            </div>
         </div>
       </div>
     </div>
@@ -547,7 +563,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
       {/* ═══ TAB 1: Info ═══ */}
       {tab === 'info' && (
         <div className="max-w-4xl mx-auto p-6 space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-slate-800/70 rounded-xl p-4 border border-white/5">
               <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-1">Client</p>
               <p className="text-sm font-bold text-white">{order.clientName}</p>
@@ -565,7 +581,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
           </div>
           <div className="bg-slate-800/70 rounded-xl p-4 border border-white/5">
             <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2">Dimensions Gaine (mm)</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-slate-800/70 rounded-lg p-3 text-center border border-white/5">
                 <p className="text-xs text-white/50">Largeur</p>
                 <p className="text-base font-extrabold text-white">{order.largeurGaineMm}</p>
@@ -580,7 +596,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-slate-800/70 rounded-xl p-4 border border-white/5">
               <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2">Matériaux</p>
               <div className="space-y-1">
@@ -631,7 +647,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
 
           <div className="bg-slate-800/70 rounded-xl border border-white/10 p-5 shadow-sm">
             <h3 className="text-sm font-bold text-white mb-3">✏️ Modifier les informations client</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-white/50 block mb-1">Nom du client</label>
                 <input type="text" value={editName} onChange={e => setEditName(e.target.value)}

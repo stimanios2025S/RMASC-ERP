@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import FicheTechniqueView from './FicheTechniqueView'
+import FileViewer from './FileViewer'
 import type { PortalSession } from '../data/portalUsers'
 import { apiFetch } from '../config/api'
 import { getUploads } from '../config/runtime-store'
@@ -97,6 +98,16 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
   const [showFiche, setShowFiche] = useState(false)
   const [showAgent, setShowAgent] = useState(false)
   const [showSmartSearch, setShowSmartSearch] = useState(false)
+  const [vaultPreviewFile, setVaultPreviewFile] = useState<{ data: string; name: string; type: string } | null>(null)
+
+  // ── Open a vault file in the FileViewer modal ──
+  const openVaultFile = (f: VaultFile) => {
+    const uploads = getUploads(f.orderId)
+    const match = uploads.find(u => u.name === f.fileName)
+    if (match) {
+      setVaultPreviewFile({ data: match.data, name: match.name, type: match.type })
+    }
+  }
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -137,6 +148,10 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
 
   const myOrders = orders.filter(o => o.status === config.status)
   const filteredOrders = orders.filter(o => !searchTerm || o.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) || o.clientName.toLowerCase().includes(searchTerm.toLowerCase()))
+
+  // ── Dynamic badge counts ──
+  const ordersWithFiles = orders.filter(o => vaultFiles.some(f => f.orderId === o.id)).length
+  const archivedOrders = orders.filter(o => ['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length
 
   if (showFiche && selectedOrder) {
     return <div className="fixed inset-0 z-50 bg-slate-950 overflow-y-auto"><FicheTechniqueView orderId={selectedOrder.id} onBack={() => setShowFiche(false)} /></div>
@@ -181,7 +196,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
       {TAB_CONFIG.map(t => {
         if (t.id === 'pieces-solo' && role !== 'INGENIEUR_2') return null
         const isActive = tab === t.id
-        const badge = t.id === 'dashboard' ? myOrders.length : t.id === 'gestion-docs' ? vaultFiles.length : 0
+        const badge = t.id === 'dashboard' ? myOrders.length : t.id === 'archive' ? ordersWithFiles : t.id === 'gestion-docs' ? ordersWithFiles : t.id === 'archives' ? archivedOrders : 0
         return (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`flex items-center gap-2 px-5 py-3 text-sm md:text-base font-bold border-b-2 transition-all whitespace-nowrap ${
@@ -266,7 +281,11 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
               <span className="text-[10px] text-white/50">{f.size} · {f.engineer}</span>
             </div>
           </div>
-          <span className="text-[10px] text-white/40 hidden sm:inline">{fmtDate(f.uploadedAt)}</span>
+          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+            <button onClick={() => openVaultFile(f)}
+              className="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-semibold transition-all" title="Voir le fichier">👁️</button>
+            <span className="text-[10px] text-white/40">{fmtDate(f.uploadedAt)}</span>
+          </div>
         </div>
       ))}
     </div>
@@ -446,11 +465,28 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
           <div className="flex items-center gap-4">
             <InstallPWA variant="compact" />
             <span className="text-[10px] text-white/50">
-              <span className="text-amber-400 font-bold">{orders.length}</span> commandes · <span className="text-amber-400 font-bold">{vaultFiles.length}</span> fichiers
+              <span className="text-amber-400 font-bold">{orders.length}</span> commandes · <span className="text-amber-400 font-bold">{vaultFiles.filter(f => orders.some(o => o.id === f.orderId)).length}</span> fichiers
             </span>
           </div>
         </footer>
       </PageBackground>
+      {vaultPreviewFile && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 md:p-8" onClick={() => setVaultPreviewFile(null)}>
+          <div className="relative w-full max-w-5xl h-[85vh] bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 bg-slate-800/50 border-b border-slate-700 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">📄</span>
+                <p className="text-sm font-bold text-white truncate max-w-md">{vaultPreviewFile.name}</p>
+              </div>
+              <button onClick={() => setVaultPreviewFile(null)}
+                className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-red-500 text-white text-sm flex items-center justify-center transition-colors">✕</button>
+            </div>
+            <div className="flex-1 bg-[#0a0f1a] overflow-hidden">
+              <FileViewer fileData={vaultPreviewFile.data} fileName={vaultPreviewFile.name} fileType={vaultPreviewFile.type} />
+            </div>
+          </div>
+        </div>
+      )}
       {showAgent && <AgentPanel onClose={() => setShowAgent(false)} />}
       {showSmartSearch && <SmartSearch onNavigate={() => setShowSmartSearch(false)} />}
     </div>

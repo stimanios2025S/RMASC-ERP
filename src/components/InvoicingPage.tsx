@@ -279,6 +279,7 @@ export default function InvoicingPage({ onBack }: Props) {
                       <span className="text-[10px] text-white font-mono">{serialForDisplay}</span>
                     </div>
 
+                  <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b-2 border-white/10">
@@ -341,6 +342,7 @@ export default function InvoicingPage({ onBack }: Props) {
                         ))}
                       </tbody>
                     </table>
+                    </div>
 
                     <button onClick={addLine}
                       className="mt-4 px-4 py-2 rounded-xl border-2 border-dashed border-white/10 text-white text-xs font-semibold hover:border-amber-500/30 hover:text-amber-400 transition-all w-full">

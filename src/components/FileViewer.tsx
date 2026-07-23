@@ -1,5 +1,6 @@
 // ─── RMASC FACTORY — Professional File Viewer ──────────────────────────
 // Supports both base64 (legacy) and server URLs (new backend-stored files).
+// PDF server-stored files: fetched with auth via fetch() → blob URL → <embed>
 // Used by Admin, Ingénieurs, Production, Stock — all roles can view/download.
 
 import { useEffect, useRef, useState } from 'react'
@@ -18,9 +19,38 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
   const containerRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
+  const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [embedError, setEmbedError] = useState(false)
 
-  // Resolve display source: server URL takes precedence over base64
-  const displaySrc = fileUrl || fileData
+  // ── For server-stored PDFs: fetch with auth token, create blob URL ──
+  useEffect(() => {
+    if (!fileUrl || !fileType?.includes('pdf')) return
+    const token = localStorage.getItem('rmasc_token')
+    let cancelled = false
+    fetch(fileUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.blob()
+      })
+      .then(blob => {
+        if (!cancelled) {
+          const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
+          setBlobUrl(url)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setEmbedError(true)
+      })
+    return () => { cancelled = true; if (blobUrl) URL.revokeObjectURL(blobUrl) }
+  }, [fileUrl, fileType])
+
+  // Resolve display source:
+  //   1. Blob URL (server PDF fetched with auth)
+  //   2. fileUrl (non-PDF server file — not auth-gated since it's not embed, download handles auth)
+  //   3. fileData (legacy base64)
+  const displaySrc = blobUrl || fileUrl || fileData
 
   useEffect(() => {
     const el = containerRef.current
@@ -40,17 +70,30 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
     }
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!fileName) return
     if (fileUrl) {
-      // Server-stored file — direct download via API
-      const a = document.createElement('a')
-      a.href = fileUrl
-      a.download = fileName
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      return
+      // Server-stored file — fetch with auth, then trigger blob download
+      const token = localStorage.getItem('rmasc_token')
+      try {
+        const res = await fetch(fileUrl, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+        if (!res.ok) throw new Error('Download failed')
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = fileName
+        document.body.appendChild(a); a.click(); document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 2000)
+        return
+      } catch {
+        // Fallback: direct link (won't work if auth is required, but better than nothing)
+        const a = document.createElement('a')
+        a.href = fileUrl; a.download = fileName
+        document.body.appendChild(a); a.click(); document.body.removeChild(a)
+        return
+      }
     }
     if (!fileData) return
     // Legacy base64 download
@@ -68,19 +111,22 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
       }
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url
-      a.download = fileName
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      a.href = url; a.download = fileName
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch {
       const a = document.createElement('a')
-      a.href = fileData
-      a.download = fileName
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      a.href = fileData; a.download = fileName
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+    }
+  }
+
+  // ── Open in new tab (fallback when embed fails) ──
+  const handleOpenInNewTab = () => {
+    if (blobUrl) {
+      window.open(blobUrl, '_blank')
+    } else if (fileUrl) {
+      window.open(fileUrl, '_blank')
     }
   }
 
@@ -112,7 +158,7 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
           </div>
           <div className="min-w-0">
             <p className="text-[12px] font-bold text-white truncate max-w-[280px]">{fileName || 'Document'}</p>
-            <p className="text-[9px] text-white">{fileType || 'inconnu'} {fileUrl ? '• Serveur' : ''}</p>
+            <p className="text-[9px] text-white/70">{fileType || 'inconnu'} {fileUrl ? '• Serveur' : ''}{blobUrl ? ' • Chargé' : ''}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -120,7 +166,7 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom avant">+</button>
           <button onClick={() => setZoom(z => Math.max(z - 0.25, 0.25))}
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom arrière">−</button>
-          <span className="text-[10px] text-white font-mono min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
+          <span className="text-[10px] text-white/70 font-mono min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
           <div className="w-px h-6 bg-slate-600 mx-1" />
           <button onClick={toggleFullscreen}
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-xs flex items-center justify-center transition-colors" title="Plein écran">⛶</button>
@@ -138,7 +184,26 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
           {isImage ? (
             <img src={displaySrc} alt={fileName || 'Upload'} className="max-w-full rounded-lg shadow-2xl" style={{ maxHeight: '80vh' }} />
           ) : isPDF ? (
-            <embed src={displaySrc} type="application/pdf" className="w-full rounded-lg shadow-2xl" style={{ minWidth: 600, height: '80vh' }} />
+            embedError || !displaySrc ? (
+              <div className="flex flex-col items-center justify-center p-12 text-white" style={{ minWidth: 600, minHeight: 400 }}>
+                <span className="text-6xl mb-4">📄</span>
+                <p className="text-sm font-medium text-white/80">{fileName || 'Document PDF'}</p>
+                <p className="text-xs text-white/70 mt-1 mb-4">L'aperçu intégré n'a pas pu charger ce PDF.</p>
+                <div className="flex items-center gap-3">
+                  <button onClick={handleDownload}
+                    className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md">
+                    ⬇️ Télécharger
+                  </button>
+                  <button onClick={handleOpenInNewTab}
+                    className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-all shadow-md">
+                    ↗️ Ouvrir dans un nouvel onglet
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <embed src={displaySrc} type="application/pdf" className="w-full rounded-lg shadow-2xl" style={{ minWidth: 600, height: '80vh' }}
+                onError={() => setEmbedError(true)} />
+            )
           ) : (
             <div className="flex flex-col items-center justify-center p-12 text-white">
               <span className="text-6xl mb-4">📁</span>
@@ -171,9 +236,14 @@ export default function FileViewer({ fileData, fileName, fileType, stampApproved
         <span className="flex items-center gap-1.5 text-white/60 font-medium">
           <span>🔒</span> {fileName || 'Document'}
         </span>
-        <button onClick={handleDownload} className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
-          ⬇️ Télécharger
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={handleOpenInNewTab} className="flex items-center gap-1 text-blue-400 hover:text-blue-300 font-medium transition-colors">
+            ↗️ Nouvel onglet
+          </button>
+          <button onClick={handleDownload} className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+            ⬇️ Télécharger
+          </button>
+        </div>
       </div>
     </div>
   )

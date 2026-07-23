@@ -508,6 +508,35 @@ function PartCard({ part, updating, onStart, onComplete }: {
 
   const badge = statusBadge(part.status)
 
+  // ── Auth-aware download for CAD files from server ──
+  const handleDownloadCad = async () => {
+    if (!part.cadFileUrl) return
+    const token = localStorage.getItem('rmasc_token')
+    const a = document.createElement('a')
+    a.href = part.cadFileUrl
+    a.download = part.partNumber + '_plan.pdf'
+    // Try blob download with auth first
+    try {
+      const res = await fetch(part.cadFileUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        a.href = url
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 2000)
+        return
+      }
+    } catch { /* fallback below */ }
+    // Fallback: direct link
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
   return (
     <div className={`rounded-2xl p-5 shadow-lg transition-all border ${
       isPending
@@ -535,17 +564,15 @@ function PartCard({ part, updating, onStart, onComplete }: {
         )}
       </div>
 
-      {/* Download CAD button */}
+      {/* Download CAD button — blob download with auth */}
       {part.cadFileUrl && (
-        <a
-          href={part.cadFileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={handleDownloadCad}
           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.10] hover:border-amber-500/30 text-white/80 hover:text-amber-400 text-xs font-bold transition-all mb-3"
         >
           <Icon name="Download" className="w-3.5 h-3.5" />
           Télécharger Plan 2D
-        </a>
+        </button>
       )}
 
       {/* Status toggles */}

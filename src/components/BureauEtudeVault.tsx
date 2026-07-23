@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../config/api'
 
 interface VaultFile {
   id: string
@@ -48,7 +49,6 @@ export default function BureauEtudeVault({ onBack, engineerName }: Props) {
         // Load orders from API (real data)
         let apiOrders: any[] = []
         try {
-          const { apiFetch } = await import('../config/api')
           apiOrders = await apiFetch('/orders')
         } catch {}
 
@@ -243,7 +243,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
         <div className="max-w-6xl mx-auto space-y-6">
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Fichiers Total', value: metrics.total, icon: '📄', color: 'text-primary-600' },
               { label: 'Documents PDF', value: metrics.pdf, icon: '📑', color: 'text-accent-600' },

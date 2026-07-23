@@ -203,7 +203,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
     { id: 'dashboard', icon: '📊', label: 'Tableau de Bord' },
     ...ENGINEER_PAGES.map(p => ({ id: p.id as TabId, icon: p.icon, label: p.title, badge: orders.filter(o => o.status === p.status).length })),
     { id: 'archive', icon: '📦', label: 'Archive', badge: kpis.livrees },
-    { id: 'gestion-docs', icon: '📁', label: 'Gestion Documents', badge: kpis.fichiers },
+    { id: 'gestion-docs', icon: '📁', label: 'Gestion Documents', badge: vaultFiles.filter(f => orders.some(o => o.id === f.orderId)).length },
   ]
 
   return (
@@ -465,17 +465,27 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                             <div className="mb-4">
                               <p className="text-[10px] font-bold uppercase tracking-wider text-white mb-2">📎 Fichiers attachés ({orderFiles.length})</p>
                               <div className="space-y-1.5">
-                                {orderFiles.map(f => (
-                                  <div key={f.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-white/5">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <span>{f.type.includes('pdf') ? '📄' : '📐'}</span>
-                                      <span className="text-sm font-medium text-white truncate">{f.fileName}</span>
-                                      <span className="text-[10px] text-white">• {f.size}</span>
-                                      <span className="text-[10px] text-white">• {f.engineer}</span>
+                                {orderFiles.map(f => {
+                                  const allUploads = getUploads(order.id)
+                                  const uploadIdx = allUploads.findIndex(u => u.name === f.fileName)
+                                  return (
+                                    <div key={f.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-white/5 hover:bg-white/[0.06] transition-all group">
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <span>{f.type.includes('pdf') ? '📄' : '📐'}</span>
+                                        <span className="text-sm font-medium text-white truncate">{f.fileName}</span>
+                                        <span className="text-[10px] text-white">• {f.size}</span>
+                                        <span className="text-[10px] text-white">• {f.engineer}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {uploadIdx >= 0 && (
+                                          <button onClick={() => { setShowFile(true); setFileIndex(uploadIdx) }}
+                                            className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-semibold transition-all" title="Voir le fichier">👁️</button>
+                                        )}
+                                        <span className="text-[10px] text-white">{fmtDate(f.uploadedAt)}</span>
+                                      </div>
                                     </div>
-                                    <span className="text-[10px] text-white">{fmtDate(f.uploadedAt)}</span>
-                                  </div>
-                                ))}
+                                  )
+                                })}
                               </div>
                             </div>
                           )}

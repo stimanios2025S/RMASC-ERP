@@ -42,6 +42,10 @@ import {
 import { sendWhatsApp } from './src/controllers/notifications.js'
 import { subscribe, sendEvent } from './src/controllers/realtime.js'
 import { getAuditLogs, getAuditActions } from './src/controllers/audit.js'
+import {
+  getDashboardStats, getOrderMetrics, getStockKPIs, getInvoicingStats, getEngineerStats,
+} from './src/controllers/stats.js'
+import { loadOrder, validateStatusTransition } from './src/middleware/statusValidation.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -130,15 +134,15 @@ app.get('/api/orders/:id/files', authenticate, listFiles)
 app.get('/api/orders/:id/files/:fileId', authenticate, downloadFile)
 app.post('/api/orders/create-and-sync', authenticate, createOrder)
 app.patch('/api/orders/:id', authenticate, requireAdmin, updateOrder)
-app.patch('/api/orders/:id/status', authenticate, updateOrderStatus)
+app.patch('/api/orders/:id/status', authenticate, loadOrder, validateStatusTransition, updateOrderStatus)
 app.patch('/api/orders/:id/production-phase', authenticate, updateProductionPhase)
 app.post('/api/orders/:id/upload', authenticate, upload.single('file'), uploadFile)
 app.delete('/api/orders/:id/files/:fileId', authenticate, deleteFile)
-app.post('/api/orders/:id/approve-plan', authenticate, requireAdmin, approvePlan)
-app.post('/api/orders/:id/reject-plan', authenticate, requireAdmin, rejectPlan)
+app.post('/api/orders/:id/approve-plan', authenticate, requireAdmin, loadOrder, approvePlan)
+app.post('/api/orders/:id/reject-plan', authenticate, requireAdmin, loadOrder, rejectPlan)
 app.post('/api/orders/:id/restamp', authenticate, requireAdmin, restampOrder)
-app.post('/api/orders/:id/mark-delivery', authenticate, markDelivery)
-app.post('/api/orders/:id/confirm-delivery', authenticate, requireAdmin, confirmDelivery)
+app.post('/api/orders/:id/mark-delivery', authenticate, loadOrder, markDelivery)
+app.post('/api/orders/:id/confirm-delivery', authenticate, requireAdmin, loadOrder, confirmDelivery)
 app.delete('/api/orders/:id', authenticate, requireAdmin, deleteOrder)
 
 // Stock — Items
@@ -193,6 +197,39 @@ app.post('/api/realtime/broadcast', authenticate, requireAdmin, sendEvent)
 // Audit Logs (admin only)
 app.get('/api/admin/audit-logs', authenticate, requireAdmin, getAuditLogs)
 app.get('/api/admin/audit-logs/actions', authenticate, requireAdmin, getAuditActions)
+
+// ═══ STATS (live aggregation pipelines) ════════════════════════════════════
+app.get('/api/stats/dashboard', authenticate, getDashboardStats)
+app.get('/api/stats/orders', authenticate, getOrderMetrics)
+app.get('/api/stats/stock', authenticate, getStockKPIs)
+app.get('/api/stats/invoicing', authenticate, getInvoicingStats)
+app.get('/api/stats/engineer', authenticate, getEngineerStats)
+
+// ═══ VAULT FILES (backend-persisted) ═══════════════════════════════════════
+// These replace localStorage-based vault storage.
+// GET /api/vault/files?orderId=xxx — list all vault files (optionally filtered by order)
+app.get('/api/vault/files', authenticate, async (req, res) => {
+  try {
+    const filter = {}
+    if (req.query.orderId) filter.order = req.query.orderId
+    const submissions = await (await import('./src/models/CAD_Submission.js')).default
+      .find(filter).populate('order', 'serialNumber clientName').sort({ createdAt: -1 }).lean()
+    res.json(submissions.map(s => ({
+      id: s._id.toString(),
+      orderId: s.order?._id?.toString(),
+      orderSerial: s.order?.serialNumber,
+      orderClient: s.order?.clientName,
+      engineeringType: s.engineeringType,
+      engineerName: s.engineerName,
+      fileMimeType: s.fileMimeType,
+      fileSizeBytes: s.fileSizeBytes,
+      status: s.status,
+      createdAt: s.createdAt,
+      approvedAt: s.approvedAt,
+      approvedBy: s.approvedBy,
+    })))
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
 
 // ═══ ERROR HANDLER ═════════════════════════════════════════════════════
 app.use((err, _req, res, _next) => {

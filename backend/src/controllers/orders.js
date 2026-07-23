@@ -5,11 +5,29 @@ import fs from 'fs'
 import Order from '../models/Order.js'
 import CAD_Submission from '../models/CAD_Submission.js'
 import StockDocument from '../models/StockDocument.js'
+import StockMovement from '../models/StockMovement.js'
 import { stampOrderFiles } from '../utils/pdfStamper.js'
 import { createOrderSchema, updateOrderSchema, updateStatusSchema, updateProductionPhaseSchema } from '../schemas/validation.js'
 import { notifyOrderCreated, notifyOrderStatusChanged, notifyOrderApproval, notifyFileUploaded } from './realtime.js'
 
 const UPLOADS_DIR = path.resolve(process.argv[1] ? path.dirname(process.argv[1]) : '.', '..', 'uploads')
+
+// ─── Helper: map status to lifecycle stage ────────────────────────────
+function mapStatusToLifecycle(status) {
+  const map = {
+    BROUILLON: 'draft',
+    ATTENTE_DESSIN_TECH: 'engineering',
+    ATTENTE_APPROBATION_ADMIN: 'admin_review',
+    ATTENTE_DESSIN_2D: 'design_2d',
+    ATTENTE_VERIFICATION: 'verification',
+    PRET_POUR_PRODUCTION: 'ready_for_production',
+    EN_LIVRAISON: 'in_delivery',
+    LIVREE: 'delivered',
+    VALIDEE: 'validated',
+    ANNULEE: 'cancelled',
+  }
+  return map[status] || 'unknown'
+}
 
 // ─── Helper: add `id` from `_id` for aggregation results ─────────────
 function addIdField(doc) {
@@ -137,9 +155,20 @@ export async function updateOrderStatus(req, res) {
   try {
     const parsed = updateStatusSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ error: 'Statut invalide.' })
-    const order = await Order.findByIdAndUpdate(req.params.id, { status: parsed.data.status }, { new: true })
+    // req.order is pre-loaded + validated by loadOrder & validateStatusTransition middleware
+    const order = req.order
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
-    res.json({ order })
+    order.status = parsed.data.status
+    order.lifecycleStage = mapStatusToLifecycle(parsed.data.status)
+    // If moving to production, set the timestamp
+    if (parsed.data.status === 'PRET_POUR_PRODUCTION') {
+      order.productionStartedAt = new Date()
+    }
+    await order.save()
+    res.json({
+      message: `✅ Statut mis à jour: ${order.status}`,
+      order: { id: order._id, serialNumber: order.serialNumber, status: order.status, lifecycleStage: order.lifecycleStage },
+    })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
 
@@ -199,7 +228,8 @@ export async function downloadFile(req, res) {
     res.setHeader('Content-Disposition', `inline; filename="${file.originalname}"`)
     res.setHeader('Content-Type', file.mimetype || 'application/octet-stream')
     res.setHeader('Content-Length', file.size)
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN')
+    // NOTE: X-Frame-Options intentionally NOT set — same-origin embed via <embed> requires it.
+    // The file endpoint is protected by auth middleware upstream.
     fs.createReadStream(absPath).pipe(res)
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
@@ -258,7 +288,7 @@ export async function getOrderArchive(req, res) {
 // POST /api/orders/:id/approve-plan
 export async function approvePlan(req, res) {
   try {
-    const order = await Order.findById(req.params.id)
+    const order = req.order  // loaded by loadOrder middleware
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
     if (order.status !== 'ATTENTE_APPROBATION_ADMIN') return res.status(409).json({ error: `Statut: ${order.status}` })
     const adminName = req.user?.name || 'Administrateur'
@@ -300,7 +330,7 @@ export async function restampOrder(req, res) {
 // POST /api/orders/:id/reject-plan
 export async function rejectPlan(req, res) {
   try {
-    const order = await Order.findById(req.params.id)
+    const order = req.order  // loaded by loadOrder middleware
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
     if (order.status !== 'ATTENTE_APPROBATION_ADMIN') return res.status(409).json({ error: 'Pas en attente.' })
     order.status = 'ATTENTE_DESSIN_TECH'
@@ -315,7 +345,7 @@ export async function rejectPlan(req, res) {
 // POST /api/orders/:id/mark-delivery
 export async function markDelivery(req, res) {
   try {
-    const order = await Order.findById(req.params.id)
+    const order = req.order  // loaded by loadOrder middleware
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
     if (order.status !== 'PRET_POUR_PRODUCTION') return res.status(409).json({ error: `Statut actuel: ${order.status}` })
     order.status = 'EN_LIVRAISON'
@@ -327,7 +357,7 @@ export async function markDelivery(req, res) {
 // POST /api/orders/:id/confirm-delivery
 export async function confirmDelivery(req, res) {
   try {
-    const order = await Order.findById(req.params.id)
+    const order = req.order  // loaded by loadOrder middleware
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
     if (order.status !== 'EN_LIVRAISON') return res.status(409).json({ error: `Statut actuel: ${order.status}` })
     order.status = 'LIVREE'
@@ -364,20 +394,38 @@ export async function updateOrder(req, res) {
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
 
-// DELETE /api/orders/:id
+// DELETE /api/orders/:id — FULL CASCADE
 export async function deleteOrder(req, res) {
   try {
     const order = await Order.findById(req.params.id).select('files')
-    if (order) {
-      for (const file of (order.files || [])) {
-        if (file.path) {
-          const absPath = path.isAbsolute(file.path) ? file.path : path.join(UPLOADS_DIR, file.path)
-          if (fs.existsSync(absPath)) try { fs.unlinkSync(absPath) } catch {}
-        }
+    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+
+    // 1. Delete physical files from disk
+    for (const file of (order.files || [])) {
+      if (file.path) {
+        const absPath = path.isAbsolute(file.path) ? file.path : path.join(UPLOADS_DIR, file.path)
+        if (fs.existsSync(absPath)) try { fs.unlinkSync(absPath) } catch {}
       }
     }
-    await CAD_Submission.deleteMany({ order: req.params.id })
+
+    // 2. Cascade: delete all related documents
+    const [cadResult, docResult, moveResult] = await Promise.all([
+      CAD_Submission.deleteMany({ order: req.params.id }),
+      StockDocument.deleteMany({ order: req.params.id }),
+      StockMovement.deleteMany({ order: req.params.id }),
+    ])
+
+    // 3. Delete the order itself
     await Order.findByIdAndDelete(req.params.id)
-    res.json({ success: true, message: 'Commande et fichiers supprimés.' })
+
+    res.json({
+      success: true,
+      message: 'Commande supprimée avec cascade complète.',
+      cascade: {
+        cadSubmissions: cadResult.deletedCount,
+        stockDocuments: docResult.deletedCount,
+        stockMovements: moveResult.deletedCount,
+      },
+    })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }

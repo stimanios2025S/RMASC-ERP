@@ -308,7 +308,7 @@ function FormCheckbox({ label, checked, onChange }: any) {
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────
-function areClientFieldsFilled(d: FormData) { return d.clientName.trim() !== '' && d.clientPhone.trim() !== '' && d.clientCity.trim() !== '' && d.serialNumber.trim() !== '' }
+function areClientFieldsFilled(d: FormData) { return d.clientName.trim() !== '' && d.clientPhone.trim() !== '' && d.clientCity.trim() !== '' }
 function isFinalisationValid(d: FormData) { return areClientFieldsFilled(d) && d.agreed === true }
 
 // ─── Step 1: Client ───────────────────────────────────────────────────────
@@ -316,20 +316,34 @@ function StepClient({ data, setData }: any) {
   const s = (f: keyof FormData) => (v: string) => setData({ ...data, [f]: v })
   return <div className="space-y-5">
     <p className="text-sm text-white mb-1">Informations de la commande.</p>
-    <div className="grid grid-cols-2 gap-4">
-      <div className="col-span-2"><FormInput label="Nom du client" value={data.clientName} onChange={s('clientName')} placeholder="Ex: Ascenseurs Bouira" required /></div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="col-span-1 md:col-span-2"><FormInput label="Nom du client" value={data.clientName} onChange={s('clientName')} placeholder="Ex: Ascenseurs Bouira" required /></div>
       <FormInput label="Email" value={data.clientEmail} onChange={s('clientEmail')} placeholder="contact@client.com" type="email" optional />
       <FormInput label="Téléphone" value={data.clientPhone} onChange={s('clientPhone')} placeholder="+213..." type="tel" required />
       <FormInput label="Téléphone 2" value={data.clientPhone2} onChange={s('clientPhone2')} placeholder="+213..." type="tel" optional />
       <FormInput label="Ville" value={data.clientCity} onChange={s('clientCity')} placeholder="Ex: Bouira" required />
     </div>
     <div className="border-t border-white/5 pt-3 mt-2">
-      <div className="col-span-2"><FormInput label="Nom du projet" value={data.projectName} onChange={s('projectName')} placeholder="Ex: Résidence El Manar Bâtiment B" optional /></div>
+      <div className="md:col-span-2"><FormInput label="Nom du projet" value={data.projectName} onChange={s('projectName')} placeholder="Ex: Résidence El Manar Bâtiment B" optional /></div>
     </div>
     <div className="border-t border-slate-600/30 pt-4">
       <p className="text-xs font-bold text-white uppercase tracking-wider mb-3">⚙️ Configuration & Priorité</p>
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput label="N° de série" value={data.serialNumber} onChange={s('serialNumber')} placeholder="Laisser vide pour génération auto (Format: ASC-001-MM-YY)" optional />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-white flex items-center gap-1.5">N° de série <span className="text-emerald-400 text-[11px] font-normal">(Auto-généré)</span></label>
+          <div className="h-10 px-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-sm font-mono font-bold text-emerald-400 tracking-wider">
+              Généré automatiquement
+            </span>
+            <span className="text-[11px] text-emerald-400/60 ml-auto">
+              Format: RMASC-2026-XXXX
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            Le numéro de série est attribué automatiquement à la création pour garantir l'intégrité du système.
+          </p>
+        </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-white flex items-center gap-1.5">Priorité <span className="text-red-400 text-xs">*</span></label>
           <div className="flex gap-2 h-10">
@@ -351,7 +365,7 @@ function StepMotorisation({ data, setData }: any) {
   const s = (f: keyof FormData) => (v: string) => setData({ ...data, [f]: v })
   return <div className="space-y-5">
     <p className="text-sm text-white mb-1">Configurez le système de motorisation.</p>
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormSelect label="Type de motorisation" value={data.motorType} onChange={(v: string) => setData({ ...data, motorType: v })} options={['ÉLECTRIQUE', 'HYDRAULIQUE']} />
       <FormInput label="Vitesse (m/s)" value={data.motorSpeed} onChange={s('motorSpeed')} placeholder="Ex: 1.5" type="number" />
       <FormInput label="Nombre d'étages" value={data.motorFloors} onChange={s('motorFloors')} placeholder="Ex: 6" type="number" />
@@ -363,7 +377,7 @@ function StepMotorisation({ data, setData }: any) {
         <span className="text-xs font-bold uppercase tracking-wider text-white">Spécifications Structurelles</span>
         <span className="text-[9px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-semibold">SH AI</span>
       </div>
-      <div className="grid gap-3 grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <FormSelectRich label="Type de moteur" value={data.motorSubtype} onChange={s('motorSubtype')} options={MOTEUR_SUBTYPE_OPTIONS} />
         <FormSelectRich label="Position contrepoids" value={data.contrepoidsPosition} onChange={s('contrepoidsPosition')} options={CONTREPOIDS_POSITION_OPTIONS} />
         <FormSelectRich label="Type de porte palière" value={data.typePorte} onChange={s('typePorte')} options={TYPE_PORTE_INSTALLATION_OPTIONS} />
@@ -372,11 +386,11 @@ function StepMotorisation({ data, setData }: any) {
 
     <hr className="border-slate-600/30" />
     <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-slate-600 flex items-center justify-center text-white text-[10px] font-bold">⚙</div><p className="text-sm font-semibold text-white">Spécifications Mécaniques</p></div>
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormSelectNum label="Largeur passage libre (PL)" value={data.largeurPassageLibre} onChange={s('largeurPassageLibre')} options={PASSAGE_LIBRE_OPTIONS} suffix="mm" />
       <FormSelectNum label="Hauteur utile cabine" value={data.hauteurUtileCabine} onChange={s('hauteurUtileCabine')} options={HAUTEUR_UTILE_OPTIONS} suffix="mm" />
     </div>
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormSelectRichWithAutre label="Type suspension / guidage" value={data.typeSuspensionGuidage} onChange={s('typeSuspensionGuidage')} options={TYPE_SUSPENSION_OPTIONS}
         customValue={data.customSuspension} onCustomChange={s('customSuspension')} placeholder="Ex: Rails renforces..." />
       <FormSelectRichWithAutre label="Systeme de surcharge" value={data.systemeSurcharge} onChange={s('systemeSurcharge')} options={SYSTEME_SURCHARGE_OPTIONS}
@@ -395,7 +409,7 @@ function StepDimensions({ data, setData }: any) {
 
   return <div className="space-y-5">
     <p className="text-sm text-white mb-1">Dimensions de la gaine technique en millimètres.</p>
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormInput label="Largeur gaine (mm)" value={data.dimWidth} onChange={s('dimWidth')} placeholder="Ex: 1600" type="number" />
       <FormInput label="Profondeur gaine (mm)" value={data.dimDepth} onChange={s('dimDepth')} placeholder="Ex: 1800" type="number" />
       <FormInput label="Hauteur de la gaine (mm)" value={data.dimHeight} onChange={s('dimHeight')} placeholder="Ex: 3600" type="number" />
@@ -420,7 +434,7 @@ function StepDimensions({ data, setData }: any) {
       <div className="bg-slate-800/60 rounded-xl px-3.5 py-2 border border-slate-700/50">
         <div className="flex items-start gap-2"><span className="text-white/50 text-xs mt-0.5">🧠</span><p className="text-[10px] text-white/80 leading-relaxed">{deductionLabel}</p></div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="bg-slate-800/60 rounded-xl px-4 py-3.5 border border-white/10">
           <div className="flex items-center justify-between mb-2"><span className="text-xs font-semibold text-white">Largeur cabine (Lc)</span><span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">⚙️ Calcul normé</span></div>
           <p className="text-2xl font-bold text-white tracking-tight">{estimatedCabinWidth}</p>
@@ -445,7 +459,7 @@ function StepDimensions({ data, setData }: any) {
     </div>}
 
     {/* Pit & Headroom */}
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="flex flex-col gap-1.5">
         <FormInput label="Profondeur cuvette (mm)" value={data.pitDepth} onChange={s('pitDepth')} placeholder="Ex: 1500" type="number" />
         {pW && <div className="flex items-start gap-1.5 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl"><span className="text-red-400 text-xs mt-0.5">⚠️</span><p className="text-[11px] text-red-300 leading-tight">Cuvette non conforme NF EN 81-20 (≥ 500 mm)</p></div>}
@@ -466,7 +480,7 @@ function StepMateriaux({ data, setData }: any) {
   return <div className="space-y-5">
     <p className="text-sm text-white mb-1">Configurez la cabine selon les standards du catalogue.</p>
     <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-amber-600 flex items-center justify-center text-white text-[10px] font-bold">📋</div><p className="text-sm font-semibold text-white">Classification Catalogue Mekisan</p></div>
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormSelectRichWithAutre label="Type de cabine" value={data.typeCabine} onChange={s('typeCabine')} options={TYPE_CABINE_OPTIONS} customValue={data.customTypeCabine} onCustomChange={s('customTypeCabine')} placeholder="Ex: Cabine hospitaliere renforcee..." />
       <FormSelectRichWithAutre label="Type de chassis / arcade" value={data.typeChassisArcade} onChange={s('typeChassisArcade')} options={TYPE_CHASSIS_ARCADE_OPTIONS} customValue={data.customChassis} onCustomChange={s('customChassis')} placeholder="Ex: Chassis renforce sur mesure..." />
       <FormSelectRichWithAutre label="Finition portes cabine" value={data.finitionPorteCabine} onChange={s('finitionPorteCabine')} options={FINITION_PORTE_CABINE_OPTIONS} customValue={data.customFinitionPorte} onCustomChange={s('customFinitionPorte')} placeholder="Ex: Laque noir mat..." />
@@ -475,7 +489,7 @@ function StepMateriaux({ data, setData }: any) {
     </div>
     <hr className="border-slate-600/30" />
     <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-slate-600 flex items-center justify-center text-white text-[10px] font-bold">M</div><p className="text-sm font-semibold text-white">Materiaux (sur mesure)</p></div>
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormSelectWithAutre label="Materiau cabine" value={data.matCabin} onChange={s('matCabin')} options={CABIN_WALL_MATERIALS}
         customValue={data.customMatCabin} onCustomChange={s('customMatCabin')} placeholder="Ex: Acier galvanise 3 mm..." />
       <FormSelectWithAutre label="Materiau portes" value={data.matDoors} onChange={s('matDoors')} options={DOOR_MATERIALS}
@@ -491,7 +505,7 @@ function StepOptions({ data, setData }: any) {
   const b = (f: keyof FormData) => (v: boolean) => setData({ ...data, [f]: v })
   return <div className="space-y-5">
     <p className="text-sm text-white mb-1">Options supplémentaires.</p>
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <FormCheckbox label="Ascenseur panoramique" checked={data.optPanoramic} onChange={b('optPanoramic')} />
       <FormCheckbox label="Alimentation de secours" checked={data.optBackupPower} onChange={b('optBackupPower')} />
       <FormCheckbox label="Annonces vocales" checked={data.optVoiceAnnounce} onChange={b('optVoiceAnnounce')} />

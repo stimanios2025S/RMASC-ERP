@@ -93,7 +93,7 @@ export default function LifecyclePipeline({ onBack }: Props) {
         <div className="max-w-7xl mx-auto space-y-6">
 
           {/* Pipeline Kanban-style stage cards */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {ordersByStage.map(stage => (
               <div key={stage.key} className={`rounded-2xl p-4 bg-slate-800/70 border border-white/5 shadow-lg hover:bg-white/[0.06] transition-all ${stage.key === filterStage ? 'ring-2 ring-amber-500/50' : ''}`}
                 onClick={() => setFilterStage(stage.key)}

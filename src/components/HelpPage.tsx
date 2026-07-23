@@ -201,12 +201,12 @@ export default function HelpPage({ onBack }: Props) {
         ))}
 
         {/* ── Contact / Support ── */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 p-5 shadow-sm">
+        <div className="bg-slate-800/80 rounded-2xl border border-slate-700/60 p-5 shadow-sm">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-xl flex-shrink-0">📧</div>
+            <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-xl flex-shrink-0 border border-amber-500/20">📧</div>
             <div>
-              <h3 className="text-sm font-extrabold text-white mb-1">📬 Support technique & signalement d'incidents</h3>
-              <p className="text-sm text-white mb-2">
+              <h3 className="text-sm font-extrabold text-amber-400 mb-1">📬 Support technique & signalement d'incidents</h3>
+              <p className="text-sm text-slate-300 mb-2">
                 Pour toute question, suggestion ou signalement d'anomalie concernant le fonctionnement du progiciel,
                 veuillez contacter l'administrateur système à l'adresse suivante :
               </p>
@@ -217,7 +217,7 @@ export default function HelpPage({ onBack }: Props) {
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 Contacter : stimanios.boukrif@univ-bouira.dz
               </a>
-              <p className="text-xs text-white/80 mt-2">Temps de réponse estimé : 24 à 48 heures ouvrées</p>
+              <p className="text-xs text-slate-500 mt-2">Temps de réponse estimé : 24 à 48 heures ouvrées</p>
             </div>
           </div>
         </div>

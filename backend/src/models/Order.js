@@ -102,9 +102,9 @@ orderSchema.virtual('cadSubmissions', {
 })
 
 // ─── Performance indexes for common queries ──────────────────────────────
+// NOTE: serialNumber has unique:true inline (auto-indexed) — do NOT duplicate.
 orderSchema.index({ status: 1, createdAt: -1 })   // Status filters + sort
 orderSchema.index({ createdAt: -1 })               // Recent orders
 orderSchema.index({ clientName: 1 })               // Search by client
-orderSchema.index({ serialNumber: 1 })              // Already unique, but explicit
 
 export default mongoose.model('Order', orderSchema)

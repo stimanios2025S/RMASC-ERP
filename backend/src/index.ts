@@ -8,6 +8,16 @@ import { connectDB } from './lib/mongoose.js'
 
 const PORT = parseInt(process.env.PORT || '4000', 10)
 
+// ─── Global crash handlers (prevents PM2 infinite restart loop) ──────────
+process.on('uncaughtException', (err) => {
+  console.error('  ❌ [UNCAUGHT EXCEPTION]', err.message)
+  console.error(err.stack)
+})
+
+process.on('unhandledRejection', (reason) => {
+  console.error('  ❌ [UNHANDLED REJECTION]', reason)
+})
+
 async function startup() {
   console.log(`\n  🏢 RMASC FACTORY — Démarrage...\n`)
 
@@ -28,5 +38,6 @@ async function startup() {
 
 startup().catch(err => {
   console.error('❌ Erreur fatale:', err.message)
-  process.exit(1)
+  // Do NOT process.exit(1) — that causes PM2 infinite restart loop.
+  // API stays up via lazy DB retry middleware in api.mjs.
 })

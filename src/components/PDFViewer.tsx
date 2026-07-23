@@ -1,11 +1,11 @@
 // ─── RMASC FACTORY — Professional PDF Viewer ────────────────────────────
 // Dedicated PDF viewer integrated into the platform for admin use.
-// Supports base64 data URLs and external URLs.
+// Supports base64 data URLs and authenticated server URLs via fetch() → blob.
 
 import { useState, useRef, useEffect } from 'react'
 
 interface Props {
-  data: string          // base64 data URL or regular URL
+  data: string          // base64 data URL or server API URL
   fileName?: string
   onClose?: () => void
 }
@@ -14,7 +14,37 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
   const [zoom, setZoom] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [embedError, setEmbedError] = useState(false)
+  const [blobUrl, setBlobUrl] = useState<string | null>(null)
+
+  // ── If data is a server URL (starts with /api/), fetch with auth to get blob ──
+  useEffect(() => {
+    if (!data) return
+    const isServerUrl = data.startsWith('/api/')
+    if (!isServerUrl) {
+      setBlobUrl(null) // base64 — use directly
+      return
+    }
+    const token = localStorage.getItem('rmasc_token')
+    let cancelled = false
+    fetch(data, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.blob()
+      })
+      .then(blob => {
+        if (!cancelled) {
+          const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
+          setBlobUrl(url)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setEmbedError(true)
+      })
+    return () => { cancelled = true; if (blobUrl) URL.revokeObjectURL(blobUrl) }
+  }, [data])
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -22,6 +52,10 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
     document.addEventListener('fullscreenchange', handler)
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
+
+  const displaySrc = blobUrl || data
+  const isBase64PDF = data?.startsWith('data:application/pdf')
+  const isServerUrl = data?.startsWith('/api/')
 
   if (!data) {
     return (
@@ -39,16 +73,35 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
     }
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    if (isServerUrl && !isBase64PDF) {
+      const token = localStorage.getItem('rmasc_token')
+      try {
+        const res = await fetch(data, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+        if (!res.ok) throw new Error('Download failed')
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = fileName || 'document.pdf'
+        document.body.appendChild(a); a.click(); document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 2000)
+        return
+      } catch { /* fallback below */ }
+    }
     const a = document.createElement('a')
-    a.href = data
+    a.href = displaySrc
     a.download = fileName || 'document.pdf'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
   }
 
-  const isBase64PDF = data.startsWith('data:application/pdf')
+  const handleOpenInNewTab = () => {
+    window.open(displaySrc, '_blank')
+  }
+
   const isValid = isBase64PDF || data.endsWith('.pdf') || data.includes('/pdf')
 
   return (
@@ -65,7 +118,7 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
           <div className="w-8 h-8 rounded-lg bg-slate-700/50 flex items-center justify-center text-sm flex-shrink-0">📄</div>
           <div className="min-w-0">
             <p className="text-[12px] font-bold text-white truncate max-w-[200px]">{fileName || 'Document PDF'}</p>
-            <p className="text-[9px] text-white/70">PDF • {isValid ? 'Prêt' : 'Format inconnu'}</p>
+            <p className="text-[9px] text-white/70">PDF • {isServerUrl ? 'Serveur' : 'Base64'} {blobUrl ? '• Chargé' : ''}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -100,14 +153,14 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
 
       {/* ─── PDF Content ─── */}
       <div className="flex-1 overflow-auto flex items-start justify-center p-4 bg-[#0b1120] relative">
-        {isValid ? (
+        {isValid && displaySrc && !embedError ? (
           <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', transition: 'transform 0.15s ease-out' }}>
             <embed
-              src={data}
+              src={displaySrc}
               type="application/pdf"
               className="rounded-lg shadow-2xl"
               style={{ width: fullscreen ? '85vw' : '100%', minWidth: zoom > 1 ? 800 : 600, height: fullscreen ? '85vh' : '70vh' }}
-              onError={() => setError('Impossible de charger le PDF.')}
+              onError={() => setEmbedError(true)}
             />
           </div>
         ) : (
@@ -115,15 +168,25 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
             <span className="text-6xl mb-4">📄</span>
             <p className="text-sm font-medium text-white/80">{fileName || 'Document'}</p>
             <p className="text-xs mt-1 mb-4">Ce fichier ne peut pas être affiché directement.</p>
-            <button onClick={handleDownload}
-              className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
-              ⬇️ Télécharger
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={handleDownload}
+                className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
+                ⬇️ Télécharger
+              </button>
+              <button onClick={handleOpenInNewTab}
+                className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2">
+                ↗️ Ouvrir dans un nouvel onglet
+              </button>
+            </div>
           </div>
         )}
-        {error && (
-          <div className="absolute bottom-4 left-4 right-4 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-2 text-sm text-red-400">
-            {error}
+        {embedError && (
+          <div className="absolute bottom-4 left-4 right-4 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-2 text-sm text-red-400 flex items-center justify-between">
+            <span>Impossible de charger le PDF dans l'aperçu intégré.</span>
+            <button onClick={() => { setEmbedError(false); handleDownload() }}
+              className="text-emerald-400 hover:text-emerald-300 font-bold underline text-xs">
+              ⬇️ Télécharger
+            </button>
           </div>
         )}
       </div>
@@ -131,9 +194,14 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
       {/* ─── Footer ─── */}
       <div className="flex-shrink-0 px-4 py-2 bg-[#0d1520] border-t border-slate-700 flex items-center justify-between text-[10px]">
         <span className="text-white/50 font-medium">📄 {fileName || 'Document PDF'}</span>
-        <button onClick={handleDownload} className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
-          ⬇️ Télécharger
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={handleOpenInNewTab} className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+            ↗️ Nouvel onglet
+          </button>
+          <button onClick={handleDownload} className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+            ⬇️ Télécharger
+          </button>
+        </div>
       </div>
     </div>
   )

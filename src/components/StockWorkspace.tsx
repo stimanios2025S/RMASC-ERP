@@ -246,7 +246,7 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-white">Articles en stock</p>
@@ -286,7 +286,7 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
       </div>
 
       {/* Alerts + Recent Movements */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Low Stock Alerts */}
         <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
@@ -375,7 +375,7 @@ function DashboardTab({ stats, lowStockItems, movements, items, suppliers, onVie
       {/* Categories breakdown */}
       <div className="bg-white/[0.04] rounded-2xl border border-white/10 p-5 shadow-sm">
         <h3 className="text-sm font-bold text-white mb-4">📊 Répartition par Catégorie</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Array.from(new Set(items.map(i => i.category))).map(cat => {
             const catItems = items.filter(i => i.category === cat)
             const total = catItems.reduce((s, i) => s + i.quantity, 0)
@@ -670,11 +670,11 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
         <h2 className="text-lg font-bold text-white">📦 Nouvel Article</h2>
       </div>
       <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField label="Référence *" value={form.reference} onChange={v => setForm({ ...form, reference: v })} required />
           <InputField label="Nom *" value={form.name} onChange={v => setForm({ ...form, name: v })} required />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectField label="Catégorie" value={form.category} onChange={v => setForm({ ...form, category: v })} options={CATEGORIES} />
           <SelectField label="Unité" value={form.unit} onChange={v => setForm({ ...form, unit: v })} options={['Unité', 'Mètre', 'Kg', 'Lot', 'Plaque', 'Rouleau', 'Boîte']} />
           <SelectField label="Stock" value={form.location} onChange={v => setForm({ ...form, location: v })} options={['Stock 1', 'Stock 2']} />
@@ -811,7 +811,7 @@ function ItemDetailView({ item, onBack, feedback }: { item: StockItem; onBack: (
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4">
           <p className="text-[10px] font-bold text-white uppercase tracking-wider">Quantité</p>
           <p className={`text-2xl font-bold mt-1 ${item.quantity <= item.alertThreshold ? 'text-red-500' : 'text-emerald-600'}`}>{item.quantity} {item.unit}</p>
@@ -839,6 +839,7 @@ function ItemDetailView({ item, onBack, feedback }: { item: StockItem; onBack: (
       <h3 className="text-sm font-bold text-white mb-3">📋 Historique des Mouvements</h3>
       <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
         {loading ? <p className="text-sm text-white italic text-center py-6">Chargement...</p> : movements.length === 0 ? <p className="text-sm text-white italic text-center py-6">Aucun mouvement.</p> : (
+          <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead><tr className="bg-white/[0.04] border-b border-white/10"><th className="text-left px-4 py-2.5 font-semibold text-white">Date</th><th className="text-left px-4 py-2.5 font-semibold text-white">Type</th><th className="text-right px-4 py-2.5 font-semibold text-white">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-white">Prix</th><th className="text-left px-4 py-2.5 font-semibold text-white">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-white">Doc.</th><th className="text-left px-4 py-2.5 font-semibold text-white">Notes</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
@@ -857,6 +858,7 @@ function ItemDetailView({ item, onBack, feedback }: { item: StockItem; onBack: (
               ))}
             </tbody>
           </table>
+            </div>
         )}
       </div>
     </div>
@@ -973,11 +975,11 @@ function SuppliersTab({ suppliers, showForm, setShowForm, onRefresh, feedback, s
       </div>
       <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
         <InputField label="Nom du fournisseur *" value={form.name} onChange={v => setForm({ ...form, name: v })} required />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField label="Personne contact" value={form.contactName} onChange={v => setForm({ ...form, contactName: v })} />
           <InputField label="Email" value={form.email} onChange={v => setForm({ ...form, email: v })} type="email" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField label="Téléphone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} />
           <InputField label="Adresse" value={form.address} onChange={v => setForm({ ...form, address: v })} />
         </div>
@@ -1077,16 +1079,16 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
         <h2 className="text-lg font-bold text-white">📋 Nouveau Mouvement</h2>
       </div>
       <form onSubmit={handleSubmit} className="bg-white/[0.04] rounded-2xl border border-white/10 p-6 shadow-sm space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectField label="Type *" value={form.type} onChange={v => setForm({ ...form, type: v })} options={[{ value: 'ENTRY', label: '📥 Entrée en stock' }, { value: 'EXIT', label: '📤 Sortie de stock' }, { value: 'ADJUSTMENT', label: '🔧 Ajustement' }]} />
           <InputField label="Quantité *" value={String(form.quantity)} onChange={v => setForm({ ...form, quantity: parseInt(v) || 0 })} type="number" />
         </div>
         <SelectField label="Article *" value={form.itemId} onChange={v => setForm({ ...form, itemId: v })} options={[{ value: '', label: 'Sélectionner...' }, ...items.map(i => ({ value: i.id, label: `${i.name} (${i.reference}) — Stock: ${i.quantity}` }))]} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField label="Prix unitaire (DA)" value={String(form.unitPrice)} onChange={v => setForm({ ...form, unitPrice: parseFloat(v) || 0 })} type="number" />
           <InputField label="Total estimé" value={String(form.unitPrice * form.quantity)} onChange={() => {}} readOnly />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectField label="Fournisseur" value={form.supplierId} onChange={v => setForm({ ...form, supplierId: v })} options={[{ value: '', label: '—' }, ...suppliers.map(s => ({ value: s.id, label: s.name }))]} />
           <InputField label="Référence" value={form.reference} onChange={v => setForm({ ...form, reference: v })} placeholder="N° BL, N° Facture..." />
         </div>
@@ -1118,6 +1120,7 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
       </div>
       <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
         {filtered.length === 0 ? <p className="text-sm text-white italic text-center py-6">Aucun mouvement.</p> : (
+          <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead><tr className="bg-white/[0.04] border-b border-white/10"><th className="text-left px-4 py-2.5 font-semibold text-white">Date</th><th className="text-left px-4 py-2.5 font-semibold text-white">Article</th><th className="text-left px-4 py-2.5 font-semibold text-white">Type</th><th className="text-right px-4 py-2.5 font-semibold text-white">Qté</th><th className="text-right px-4 py-2.5 font-semibold text-white">Total</th><th className="text-left px-4 py-2.5 font-semibold text-white">Réf.</th><th className="text-left px-4 py-2.5 font-semibold text-white">Par</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
@@ -1134,6 +1137,7 @@ function MovementsTab({ movements, showForm, setShowForm, items, suppliers, onRe
               ))}
             </tbody>
           </table>
+            </div>
         )}
       </div>
     </div>

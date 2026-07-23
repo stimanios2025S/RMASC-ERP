@@ -29,11 +29,22 @@ import type { PortalSession } from '../data/portalUsers'
 import Icon from './ui/Icon'
 import KpiCard from './dashboard/KpiCard'
 import AuditLogPage from './AuditLogPage'
+import { showToast } from './ui/Toast'
+import { CardSkeleton } from './ui/Skeleton'
 
 interface OrderSummary {
   id: string; serialNumber: string; clientName: string; clientCity: string
   typeMotorisation: string; typeCabine?: string; status: string; createdAt: string
   priority?: string; _count: { cadSubmissions: number }
+}
+interface DashboardStats {
+  totalOrders: number; activeOrders: number; blockedOrders: number
+  completedOrders: number; cancelledOrders: number; completionRate: number
+  statusMap: Record<string, number>; priorityMap: Record<string, number>
+  typeMap: Record<string, number>; engineeringStages: {
+    engineering: number; design2d: number; verification: number; production: number
+  }
+  revenue: { totalDZD: number; deliveredCount: number }
 }
 interface Props { onLogout: () => void; session: PortalSession; onSessionUpdate?: () => void }
 
@@ -56,7 +67,6 @@ const menuItems = [
   { icon: 'HelpCircle', label: 'Aide & Catalogue', view: 'help' as const, badge: null },
   { icon: 'Package', label: 'Archives', view: 'archives' as const, badge: null },
   { icon: 'Settings', label: 'Paramètres', view: 'settings' as const, badge: null },
-  { icon: 'Code2', label: "Journal d'Audit", view: 'audit-log' as const, badge: null },
 ]
 const generalItems = [{ icon: 'LogOut', label: 'Déconnexion', action: 'logout' as const }]
 
@@ -441,7 +451,26 @@ function CollaborationCard({ orders }: { orders: OrderSummary[] }) {
 }
 
 function ProgressArc({ orders }: { orders: OrderSummary[] }) {
-  const total = orders.length || 1
+  const total = orders.length
+  if (total === 0) {
+    return (
+      <div className="bg-slate-800/70 rounded-2xl border border-white/10 p-5 flex flex-col items-center">
+        <h3 className="text-base font-semibold text-white mb-3 w-full">Progression des Commandes</h3>
+        <div className="relative w-[130px] h-[130px] mb-4">
+          <svg className="w-full h-full" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-2xl font-bold text-white/50">0%</span>
+            <span className="text-[10px] text-white/40 font-medium">Terminés</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-xs text-white/40">
+          <span>Aucune commande enregistrée</span>
+        </div>
+      </div>
+    )
+  }
   const termines = orders.filter(o => ['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length
   const enCours = orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION', 'EN_LIVRAISON'].includes(o.status)).length
   const enAttente = orders.filter(o => ['BROUILLON', 'ATTENTE_APPROBATION_ADMIN', 'PRET_POUR_PRODUCTION'].includes(o.status)).length
@@ -529,6 +558,8 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   })
   const persistView = useCallback((v: ViewType) => { setView(v); try { localStorage.setItem('rmasc_active_tab', v) } catch {} }, [])
   const [orders, setOrders] = useState<OrderSummary[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
   const [ficheOrderId, setFicheOrderId] = useState<string | null>(null)
   const [notifications, setNotifications] = useState<OrderSummary[]>([])
   const [showNotifPanel, setShowNotifPanel] = useState(false)
@@ -573,6 +604,11 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         const data: OrderSummary[] = await apiFetch('/orders')
         if (cancelled) return
         setOrders(data)
+        // ── Fetch live dashboard stats from aggregation pipeline ─────
+        try {
+          const liveStats: DashboardStats = await apiFetch('/stats/dashboard')
+          if (!cancelled) { setStats(liveStats); setStatsLoading(false) }
+        } catch { if (!cancelled) setStatsLoading(false) }
         const newNotifs = data.filter(o => o.status === 'ATTENTE_APPROBATION_ADMIN')
         setNotifications(newNotifs)
         if (newNotifs.length > prevNotifCount.current) {
@@ -605,7 +641,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   if (view === 'be-inspect') return (
     <div className="flex h-screen bg-slate-950">
       <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-slate-950">
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-2.5 flex items-center justify-between shadow-lg">
           <span className="text-sm font-bold">👁️ Mode Inspection</span>
           <button onClick={() => persistView('dashboard')} className="px-4 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-bold">👑 Retour</button>
@@ -686,12 +722,18 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
             </button>
           </div>
 
-          {/* KPIs */}
+          {/* KPIs — live stats or loading skeletons */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 stagger-children">
-            <KpiCard title="Commandes Totales" value={String(kpis.total)} subtext="Toutes les configurations" icon="BarChart3" />
-            <KpiCard title="Commandes Livrées" value={String(kpis.termines)} subtext="Statut LIVRÉ ou CONSTRUIT" icon="Check" />
-            <KpiCard title="En Production" value={String(kpis.enCours)} subtext="En attente ou en fabrication" icon="ListTodo" />
-            <KpiCard title="Brouillons" value={String(kpis.enAttente)} subtext="En attente de validation" icon="Clock" />
+            {statsLoading ? (
+              Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
+            ) : (
+              <>
+                <KpiCard title="Commandes Totales" value={String(stats?.totalOrders ?? orders.length)} subtext="Toutes les configurations" icon="BarChart3" />
+                <KpiCard title="Commandes Livrées" value={String(stats?.completedOrders ?? kpis.termines)} subtext={`${stats?.completionRate ?? 0}% de complétion`} icon="Check" />
+                <KpiCard title="En Production" value={String(stats?.activeOrders ?? kpis.enCours)} subtext="En attente ou en fabrication" icon="ListTodo" />
+                <KpiCard title="Brouillons / Bloquées" value={String(stats?.blockedOrders ?? kpis.enAttente)} subtext="En attente de validation" icon="Clock" />
+              </>
+            )}
           </div>
 
           {/* Notifications */}
@@ -715,41 +757,41 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
             </div>
           )}
 
-          {/* Prediction Row */}
+          {/* Prediction Row — live stats or client-side fallback */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="bg-slate-800/70 rounded-2xl border border-white/10 p-5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2"><span>🔮</span> Prédictions</h3>
-                <span className="text-[10px] text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-full font-semibold">IA</span>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2"><span>🔮</span> Progression</h3>
+                <span className="text-[10px] text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-full font-semibold">Live</span>
               </div>
               <div className="space-y-3">
-                <div className="flex items-center justify-between"><span className="text-xs text-white/60">Commandes en cours</span><span className="text-lg font-bold text-white">{orders.filter(o => !['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length}</span></div>
+                <div className="flex items-center justify-between"><span className="text-xs text-white/60">Commandes en cours</span><span className="text-lg font-bold text-white">{stats?.activeOrders ?? orders.filter(o => !['LIVREE', 'VALIDEE', 'ANNULEE'].includes(o.status)).length}</span></div>
                 <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 animate-progress" style={{ width: `${orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 animate-progress" style={{ width: `${(stats?.totalOrders ?? orders.length) > 0 ? (stats?.completionRate ?? (orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0)) : 0}%` }} />
                 </div>
-                <div className="flex items-center justify-between text-[10px]"><span className="text-white/60">Progression</span><span className="text-amber-400 font-bold">{orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%</span></div>
+                <div className="flex items-center justify-between text-[10px]"><span className="text-white/60">Taux de complétion</span><span className="text-amber-400 font-bold">{stats?.completionRate ?? (orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0)}%</span></div>
               </div>
             </div>
             <div className="bg-slate-800/70 rounded-2xl border border-white/10 p-5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2"><span>🏆</span> Productivité</h3>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${orders.length > 0 && (orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) > 0.5 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>{orders.length > 0 ? Math.round((orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length / orders.length) * 100) : 0}%</span>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2"><span>💰</span> Revenus</h3>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${(stats?.revenue?.totalDZD ?? 0) > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>{(stats?.revenue?.deliveredCount ?? 0)} livrées</span>
               </div>
               <div className="space-y-2.5">
-                <div className="flex items-center justify-between"><span className="text-xs text-white/60">✅ Terminées</span><span className="text-sm font-bold text-emerald-400">{orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length}</span></div>
-                <div className="flex items-center justify-between"><span className="text-xs text-white/60">🔄 En cours</span><span className="text-sm font-bold text-amber-400">{orders.filter(o => ['ATTENTE_DESSIN_TECH', 'ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION', 'ATTENTE_APPROBATION_ADMIN', 'EN_LIVRAISON'].includes(o.status)).length}</span></div>
-                <div className="flex items-center justify-between"><span className="text-xs text-white/60">⏸️ Bloquées</span><span className="text-sm font-bold text-red-400">{orders.filter(o => ['BROUILLON', 'PRET_POUR_PRODUCTION'].includes(o.status)).length}</span></div>
+                <div className="flex items-center justify-between"><span className="text-xs text-white/60">💰 Chiffre d'affaires</span><span className="text-sm font-bold text-emerald-400">{(stats?.revenue?.totalDZD ?? 0).toLocaleString('fr-DZ')} DZD</span></div>
+                <div className="flex items-center justify-between"><span className="text-xs text-white/60">📦 Commandes livrées</span><span className="text-sm font-bold text-amber-400">{stats?.completedOrders ?? orders.filter(o => ['LIVREE', 'VALIDEE'].includes(o.status)).length}</span></div>
+                <div className="flex items-center justify-between"><span className="text-xs text-white/60">⏸️ Bloquées</span><span className="text-sm font-bold text-red-400">{stats?.blockedOrders ?? orders.filter(o => ['BROUILLON', 'PRET_POUR_PRODUCTION'].includes(o.status)).length}</span></div>
               </div>
             </div>
             <div className="bg-slate-800/70 rounded-2xl border border-white/10 p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2"><span>🚨</span> Priorités</h3>
-                <span className="text-[10px] text-red-400 font-bold">{orders.filter(o => o.priority === 'URGENT' || o.priority === 'HAUTE').length}</span>
+                <span className="text-[10px] text-red-400 font-bold">{(stats?.priorityMap?.['URGENT'] ?? 0) + (stats?.priorityMap?.['HAUTE'] ?? 0)} urgentes</span>
               </div>
               <div className="space-y-2.5">
-                <div className="flex items-center justify-between"><span className="text-xs text-white/60">🔴 Urgent</span><span className="text-sm font-bold text-red-400">{orders.filter(o => o.priority === 'URGENT').length}</span></div>
-                <div className="flex items-center justify-between"><span className="text-xs text-white/60">🟠 Haute</span><span className="text-sm font-bold text-orange-400">{orders.filter(o => o.priority === 'HAUTE').length}</span></div>
-                <div className="flex items-center justify-between"><span className="text-xs text-white/60">🔵 Normale</span><span className="text-sm font-bold text-blue-400">{orders.filter(o => !o.priority || o.priority === 'NORMAL').length}</span></div>
+                <div className="flex items-center justify-between"><span className="text-xs text-white/60">🔴 Urgent</span><span className="text-sm font-bold text-red-400">{stats?.priorityMap?.['URGENT'] ?? orders.filter(o => o.priority === 'URGENT').length}</span></div>
+                <div className="flex items-center justify-between"><span className="text-xs text-white/60">🟠 Haute</span><span className="text-sm font-bold text-orange-400">{stats?.priorityMap?.['HAUTE'] ?? orders.filter(o => o.priority === 'HAUTE').length}</span></div>
+                <div className="flex items-center justify-between"><span className="text-xs text-white/60">🔵 Normale</span><span className="text-sm font-bold text-blue-400">{stats?.priorityMap?.['NORMAL'] ?? orders.filter(o => !o.priority || o.priority === 'NORMAL').length}</span></div>
               </div>
             </div>
           </div>

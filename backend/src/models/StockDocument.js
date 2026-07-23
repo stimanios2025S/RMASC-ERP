@@ -22,7 +22,7 @@ const documentSchema = new mongoose.Schema({
   lines:          [lineSchema],
 }, { timestamps: true })
 
+// NOTE: documentNumber has unique:true inline (auto-indexed) — do NOT duplicate.
 documentSchema.index({ documentType: 1 })
-documentSchema.index({ documentNumber: 1 })
 
 export default mongoose.model('StockDocument', documentSchema)

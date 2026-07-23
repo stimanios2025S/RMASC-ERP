@@ -91,7 +91,7 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
   if (deliveryOrder) return <DeliveryDetail order={deliveryOrder} onBack={() => setDeliveryOrder(null)} onConfirm={confirmDelivery} submitting={submitting} actionMsg={actionMsg} setActionMsg={setActionMsg} onFiche={onFiche} />
 
   return (
-    <PageBackground className="flex-1 overflow-y-auto">
+    <PageBackground className="flex-1 overflow-y-auto overflow-x-hidden">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -101,31 +101,34 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
             </button>
           )}
           <h1 className="text-lg font-extrabold text-white">✅ Validations</h1>
-          <span className="text-xs font-mono text-white/80 font-semibold">{pending.length + pendingDelivery.length} en attente</span>
+          <span className="text-xs font-mono text-amber-400 font-bold">{pending.length + pendingDelivery.length} en attente</span>
         </div>
         {actionMsg && <span className={`text-sm font-medium ${actionMsg.includes('✅') ? 'text-emerald-400' : 'text-amber-400'}`}>{actionMsg}</span>}
       </div>
 
-      {/* Tabs */}
-      <div className="sticky top-[57px] z-10 bg-slate-800/70 border-b border-white/5 px-6 flex gap-0">
+      {/* Tabs — clean borders, no bleed */}
+      <div className="sticky top-[57px] z-10 bg-slate-900/90 backdrop-blur-sm border-b border-white/5">
+        <div className="px-6 flex gap-0">
         {TABS.map(t => {
           const isActive = tab === t.key
           const count = t.key === 'plans' ? pending.length : pendingDelivery.length
           return (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-5 py-3 text-base font-bold border-b-2 transition-all whitespace-nowrap ${
-                isActive ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'
+              className={`relative flex items-center gap-2 px-5 py-3 text-sm font-bold transition-all whitespace-nowrap ${
+                isActive ? 'text-amber-400' : 'text-white/50 hover:text-white/80'
               }`}>
               <span>{t.icon}</span>
               <span>{t.label}</span>
               {count > 0 && (
                 <span className={`px-1.5 py-0.5 rounded-full text-[11px] font-bold ${
-                  isActive ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/70'
+                  isActive ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/50'
                 }`}>{count}</span>
               )}
+              {isActive && <span className="absolute bottom-0 left-5 right-5 h-0.5 bg-amber-400 rounded-full" />}
             </button>
           )
         })}
+        </div>
       </div>
 
       <div className="p-6">
@@ -135,12 +138,22 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
         {tab === 'plans' && (
           <div>
             {loading ? (
-              <div className="text-sm text-white/80 italic p-4 text-center">Chargement...</div>
+              <div className="min-h-[60vh] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
+                  <p className="text-sm text-white/60">Chargement des validations...</p>
+                </div>
+              </div>
             ) : pending.length === 0 ? (
-              <div className="bg-slate-800/70 rounded-2xl border border-white/5 p-12 text-center">
-                <span className="text-5xl block mb-4">✅</span>
-                <h3 className="text-base font-bold text-white">Tous les plans sont approuvés</h3>
-                <p className="text-sm text-white/80 mt-1">Aucune approbation de plan en attente.</p>
+              <div className="min-h-[60vh] flex items-center justify-center">
+                <div className="bg-slate-800/70 rounded-2xl border border-white/5 p-12 text-center max-w-md mx-auto">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-3xl">✅</span>
+                  </div>
+                  <h3 className="text-base font-bold text-white">Tous les plans sont approuvés</h3>
+                  <p className="text-sm text-slate-400 mt-1">Aucune approbation de plan en attente.</p>
+                  <p className="text-xs text-slate-500 mt-3">Les nouvelles commandes apparaîtront automatiquement ici.</p>
+                </div>
               </div>
             ) : (
               <div className="space-y-3">
@@ -212,12 +225,21 @@ export default function ValidationsPage({ onBack, onFiche }: Props) {
               </h2>
 
               {loading ? (
-                <div className="text-sm text-white/80 italic p-4 text-center">Chargement...</div>
+                <div className="min-h-[40vh] flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 rounded-full border-2 border-cyan-500/30 border-t-cyan-500 animate-spin" />
+                    <p className="text-sm text-white/60">Chargement...</p>
+                  </div>
+                </div>
               ) : pendingDelivery.length === 0 ? (
-                <div className="bg-slate-800/70 rounded-2xl border border-white/5 p-12 text-center">
-                  <span className="text-5xl block mb-4">🚚</span>
-                  <h3 className="text-base font-bold text-white">Aucune livraison en attente</h3>
-                  <p className="text-sm text-white/80 mt-1">Les livraisons prêtes apparaîtront ici pour validation.</p>
+                <div className="min-h-[40vh] flex items-center justify-center">
+                  <div className="bg-slate-800/70 rounded-2xl border border-white/5 p-12 text-center max-w-md mx-auto">
+                    <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 flex items-center justify-center mx-auto mb-4">
+                      <span className="text-3xl">🚚</span>
+                    </div>
+                    <h3 className="text-base font-bold text-white">Aucune livraison en attente</h3>
+                    <p className="text-sm text-slate-400 mt-1">Les livraisons prêtes apparaîtront ici pour validation.</p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3">

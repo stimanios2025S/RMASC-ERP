@@ -312,6 +312,10 @@ function FicheDocument({ data }: { data: OrderFull }) {
           <div className="fiche-cell-value">{data.clientName}</div>
         </div>
         <div className="fiche-cell">
+          <div className="fiche-cell-label">Nom du projet</div>
+          <div className="fiche-cell-value" style={{color: data.projectName ? '#fbbf24' : '#64748b'}}>{data.projectName || 'Non spécifié'}</div>
+        </div>
+        <div className="fiche-cell">
           <div className="fiche-cell-label">Ville</div>
           <div className="fiche-cell-value">{data.clientCity}</div>
         </div>
@@ -323,12 +327,6 @@ function FicheDocument({ data }: { data: OrderFull }) {
           <div className="fiche-cell-label">Telephone</div>
           <div className="fiche-cell-value">{data.clientPhone}</div>
         </div>
-        {data.projectName && (
-          <div className="fiche-cell fiche-cell-wide">
-            <div className="fiche-cell-label">Projet</div>
-            <div className="fiche-cell-value">{data.projectName}</div>
-          </div>
-        )}
       </div>
 
       {/* ═══════ 2. MOTORISATION ═══════ */}

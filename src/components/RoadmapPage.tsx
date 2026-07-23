@@ -81,7 +81,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
       </div>
 
       {/* KPI */}
-      <div className="px-6 py-4 grid grid-cols-4 gap-4">
+      <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total', value: total, color: 'text-white', bg: 'bg-white/[0.04] border border-white/10' },
           { label: 'En cours', value: enCours, color: 'text-cyan-700', bg: 'bg-cyan-50 border border-cyan-100' },

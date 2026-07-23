@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import type { PortalSession, PortalUser } from '../data/portalUsers'
 import { getSession, changeAdminCredentials, changeUserPassword, updateUserDisplayName, fetchAllUsers } from '../data/portalUsers'
 import CatalogSettings from './CatalogSettings'
+import AuditLogPage from './AuditLogPage'
 
 interface Props {
   onBack?: () => void
@@ -120,7 +121,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
   }
 
   const sorted = ROLE_ORDER.map(role => users.find(u => u.role === role)).filter(Boolean) as PortalUser[]
-  const [settingsTab, setSettingsTab] = useState<'team' | 'catalog'>('team')
+  const [settingsTab, setSettingsTab] = useState<'team' | 'catalog' | 'audit'>('team')
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -138,16 +139,22 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
       {/* ── Settings Tabs ── */}
       <div className="bg-slate-800/70 border-b border-white/5 px-6 flex gap-0">
         <button onClick={() => setSettingsTab('team')}
-          className={`px-5 py-3 text-base font-bold border-b-2 transition-all ${
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${
             settingsTab === 'team' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'
           }`}>
           👥 Équipe
         </button>
         <button onClick={() => setSettingsTab('catalog')}
-          className={`px-5 py-3 text-base font-bold border-b-2 transition-all ${
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${
             settingsTab === 'catalog' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'
           }`}>
           📋 Catalogue
+        </button>
+        <button onClick={() => setSettingsTab('audit')}
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${
+            settingsTab === 'audit' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'
+          }`}>
+          📜 Journal d'Audit
         </button>
       </div>
 
@@ -164,7 +171,11 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
           </div>
         )}
 
-        {settingsTab === 'catalog' ? (
+        {settingsTab === 'audit' ? (
+          <div className="max-w-4xl mx-auto">
+            <AuditLogPage onBack={undefined} />
+          </div>
+        ) : settingsTab === 'catalog' ? (
           <CatalogSettings />
         ) : (
           <div>
@@ -261,7 +272,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
 
             {showAdminForm && (
               <form onSubmit={handleAdminCredentialChange} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-white">Identifiant</label>
                     <input type="text" value={newId} onChange={e => setNewId(e.target.value)}
@@ -276,7 +287,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
                   </div>
                 </div>
                 <hr className="border-white/5" />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-white">Nouveau mot de passe *</label>
                     <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
