@@ -1,9 +1,10 @@
-// ─── RMASC FACTORY — Service Worker v2.6.0 ──────────────────────────────
+// ─── RMASC FACTORY — Service Worker v2.6.1 ──────────────────────────────
 // Stratégie : Cache-first pour les assets, réseau d'abord pour l'API.
 // File d'attente offline pour les mutations (POST/PATCH/DELETE).
 // Sync automatique via Background Sync API quand la connexion revient.
+// v2.6.1: All Cache.put() wrapped in catch() to prevent blank-screen crashes.
 
-const SW_VERSION = 'v2.6.0'
+const SW_VERSION = 'v2.6.1'
 const CACHE_STATIC = 'rmasc-static'
 const CACHE_DYNAMIC = 'rmasc-dynamic'
 const CACHE_ASSETS = 'rmasc-assets'
@@ -19,6 +20,20 @@ const STATIC_URLS = [
 ]
 
 const API_PREFIX = '/api'
+
+// ─── Safe cache put — never throws, never crashes the page ───────────────
+async function safeCachePut(cacheName, request, response) {
+  try {
+    if (!response || !response.ok) return
+    // Only cache same-origin or CORS responses (opaque responses can't be cached via put)
+    const type = response.type
+    if (type === 'opaque' || type === 'opaqueredirect') return
+    const cache = await caches.open(cacheName)
+    await cache.put(request, response.clone())
+  } catch {
+    // Silently ignore cache failures — never crash the SW or the page
+  }
+}
 
 // ─── INSTALL ───────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
@@ -80,8 +95,7 @@ async function cacheFirst(request) {
   try {
     const response = await fetch(request)
     if (response.ok && request.method === 'GET') {
-      const cache = await caches.open(CACHE_ASSETS)
-      cache.put(request, response.clone())
+      safeCachePut(CACHE_ASSETS, request, response)
     }
     return response
   } catch {
@@ -93,8 +107,7 @@ async function networkFirstWithQueue(request) {
   try {
     const response = await fetch(request)
     if (response.ok && request.method === 'GET') {
-      const cache = await caches.open(CACHE_DYNAMIC)
-      cache.put(request, response.clone())
+      safeCachePut(CACHE_DYNAMIC, request, response)
     }
     return response
   } catch {
@@ -117,8 +130,7 @@ async function networkFirstWithOfflineFallback(request) {
   try {
     const response = await fetch(request)
     if (response.ok) {
-      const cache = await caches.open(CACHE_DYNAMIC)
-      cache.put(request, response.clone())
+      safeCachePut(CACHE_DYNAMIC, request, response)
     }
     return response
   } catch {
