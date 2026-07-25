@@ -49,12 +49,14 @@ echo.
 REM ─── 3. UPLOAD BACKEND (if changed) ──────────────────────────────────────
 echo  [3/4] Syncing backend (if changes detected)...
 
-:: Check if backend files changed since last deploy (optional)
-:: For now, always sync backend api.mjs and models
-ssh sarlrmasc@192.168.1.95 "mkdir -p /opt/rmasc/backend/src"
+ssh sarlrmasc@192.168.1.95 "mkdir -p /opt/rmasc/backend/src/lib /opt/rmasc/backend/src/models /opt/rmasc/backend/src/middleware /opt/rmasc/backend/src/controllers /opt/rmasc/backend/src/schemas /opt/rmasc/backend/src/utils"
 scp -r backend\api.mjs sarlrmasc@192.168.1.95:/opt/rmasc/backend/
 scp -r backend\src\lib\*.mjs sarlrmasc@192.168.1.95:/opt/rmasc/backend/src/lib/ 2>nul
 scp -r backend\src\models\*.js sarlrmasc@192.168.1.95:/opt/rmasc/backend/src/models/ 2>nul
+scp -r backend\src\controllers\*.js sarlrmasc@192.168.1.95:/opt/rmasc/backend/src/controllers/ 2>nul
+scp -r backend\src\middleware\*.js sarlrmasc@192.168.1.95:/opt/rmasc/backend/src/middleware/ 2>nul
+scp -r backend\src\schemas\*.js sarlrmasc@192.168.1.95:/opt/rmasc/backend/src/schemas/ 2>nul
+scp -r backend\src\utils\*.js sarlrmasc@192.168.1.95:/opt/rmasc/backend/src/utils/ 2>nul
 
 echo  ✅ Backend synced
 echo.

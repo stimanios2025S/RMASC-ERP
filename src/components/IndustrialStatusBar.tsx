@@ -17,9 +17,9 @@ interface Metric {
 export default function IndustrialStatusBar() {
   const [time, setTime] = useState(new Date())
   const [metrics, setMetrics] = useState<Metric[]>([
-    { label: 'Production', value: 48, unit: 'cmd/mois', icon: '🏭', color: 'text-emerald-400' },
-    { label: 'Taux OK', value: 92, unit: '%', icon: '✅', color: 'text-emerald-400' },
-    { label: 'Disponible', value: 97, unit: '%', icon: '⚡', color: 'text-amber-400' },
+    { label: 'Systeme', value: 100, unit: '%', icon: '⚡', color: 'text-emerald-400' },
+    { label: 'Securise', value: 100, unit: '%', icon: '🔒', color: 'text-emerald-400' },
+    { label: 'Pret', value: 100, unit: '%', icon: '✅', color: 'text-amber-400' },
   ])
 
   // Time update — every second

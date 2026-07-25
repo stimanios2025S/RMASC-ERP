@@ -14,8 +14,8 @@ let currentSession: PortalSession | null = loadSession()
 export async function initPortalUsers(): Promise<void> {
   // Init le localStorage (seed des utilisateurs locaux)
   initLocalData()
-  // Tentative de seed du backend (silencieux si hors-ligne)
-  try { await api.post('/users/seed', {}) } catch {}
+  // Tentative de seed du backend (silencieux si hors-ligne, non bloquant)
+  api.post('/users/seed', {}).catch(() => {})
 }
 
 export async function login(loginId: string, password: string): Promise<PortalSession | null> {

@@ -1,7 +1,7 @@
 // ─── RMASC FACTORY — Local Storage Layer ──────────────────────────────
 // SESSION persistence for login across refresh.
 // LOCAL API fallback for offline/demo mode (fully self-contained).
-// In production mode with Neon backend, all data goes through the API.
+// In production mode with MongoDB backend, all data goes through the API.
 // localStorage is only used for session + local fallback.
 
 const SEED_KEY = 'rmasc_local_seeded_v3'
@@ -34,8 +34,24 @@ interface LocalOrder {
 let uid = 100
 function genId(prefix: string) { return `${prefix}_${++uid}_${Date.now().toString(36)}` }
 
+function getUsers(): LocalUser[] {
+  try { return JSON.parse(localStorage.getItem('rmasc_local_users') || '[]') } catch { return [] }
+}
+
+// ─── Validate that seed data actually exists.
+//     If the SEED_KEY was persisted but user data was wiped (e.g. partial clear),
+//     we re-seed to restore local fallback accounts.
+function isSeedValid(): boolean {
+  if (!localStorage.getItem(SEED_KEY)) return false
+  const users = getUsers()
+  if (users.length < 8) return false
+  // Verify at least one known admin account exists
+  return users.some(u => u.loginId === 'salim' || u.loginId === 'admin')
+}
+
 function seedOnce() {
-  if (localStorage.getItem(SEED_KEY)) return
+  if (isSeedValid()) return
+  localStorage.removeItem(SEED_KEY)
   const users: LocalUser[] = [
     { id: genId('u'), loginId: 'admin', password: 'admin123', name: 'Totok Michael', role: 'ADMIN' },
     { id: genId('u'), loginId: 'salim', password: 'salim123', name: 'Salim', role: 'ADMIN' },

@@ -58,10 +58,14 @@ if (-not $Backend) {
 
 if ($Backend -or $Quick) {
     Write-Host "  → Uploading backend changes..."
+    ssh $SERVER "mkdir -p $APP_DIR/backend/src/lib $APP_DIR/backend/src/models $APP_DIR/backend/src/middleware $APP_DIR/backend/src/controllers $APP_DIR/backend/src/schemas $APP_DIR/backend/src/utils"
     scp "backend/api.mjs" "${SERVER}:${APP_DIR}/backend/api.mjs"
-    ssh $SERVER "mkdir -p $APP_DIR/backend/src/lib $APP_DIR/backend/src/models"
     scp backend/src/lib/*.mjs "${SERVER}:${APP_DIR}/backend/src/lib/"
     scp backend/src/models/*.js "${SERVER}:${APP_DIR}/backend/src/models/"
+    scp backend/src/controllers/*.js "${SERVER}:${APP_DIR}/backend/src/controllers/"
+    scp backend/src/middleware/*.js "${SERVER}:${APP_DIR}/backend/src/middleware/"
+    scp backend/src/schemas/*.js "${SERVER}:${APP_DIR}/backend/src/schemas/"
+    scp backend/src/utils/*.js "${SERVER}:${APP_DIR}/backend/src/utils/"
     Write-OK "Backend uploaded"
 }
 

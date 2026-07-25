@@ -29,27 +29,38 @@ export default function LoginScreen({ onLogin }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showHint, setShowHint] = useState(false)
+  const [networkOnline, setNetworkOnline] = useState(true)
 
-  useEffect(() => { initPortalUsers() }, [])
+  useEffect(() => {
+    initPortalUsers()
+    // Detect network status for helpful error messages
+    setNetworkOnline(navigator.onLine)
+    const goOnline = () => setNetworkOnline(true)
+    const goOffline = () => setNetworkOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => { window.removeEventListener('online', goOnline); window.removeEventListener('offline', goOffline) }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(null)
     if (!loginId.trim()) { setError('Veuillez saisir votre identifiant.'); return }
     if (!password.trim()) { setError('Veuillez saisir votre mot de passe.'); return }
     setLoading(true)
-    let session = null
-    for (let i = 0; i < 3; i++) {
-      session = await login(loginId.trim(), password)
-      if (session) break
-      if (i < 2) await new Promise(r => setTimeout(r, 2000))
-    }
+    // Single attempt — local auth is instant; API fallback has its own retries
+    const session = await login(loginId.trim(), password)
     setLoading(false)
-    if (!session) { setError('Impossible de se connecter au serveur.'); return }
+    if (!session) {
+      setError(networkOnline
+        ? 'Identifiants incorrects. Verifiez votre identifiant et mot de passe.'
+        : 'Hors-ligne. Veuillez verifier votre connexion reseau.')
+      return
+    }
     onLogin(session)
   }
 
   return (
-    <div className="h-screen flex flex-col md:flex-row relative overflow-hidden bg-slate-950">
+    <div className="h-screen flex flex-col md:flex-row relative overflow-x-hidden overflow-y-auto bg-slate-950">
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />

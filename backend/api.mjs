@@ -231,6 +231,22 @@ app.get('/api/vault/files', authenticate, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
+// ═══ SERVE FRONTEND BUILD (dist/) ═══════════════════════════════════════
+// Serve the Vite production build — must come AFTER all API routes so
+// /api/... endpoints are prioritized and never intercepted.
+const distPath = path.resolve(__dirname, '..', 'dist')
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath))
+
+  // SPA fallback: any non-API GET → index.html (handles client-side routing)
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: 'Route API introuvable.' })
+    }
+    res.sendFile(path.join(distPath, 'index.html'))
+  })
+}
+
 // ═══ ERROR HANDLER ═════════════════════════════════════════════════════
 app.use((err, _req, res, _next) => {
   console.error(`[API ERROR] ${err.message || 'Erreur interne'}`)
