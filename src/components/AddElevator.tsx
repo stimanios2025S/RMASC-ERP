@@ -664,9 +664,23 @@ export default function AddElevator({ onBack, editOrder }: Props) {
   useEffect(() => { if (saved && !prevSaved.current) { try { localStorage.removeItem(FORM_KEY) } catch {}; try { localStorage.removeItem(STEP_KEY) } catch {} }; prevSaved.current = saved }, [saved])
 
   const isLastStep = step === STEPS.length - 1; const isFirstStep = step === 0
-  // All steps are now freely editable - no validation blocking
-  const canProceed = () => true
-  const isFinalValid = () => true
+  // Validation per step
+  const canProceed = () => {
+    switch (STEPS[step].key) {
+      case 'client':
+        return data.clientName.trim() !== '' && data.clientPhone.trim() !== '' && data.clientCity.trim() !== ''
+      case 'motorisation':
+        return data.motorType.trim() !== ''
+      case 'dimensions':
+        return data.dimWidth.trim() !== '' && data.dimDepth.trim() !== '' && data.dimHeight.trim() !== ''
+      default:
+        return true
+    }
+  }
+  const isFinalValid = () => {
+    return data.clientName.trim() !== '' && data.clientPhone.trim() !== '' && data.clientCity.trim() !== '' &&
+           data.agreed === true
+  }
 
   const handleSubmitOrder = async () => {
     setSubmitting(true)

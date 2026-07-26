@@ -46,53 +46,53 @@ export default function BureauEtudeVault({ onBack, engineerName }: Props) {
     let cancelled = false
     async function load() {
       try {
-        // Load orders from API (real data)
+        // Load orders from API
         let apiOrders: any[] = []
         try {
           apiOrders = await apiFetch('/orders')
-        } catch {}
-
-        // Also get vault files from localStorage
-        const vaultRaw = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
-        // Also get uploaded files from runtime-store
-        let uploadFiles: any[] = []
-        try {
-          const raw = JSON.parse(localStorage.getItem('rmasc_uploads_cache') || '{}')
-          for (const [orderId, uploads] of Object.entries(raw)) {
-            if (Array.isArray(uploads)) {
-              uploadFiles.push(...uploads.map((u: any, i: number) => ({
-                id: `upload_${orderId}_${i}`,
-                orderId,
-                fileName: u.name,
-                engineer: u.label || 'Administrateur',
-                uploadedAt: u.uploadedAt,
-                size: u.data ? `${Math.round((u.data.length * 0.75) / 1024)} KB` : '—',
-                type: u.type,
-              })))
-            }
-          }
-        } catch {}
-
-        // Combine all files
-        const allFiles = [...vaultRaw, ...uploadFiles]
-        const filtered = engineerName
-          ? allFiles.filter((f: any) => f.engineer === engineerName)
-          : allFiles
-
-        if (!cancelled) {
-          setFiles(filtered)
-          // Use API orders if available, fall back to localStorage
-          if (apiOrders.length > 0) {
+          if (!cancelled) {
             setOrders(apiOrders.map((o: any) => ({
               id: o.id || o._id,
               serialNumber: o.serialNumber,
               clientName: o.clientName,
               status: o.status,
             })))
-          } else {
-            const ordersRaw = JSON.parse(localStorage.getItem('rmasc_local_orders') || '[]')
-            setOrders(ordersRaw.map((o: any) => ({ id: o.id, serialNumber: o.serialNumber, clientName: o.clientName, status: o.status })))
           }
+        } catch {}
+
+        // Load vault files from BACKEND API — cross-device sync
+        // Falls back to localStorage only if backend is unreachable
+        let vaultFilesData: any[] = []
+        try {
+          vaultFilesData = await apiFetch('/vault/files')
+        } catch {
+          // Fallback: localStorage vault files
+          const vaultRaw = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
+          let uploadFiles: any[] = []
+          try {
+            const raw = JSON.parse(localStorage.getItem('rmasc_uploads_cache') || '{}')
+            for (const [orderId, uploads] of Object.entries(raw)) {
+              if (Array.isArray(uploads)) {
+                uploadFiles.push(...uploads.map((u: any, i: number) => ({
+                  id: `upload_${orderId}_${i}`,
+                  orderId,
+                  fileName: u.name,
+                  engineer: u.label || 'Admin',
+                  uploadedAt: u.uploadedAt,
+                  size: u.data ? `${Math.round((u.data.length * 0.75) / 1024)} KB` : '—',
+                  type: u.type,
+                })))
+              }
+            }
+          } catch {}
+          vaultFilesData = [...vaultRaw, ...uploadFiles]
+        }
+
+        if (!cancelled) {
+          const filtered = engineerName
+            ? vaultFilesData.filter((f: any) => f.engineer === engineerName)
+            : vaultFilesData
+          setFiles(filtered)
         }
       } catch { /* silent */ }
       if (!cancelled) setLoading(false)

@@ -261,6 +261,22 @@ async function start() {
     const { connectDB } = await import('./src/lib/mongoose.js')
     await connectDB()
     console.log(`  ✅ MongoDB connectée`)
+
+    // ─── Create performance indexes (non-blocking) ─────────────────────
+    try {
+      const Order = (await import('./src/models/Order.js')).default
+      const StockItem = (await import('./src/models/StockItem.js')).default
+      const StockMovement = (await import('./src/models/StockMovement.js')).default
+      await Promise.all([
+        Order.collection.createIndex({ priority: 1, createdAt: -1 }, { background: true }),
+        Order.collection.createIndex({ lifecycleStage: 1 }, { background: true }),
+        Order.collection.createIndex({ typeCabine: 1 }, { background: true }),
+        Order.collection.createIndex({ completedAt: 1 }, { background: true, sparse: true }),
+        StockItem.collection.createIndex({ category: 1, quantity: 1 }, { background: true }),
+        StockMovement.collection.createIndex({ createdAt: -1 }, { background: true }),
+      ]).catch(() => {})
+    } catch {}
+  } catch (err) {
   } catch (err) {
     console.warn(`  ⚠️  MongoDB: ${err.message}`)
   }

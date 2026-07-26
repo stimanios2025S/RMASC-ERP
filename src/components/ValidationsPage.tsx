@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import FileViewer from './FileViewer'
 import { apiFetch } from '../config/api'
-import { getUploads } from '../config/runtime-store'
 import { getSession } from '../data/portalUsers'
 import { PageBackground } from './PageBackground'
 
@@ -312,6 +311,32 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
   rejectReason: string; setRejectReason: (v: string) => void; showReject: boolean; setShowReject: (v: boolean) => void
   submitting: boolean; actionMsg: string | null; setActionMsg: (v: string | null) => void; onFiche?: (id: string) => void
 }) {
+  const [serverFiles, setServerFiles] = useState<{ id: string; name: string; type: string; url: string }[]>([])
+  const [loadingFiles, setLoadingFiles] = useState(true)
+
+  // Load files from BACKEND API — not from runtime-store/localStorage
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const data: any = await apiFetch(`/orders/${order.id}/files`)
+        if (cancelled) return
+        const files = (data.files || []).map((f: any) => ({
+          id: f._id || f.id,
+          name: f.originalname || f.name,
+          type: f.mimetype || f.type,
+          url: `/api/orders/${order.id}/files/${f._id || f.id}`,
+        }))
+        setServerFiles(files)
+      } catch {}
+      if (!cancelled) setLoadingFiles(false)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [order.id])
+
+  const firstFile = serverFiles[0] || null
+
   return (
     <div className="h-screen flex flex-col">
       <div className="flex-shrink-0 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
@@ -345,11 +370,33 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
       )}
 
       <div className="flex-1 overflow-hidden p-4">
-        {(() => {
-          let uploadData: { data: string; name: string; type: string } | null = null
-          try { const uploads = getUploads(order.id); uploadData = uploads[0] || null } catch {}
-          return <FileViewer fileData={uploadData?.data} fileName={uploadData?.name} fileType={uploadData?.type} />
-        })()}
+        {loadingFiles ? (
+          <div className="h-full flex flex-col items-center justify-center bg-[#0a0f1a] text-white rounded-xl border border-slate-700">
+            <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin mb-4" />
+            <p className="text-sm font-medium">Chargement des fichiers...</p>
+          </div>
+        ) : firstFile ? (
+          <FileViewer
+            fileName={firstFile.name}
+            fileType={firstFile.type}
+            fileUrl={firstFile.url}
+          />
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center bg-[#0a0f1a] text-white rounded-xl border border-slate-700">
+            <span className="text-5xl mb-4">📄</span>
+            <p className="text-sm font-medium">Aucun fichier déposé pour cette commande</p>
+            <p className="text-xs mt-1 text-white/60">L'ingénieur doit d'abord uploader un fichier</p>
+          </div>
+        )}
+        {serverFiles.length > 1 && (
+          <div className="mt-2 flex gap-2 justify-center">
+            {serverFiles.map((f, i) => (
+              <span key={f.id} className="text-[10px] text-white/50 bg-white/5 px-2 py-1 rounded">
+                {i === 0 ? '📄 ' : ''}{f.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {showReject && (

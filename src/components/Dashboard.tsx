@@ -580,9 +580,10 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   const prevNotifCount = useRef(0)
   useEffect(() => {
     let cancelled = false
-    async function load() {
+    async function loadLight() {
+      // Lightweight poll: only fetch stats (aggregation), NOT full orders list
+      // Orders list is loaded on demand to save bandwidth and DB CPU.
       try {
-        // ── Step 1: Health ping (verifies backend is reachable) ──────────
         const health: any = await apiFetch('/health')
         if (cancelled) return
         if (health?.status === 'ok' || health?.status === 'degraded') {
@@ -600,15 +601,25 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
         return
       }
 
+      // ── Fetch stats only (fast aggregation, no full document load) ───
       try {
-        const data: OrderSummary[] = await apiFetch('/orders')
+        const liveStats: DashboardStats = await apiFetch('/stats/dashboard')
+        if (cancelled) return
+        setStats(liveStats)
+        setStatsLoading(false)
+      } catch { if (cancelled) return; setStatsLoading(false) }
+    }
+
+    async function loadFull() {
+      // Full load: fetch orders list + stats (called on mount & on focus)
+      try {
+        const [data, liveStats] = await Promise.all([
+          apiFetch<OrderSummary[]>('/orders'),
+          apiFetch<DashboardStats>('/stats/dashboard').catch(() => null),
+        ])
         if (cancelled) return
         setOrders(data)
-        // ── Fetch live dashboard stats from aggregation pipeline ─────
-        try {
-          const liveStats: DashboardStats = await apiFetch('/stats/dashboard')
-          if (!cancelled) { setStats(liveStats); setStatsLoading(false) }
-        } catch { if (!cancelled) setStatsLoading(false) }
+        if (liveStats) { setStats(liveStats); setStatsLoading(false) } else setStatsLoading(false)
         const newNotifs = data.filter(o => o.status === 'ATTENTE_APPROBATION_ADMIN')
         setNotifications(newNotifs)
         if (newNotifs.length > prevNotifCount.current) {
@@ -618,14 +629,19 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       } catch (err: any) {
         if (cancelled) return
         setApiError(err?.message || 'Erreur de chargement des données')
-        console.error('[Dashboard] Échec de chargement des commandes:', err?.message)
       }
     }
-    load()
-    const iv = setInterval(load, 8000)
-    const onFocus = () => { if (!cancelled) load() }
+
+    // First load: full (orders + stats)
+    loadFull()
+
+    // Ongoing: lightweight (stats only) every 15s
+    const iv = setInterval(loadLight, 15000)
+
+    // On focus: full reload
+    const onFocus = () => { if (!cancelled) loadFull() }
     window.addEventListener('focus', onFocus)
-    document.addEventListener('visibilitychange', () => { if (!document.hidden && !cancelled) load() })
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && !cancelled) loadFull() })
     return () => { cancelled = true; clearInterval(iv); window.removeEventListener('focus', onFocus) }
   }, [])
 

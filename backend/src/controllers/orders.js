@@ -65,22 +65,35 @@ async function generateAscSerial() {
 export async function listOrders(req, res) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1)
-    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 100))
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50))
     const skip = (page - 1) * limit
-    const orders = await Order.aggregate([
-      { $sort: { createdAt: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-      { $lookup: { from: 'cad_submissions', localField: '_id', foreignField: 'order', as: 'cadSubmissions' } },
-      { $addFields: { _count: { $size: '$cadSubmissions' } } },
-      { $project: { cadSubmissions: 0 } },
-    ]).option({ allowDiskUse: false }).hint({ createdAt: -1 })
-    for (const o of orders) {
-      if (o.rejectionReason === undefined) o.rejectionReason = null
-      if (o.rejectedBy === undefined) o.rejectedBy = null
-      if (o.rejectedAt === undefined) o.rejectedAt = null
-    }
-    res.json(addIdField(orders))
+
+    // Lightweight: no $lookup unless counts are explicitly requested.
+    // Use a simple find with lean() and a coverable index.
+    const orders = await Order.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select('-files')  // exclude heavy file arrays
+      .lean()
+      .hint({ createdAt: -1 })
+
+    // Get cadSubmissions counts in a single efficient query
+    const orderIds = orders.map(o => o._id)
+    const cadCounts = await CAD_Submission.aggregate([
+      { $match: { order: { $in: orderIds } } },
+      { $group: { _id: '$order', count: { $sum: 1 } } },
+    ]).option({ allowDiskUse: false })
+
+    const countMap = {}
+    for (const row of cadCounts) countMap[row._id.toString()] = row.count
+
+    const result = orders.map(o => addIdField({
+      ...o,
+      _count: { cadSubmissions: countMap[o._id.toString()] || 0 },
+    }))
+
+    res.json(result)
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
 

@@ -98,14 +98,29 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
   const [showFiche, setShowFiche] = useState(false)
   const [showAgent, setShowAgent] = useState(false)
   const [showSmartSearch, setShowSmartSearch] = useState(false)
-  const [vaultPreviewFile, setVaultPreviewFile] = useState<{ data: string; name: string; type: string } | null>(null)
+  const [vaultPreviewFile, setVaultPreviewFile] = useState<{ name: string; type: string; url?: string } | null>(null)
 
   // ── Open a vault file in the FileViewer modal ──
-  const openVaultFile = (f: VaultFile) => {
+  const openVaultFile = async (f: VaultFile) => {
+    // Try to find the file in the server-stored order files
+    try {
+      const files: any = await apiFetch(`/orders/${f.orderId}/files`)
+      const match = (files.files || []).find((sf: any) => (sf.originalname || sf.name) === f.fileName)
+      if (match) {
+        const fileId = match._id || match.id
+        setVaultPreviewFile({
+          name: f.fileName,
+          type: f.type || match.mimetype,
+          url: `/api/orders/${f.orderId}/files/${fileId}`,
+        })
+        return
+      }
+    } catch {}
+    // Fallback: try runtime-store (legacy base64)
     const uploads = getUploads(f.orderId)
     const match = uploads.find(u => u.name === f.fileName)
     if (match) {
-      setVaultPreviewFile({ data: match.data, name: match.name, type: match.type })
+      setVaultPreviewFile({ name: match.name, type: match.type })
     }
   }
 
@@ -123,13 +138,16 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
   const loadOrders = useCallback(async () => {
     try { setOrders(await apiFetch('/orders')) } catch {}
   }, [])
-  const loadVault = useCallback(() => {
-    try { setVaultFiles(JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')) } catch {}
+  const loadVault = useCallback(async () => {
+    try {
+      const files = await apiFetch('/vault/files')
+      setVaultFiles(files)
+    } catch { setVaultFiles([]) }
   }, [])
 
   useEffect(() => { loadOrders(); loadVault() }, [])
   useEffect(() => {
-    const iv = setInterval(() => { loadOrders(); loadVault() }, 8000)
+    const iv = setInterval(() => { loadOrders(); loadVault() }, 15000)
     const onFocus = () => { loadOrders(); loadVault() }
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { loadOrders(); loadVault() } })
@@ -482,7 +500,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
                 className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-red-500 text-white text-sm flex items-center justify-center transition-colors">✕</button>
             </div>
             <div className="flex-1 bg-[#0a0f1a] overflow-hidden">
-              <FileViewer fileData={vaultPreviewFile.data} fileName={vaultPreviewFile.name} fileType={vaultPreviewFile.type} />
+              <FileViewer fileUrl={vaultPreviewFile.url} fileName={vaultPreviewFile.name} fileType={vaultPreviewFile.type} />
             </div>
           </div>
         </div>

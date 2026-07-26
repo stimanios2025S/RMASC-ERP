@@ -70,17 +70,18 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     return <div className="fixed inset-0 z-50 bg-black/60 overflow-y-auto"><FicheTechniqueView orderId={selectedOrder.id} onBack={() => setShowFiche(false)} /></div>
   }
 
-  // ── Production phase from DB (NOT localStorage) ──────────────────────
+  // ── Production phase from DB ONLY (NOT localStorage) ──────────────────
   function getProdPhase(order: OrderRow): string {
     return order.productionPhase || 'decoupe'
   }
 
+  // Filter orders: show those at or past the active phase
   const currentPhase = PHASES.find(p => p.id === activePhase)!
   const phaseOrders = orders.filter(o => {
     const p = getProdPhase(o)
     const phaseIdx = PHASES.findIndex(x => x.id === p)
     const currentIdx = PHASES.findIndex(x => x.id === activePhase)
-    return phaseIdx >= currentIdx || (activePhase === 'decoupe' && p === 'decoupe')
+    return phaseIdx >= currentIdx
   })
 
   const advancePhase = async (orderId: string, order: OrderRow) => {

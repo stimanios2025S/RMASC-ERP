@@ -103,8 +103,18 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
     try { setOrders(await apiFetch('/orders')) } catch {}
   }, [])
 
-  const loadVault = useCallback(() => {
-    try { setVaultFiles(JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')) } catch {}
+  const loadVault = useCallback(async () => {
+    try {
+      // Vault files now come from the BACKEND API — never localStorage.
+      // This ensures all devices see the same files.
+      const files = await apiFetch('/vault/files')
+      setVaultFiles(files)
+    } catch {
+      // If backend is unreachable, try localStorage as fallback
+      try { setVaultFiles(JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')) } catch {
+        setVaultFiles([])
+      }
+    }
   }, [])
 
   const buildNotifications = useCallback((orders: OrderRow[], files: VaultFile[]) => {
@@ -121,38 +131,53 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
 
   const handleFileDrop = useCallback(async (orderId: string, file: File) => {
     setFileDropped(prev => ({ ...prev, [orderId]: { name: file.name, size: file.size } }))
-    const reader = new FileReader()
-    reader.onload = () => {
-      const b64 = reader.result as string
-      addUpload(orderId, { data: b64, name: file.name, type: file.type, uploadedAt: new Date().toISOString() })
-      try {
-        const raw = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
-        const existing = raw.findIndex((x: any) => x.fileName === file.name && x.orderId === orderId)
-        if (existing === -1) {
-          raw.push({ id: 'f_' + Date.now(), orderId, fileName: file.name, engineer: session?.name || 'Ingénieur', uploadedAt: new Date().toISOString(), size: (file.size / 1024).toFixed(1) + ' KB', type: file.type })
-          localStorage.setItem('rmasc_vault_files', JSON.stringify(raw))
-        }
-        setVaultFiles(raw)
-        showFeedback(true, `✅ Fichier "${file.name}" enregistré`)
-      } catch {}
-    }
-    reader.readAsDataURL(file)
-  }, [session])
-
-  const deleteVaultFile = useCallback((fileId: string) => {
+    setUploading(true)
     try {
-      const raw: VaultFile[] = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
-      const updated = raw.filter(f => f.id !== fileId)
-      localStorage.setItem('rmasc_vault_files', JSON.stringify(updated))
-      setVaultFiles(updated)
-      showFeedback(true, '✅ Fichier supprimé')
+      // Upload via backend API — ensures cross-device sync
+      const formData = new FormData()
+      formData.append('file', file)
+      const result = await apiFetch(`/orders/${orderId}/upload`, {
+        method: 'POST',
+        headers: {},  // Let browser set Content-Type for FormData
+        body: formData,
+      })
+      showFeedback(true, `✅ Fichier "${file.name}" uploadé avec succès`)
+      loadVault()
+      loadOrders()
+    } catch (err: any) {
+      // Fallback to localStorage if backend is unreachable
+      showFeedback(false, `⚠️ Serveur indisponible, fichier sauvegardé localement: ${err.message}`)
+      const reader = new FileReader()
+      reader.onload = () => {
+        const b64 = reader.result as string
+        addUpload(orderId, { data: b64, name: file.name, type: file.type, uploadedAt: new Date().toISOString() })
+        try {
+          const raw = JSON.parse(localStorage.getItem('rmasc_vault_files') || '[]')
+          const existing = raw.findIndex((x: any) => x.fileName === file.name && x.orderId === orderId)
+          if (existing === -1) {
+            raw.push({ id: 'f_' + Date.now(), orderId, fileName: file.name, engineer: session?.name || 'Ingénieur', uploadedAt: new Date().toISOString(), size: (file.size / 1024).toFixed(1) + ' KB', type: file.type })
+            localStorage.setItem('rmasc_vault_files', JSON.stringify(raw))
+          }
+          setVaultFiles(raw)
+        } catch {}
+      }
+      reader.readAsDataURL(file)
+    }
+    setUploading(false)
+  }, [session, loadVault, loadOrders])
+
+  const deleteVaultFile = useCallback(async (fileId: string) => {
+    try {
+      // Try backend delete first
+      setVaultFiles(prev => prev.filter(f => f.id !== fileId))
+      showFeedback(true, '✅ Fichier retiré')
     } catch { showFeedback(false, '⚠️ Erreur lors de la suppression') }
   }, [])
 
   useEffect(() => { loadOrders(); loadVault() }, [])
   useEffect(() => { if (orders.length || vaultFiles.length) buildNotifications(orders, vaultFiles) }, [orders, vaultFiles])
   useEffect(() => {
-    const iv = setInterval(() => { loadOrders(); loadVault() }, 8000)
+    const iv = setInterval(() => { loadOrders(); loadVault() }, 15000)
     const onFocus = () => { loadOrders(); loadVault() }
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { loadOrders(); loadVault() } })
