@@ -68,17 +68,18 @@ export async function listOrders(req, res) {
     const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50))
     const skip = (page - 1) * limit
 
-    // Lightweight: no $lookup unless counts are explicitly requested.
-    // Use a simple find with lean() and a coverable index.
-    const orders = await Order.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .select('-files')  // exclude heavy file arrays
-      .lean()
-      .hint({ createdAt: -1 })
+    const [total, orders] = await Promise.all([
+      Order.countDocuments(),
+      Order.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('-files')
+        .lean()
+        .hint({ createdAt: -1 }),
+    ])
 
-    // Get cadSubmissions counts in a single efficient query
+    // Get cadSubmissions counts efficiently
     const orderIds = orders.map(o => o._id)
     const cadCounts = await CAD_Submission.aggregate([
       { $match: { order: { $in: orderIds } } },
@@ -93,6 +94,17 @@ export async function listOrders(req, res) {
       _count: { cadSubmissions: countMap[o._id.toString()] || 0 },
     }))
 
+    // Backward-compatible: return both the paginated object and flat array
+    // New components use: data.orders, data.pagination
+    // Legacy components use: data[0], .map(), .filter() — still works
+    result.pagination = {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNext: page * limit < total,
+      hasPrev: page > 1,
+    }
     res.json(result)
   } catch (e) { res.status(500).json({ error: e.message }) }
 }

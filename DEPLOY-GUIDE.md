@@ -165,3 +165,11 @@ ssh sarlrmasc@100.73.62.52 "pm2 delete rmasc-api && pm2 kill && sleep 2 && pm2 s
 ---
 
 > **Document créé le 27/07/2026 — RMASC FACTORY ERP v2.6.0**
+>
+> ## 📊 Monitoring
+>
+> | Service | URL | Description |
+> |---------|-----|-------------|
+> | **Sentry** | https://sentry.io | Tracking d'erreurs en temps réel (login GitHub) |
+> | **Site** | https://sarl-rmasc.com | ERP en production |
+> | **IP directe** | http://100.73.62.52:4000 | Accès direct sans DNS |

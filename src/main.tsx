@@ -1,29 +1,33 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import * as Sentry from '@sentry/react'
 import App from './App'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
-// ─── Sentry — Real-time error tracking ──────────────────────────────────
-Sentry.init({
-  dsn: 'https://fa2884aa65c1f0a3446c5f4d5c85c5ed@o4511808265977856.ingest.de.sentry.io/4511808272466000',
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
-  ],
-  tracesSampleRate: 1.0,
-  tracePropagationTargets: ['localhost', /^https:\/\/sarl-rmasc\.com\/api/],
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-  environment: 'production',
-  enableLogs: true,
-})
+// ─── Lazy load Sentry (keeps main bundle small) ────────────────────────
+// Sentry is loaded AFTER the app renders, so it doesn't delay page load
+let SentryModule: any = null
+async function initSentry() {
+  if (window.location.hostname === 'localhost') return
+  try {
+    SentryModule = await import('@sentry/react')
+    SentryModule.init({
+      dsn: 'https://fa2884aa65c1f0a3446c5f4d5c85c5ed@o4511808265977856.ingest.de.sentry.io/4511808272466000',
+      integrations: [SentryModule.browserTracingIntegration(), SentryModule.replayIntegration()],
+      tracesSampleRate: 0.3,
+      replaysSessionSampleRate: 0.05,
+      replaysOnErrorSampleRate: 0.5,
+      environment: 'production',
+    })
+    console.log('[Sentry] Initialized')
+  } catch { /* silent fail */ }
+}
+initSentry()
 
-// ─── Global JS error handler — prevents silent blank screens ──────────────
-window.onerror = (msg, source, line, col, error) => {
-  console.error('[GLOBAL ERROR]', msg, 'at', source, line, col)
-  Sentry.captureException(error || new Error(String(msg)))
+// ─── Global error handler ────────────────────────────────────────────────
+window.onerror = (_msg, _source, _line, _col, error) => {
+  console.error('[GLOBAL ERROR]', error?.message)
+  if (SentryModule) SentryModule.captureException(error)
   const root = document.getElementById('root')
   if (root && !root.hasChildNodes()) {
     root.innerHTML = `
@@ -34,7 +38,7 @@ window.onerror = (msg, source, line, col, error) => {
           <p style="color:#94a3b8;font-size:14px;line-height:1.5;">
             L'application n'a pas pu se charger correctement.
             <br/>
-            <span style="font-size:12px;color:#64748b;">${String(msg).substring(0, 200)}</span>
+            <span style="font-size:12px;color:#64748b;">${String(error?.message || _msg).substring(0, 200)}</span>
           </p>
           <button onclick="localStorage.clear();location.reload()"
             style="margin-top:16px;padding:10px 24px;border-radius:12px;border:none;background:linear-gradient(135deg,#f59e0b,#ea580c);color:white;font-weight:bold;font-size:14px;cursor:pointer;">
@@ -49,12 +53,10 @@ window.onerror = (msg, source, line, col, error) => {
 
 // ─── Service Worker safeguard ──────────────────────────────────────────
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister())
-  })
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()))
 }
 
-// ─── Mount timeout ──────────────────────────────────────────────────────
+// ─── Mount timeout fallback ────────────────────────────────────────────
 const mountTimeout = setTimeout(() => {
   const root = document.getElementById('root')
   if (root && !root.hasChildNodes()) {
@@ -65,14 +67,8 @@ const mountTimeout = setTimeout(() => {
           <h1 style="font-size:20px;margin-bottom:8px;">RMASC ERP — Chargement</h1>
           <p style="color:#94a3b8;font-size:14px;">L'application prend plus de temps que prévu...</p>
           <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;">
-            <button onclick="location.reload()"
-              style="padding:10px 20px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:13px;cursor:pointer;">
-              🔁 Recharger
-            </button>
-            <button onclick="localStorage.clear();location.reload()"
-              style="padding:10px 20px;border-radius:12px;border:none;background:linear-gradient(135deg,#f59e0b,#ea580c);color:white;font-weight:bold;font-size:13px;cursor:pointer;">
-              🗑️ Vider le cache & recharger
-            </button>
+            <button onclick="location.reload()" style="padding:10px 20px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:13px;cursor:pointer;">🔁 Recharger</button>
+            <button onclick="localStorage.clear();location.reload()" style="padding:10px 20px;border-radius:12px;border:none;background:linear-gradient(135deg,#f59e0b,#ea580c);color:white;font-weight:bold;font-size:13px;cursor:pointer;">🗑️ Vider le cache & recharger</button>
           </div>
         </div>
       </div>
@@ -80,27 +76,11 @@ const mountTimeout = setTimeout(() => {
   }
 }, 8000)
 
-const SentryErrorBoundary = Sentry.withErrorBoundary(ErrorBoundary, {
-  fallback: ({ error }) => (
-    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-8">
-      <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl text-center">
-        <div className="text-5xl mb-4">⚠️</div>
-        <h2 className="text-xl font-bold text-white mb-2">Une erreur est survenue</h2>
-        <p className="text-sm text-white/50 mb-6">L'application a rencontré une erreur. L'équipe technique a été notifiée.</p>
-        <button onClick={() => window.location.reload()}
-          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-bold transition-all shadow-lg">
-          🔄 Recharger
-        </button>
-      </div>
-    </div>
-  ),
-})
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <SentryErrorBoundary>
+    <ErrorBoundary>
       <App />
-    </SentryErrorBoundary>
+    </ErrorBoundary>
   </React.StrictMode>,
 )
 
