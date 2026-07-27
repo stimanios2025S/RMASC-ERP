@@ -94,9 +94,6 @@ const upload = multer({ storage, limits: { fileSize: MULTER_MAX_SIZE_MB * 1024 *
   ALLOWED_MIME_TYPES.includes(file.mimetype) ? cb(null, true) : cb(new Error(`Type non autorisé: ${file.mimetype}`))
 }})
 
-// ═══ SERVE UPLOADS (auth-gated) ════════════════════════════════════════
-app.use('/uploads', authenticate, express.static(UPLOADS_DIR))
-
 // ═══ LAZY DB CONNECTION ════════════════════════════════════════════════
 app.use(async (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
@@ -206,8 +203,6 @@ app.get('/api/stats/invoicing', authenticate, getInvoicingStats)
 app.get('/api/stats/engineer', authenticate, getEngineerStats)
 
 // ═══ VAULT FILES (backend-persisted) ═══════════════════════════════════════
-// These replace localStorage-based vault storage.
-// GET /api/vault/files?orderId=xxx — list all vault files (optionally filtered by order)
 app.get('/api/vault/files', authenticate, async (req, res) => {
   try {
     const filter = {}
@@ -232,13 +227,9 @@ app.get('/api/vault/files', authenticate, async (req, res) => {
 })
 
 // ═══ SERVE FRONTEND BUILD (dist/) ═══════════════════════════════════════
-// Serve the Vite production build — must come AFTER all API routes so
-// /api/... endpoints are prioritized and never intercepted.
 const distPath = path.resolve(__dirname, '..', 'dist')
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath))
-
-  // SPA fallback: any non-API GET → index.html (handles client-side routing)
   app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
       return res.status(404).json({ error: 'Route API introuvable.' })
@@ -261,22 +252,6 @@ async function start() {
     const { connectDB } = await import('./src/lib/mongoose.js')
     await connectDB()
     console.log(`  ✅ MongoDB connectée`)
-
-    // ─── Create performance indexes (non-blocking) ─────────────────────
-    try {
-      const Order = (await import('./src/models/Order.js')).default
-      const StockItem = (await import('./src/models/StockItem.js')).default
-      const StockMovement = (await import('./src/models/StockMovement.js')).default
-      await Promise.all([
-        Order.collection.createIndex({ priority: 1, createdAt: -1 }, { background: true }),
-        Order.collection.createIndex({ lifecycleStage: 1 }, { background: true }),
-        Order.collection.createIndex({ typeCabine: 1 }, { background: true }),
-        Order.collection.createIndex({ completedAt: 1 }, { background: true, sparse: true }),
-        StockItem.collection.createIndex({ category: 1, quantity: 1 }, { background: true }),
-        StockMovement.collection.createIndex({ createdAt: -1 }, { background: true }),
-      ]).catch(() => {})
-    } catch {}
-  } catch (err) {
   } catch (err) {
     console.warn(`  ⚠️  MongoDB: ${err.message}`)
   }
@@ -287,11 +262,9 @@ async function start() {
     console.log(`  ╠══════════════════════════════════════════════╣`)
     console.log(`  ║  🚀  http://localhost:${PORT}/api/health         ║`)
     console.log(`  ║  🔒  CORS: sarl-rmasc.com + localhost        ║`)
-    console.log(`  ║  🌐  Cloudflare Tunnel → sarl-rmasc.com      ║`)
     console.log(`  ╚══════════════════════════════════════════════╝\n`)
   })
 
-  // ─── Graceful Shutdown ──────────────────────────────────────────────
   const shutdown = async (signal) => {
     console.log(`\n  🛑 Signal ${signal} reçu — Arrêt gracieux...`)
     server.close(async () => {
@@ -302,21 +275,13 @@ async function start() {
       console.log(`  ✅ Arrêt terminé`)
       process.exit(0)
     })
-    setTimeout(() => {
-      console.error(`  ❌ Arrêt forcé après 10s`)
-      process.exit(1)
-    }, 10000)
+    setTimeout(() => { console.error(`  ❌ Arrêt forcé après 10s`); process.exit(1) }, 10000)
   }
 
   process.on('SIGINT', () => shutdown('SIGINT'))
   process.on('SIGTERM', () => shutdown('SIGTERM'))
-  process.on('uncaughtException', (err) => {
-    console.error(`  ❌ Erreur non gérée: ${err.message}`)
-    console.error(err.stack)
-  })
-  process.on('unhandledRejection', (reason) => {
-    console.error(`  ❌ Promise rejetée non gérée:`, reason)
-  })
+  process.on('uncaughtException', (err) => { console.error(`  ❌ Erreur non gérée: ${err.message}`); console.error(err.stack) })
+  process.on('unhandledRejection', (reason) => { console.error(`  ❌ Promise rejetée non gérée:`, reason) })
 }
 
 const isMainModule = process.argv[1] && (process.argv[1].includes('api.mjs') || process.argv[1].includes('api'))

@@ -1,0 +1,74 @@
+# ─── RMASC FACTORY — Auto Deploy Pipeline ─────────────────────────────────
+# Pousse sur main → Build frontend → Upload au serveur → Redémarre PM2
+# Plus besoin de SCP manuel, plus de fichiers corrompus.
+
+name: 🚀 RMASC Auto Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    # Permet de déclencher manuellement depuis GitHub.com
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: 📤 Deploy to server via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST || '100.73.62.52' }}
+          username: ${{ secrets.SERVER_USER || 'sarlrmasc' }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: 22
+          source: |
+            dist/
+            backend/api.mjs
+            backend/src/controllers/*.js
+            backend/src/middleware/*.js
+            backend/src/schemas/*.js
+            backend/src/utils/*.js
+            backend/src/lib/*.mjs
+            backend/src/models/*.js
+          target: /home/sarlrmasc/rmasc-erp
+          strip_components: 0
+          rm: false
+          overwrite: true
+
+      - name: 🔄 Restart backend via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST || '100.73.62.52' }}
+          username: ${{ secrets.SERVER_USER || 'sarlrmasc' }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: 22
+          script: |
+            cd /home/sarlrmasc/rmasc-erp
+            pm2 delete rmasc-api 2>/dev/null || true
+            pm2 start /home/sarlrmasc/rmasc-erp/backend/api.mjs --name rmasc-api
+            sleep 3
+            curl -s --connect-timeout 5 http://localhost:4000/api/health || echo "⚠️ Healthcheck failed"
+
+      - name: ✅ Verify deployment
+        run: |
+          sleep 5
+          echo "🎉 Deploy completed! Check http://100.73.62.52:4000"

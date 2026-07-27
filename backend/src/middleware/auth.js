@@ -1,4 +1,8 @@
 // ─── RMASC FACTORY — Auth Middleware ──────────────────────────────────────
+// Accepts JWT from either:
+//   1. Authorization: Bearer <token> header (standard)
+//   2. ?token=<token> query parameter (for <embed> tags / direct URLs)
+
 import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET
@@ -8,10 +12,19 @@ if (!JWT_SECRET) {
 }
 
 export function authenticate(req, res, next) {
+  // Try Authorization header first (standard)
   const auth = req.headers.authorization
-  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'Authentification requise.' })
+  let token = null
+  if (auth?.startsWith('Bearer ')) {
+    token = auth.slice(7)
+  }
+  // Fallback: query parameter ?token=xxx (for <embed> tags, direct links)
+  if (!token && req.query?.token) {
+    token = req.query.token
+  }
+  if (!token) return res.status(401).json({ error: 'Authentification requise.' })
   try {
-    req.user = jwt.verify(auth.slice(7), JWT_SECRET)
+    req.user = jwt.verify(token, JWT_SECRET)
     next()
   } catch { return res.status(401).json({ error: 'Token invalide ou expiré.' }) }
 }

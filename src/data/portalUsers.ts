@@ -19,35 +19,32 @@ export async function initPortalUsers(): Promise<void> {
 }
 
 export async function login(loginId: string, password: string): Promise<PortalSession | null> {
-  // 1. D'abord essayer localStorage (instantané, pas de backend nécessaire)
+  // 1. Toujours essayer l'API backend d'abord pour obtenir un vrai JWT token.
+  //    Le token est nécessaire pour les requêtes authentifiées (uploads, fichiers, etc.)
   const localUser = localApi.login(loginId, password)
-  if (localUser) {
-    currentSession = {
-      userId: localUser.loginId,
-      name: localUser.name,
-      role: localUser.role,
-      loggedInAt: new Date().toISOString(),
-    }
-    saveSession(currentSession)
-    // 2. En arrière-plan, essayer l'API backend pour avoir un token JWT
-    api.post('/users/login', { loginId, password }).then((user: any) => {
-      if (user?.token) {
-        try { localStorage.setItem('rmasc_token', user.token) } catch {}
-      }
-    }).catch(() => {})
-    return currentSession
-  }
 
-  // 3. Fallback : essayer l'API backend (peut prendre du temps si hors-ligne)
+  // 2. API call — WAIT for it to get the JWT token
   try {
     const user: any = await api.post('/users/login', { loginId, password })
+    if (user?.token) {
+      localStorage.setItem('rmasc_token', user.token)
+    }
     currentSession = { userId: user.userId, name: user.name, role: user.role, loggedInAt: user.loggedInAt }
     saveSession(currentSession)
-    if (user.token) {
-      try { localStorage.setItem('rmasc_token', user.token) } catch {}
-    }
     return currentSession
   } catch {
+    // API unreachable — fall back to localStorage auth (no JWT token)
+    // File uploads and PDF viewing will NOT work in this mode
+    if (localUser) {
+      currentSession = {
+        userId: localUser.loginId,
+        name: localUser.name,
+        role: localUser.role,
+        loggedInAt: new Date().toISOString(),
+      }
+      saveSession(currentSession)
+      return currentSession
+    }
     return null
   }
 }

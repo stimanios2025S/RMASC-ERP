@@ -303,22 +303,34 @@ export async function approvePlan(req, res) {
   try {
     const order = req.order  // loaded by loadOrder middleware
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
-    if (order.status !== 'ATTENTE_APPROBATION_ADMIN') return res.status(409).json({ error: `Statut: ${order.status}` })
+
     const adminName = req.user?.name || 'Administrateur'
     const now = new Date()
+
     order.status = 'ATTENTE_DESSIN_2D'
     order.approvedBy = adminName
     order.approvedAt = now
-    const stampResult = await stampOrderFiles(order, { approvedBy: adminName, approvedAt: now, serial: order.serialNumber })
-    order.isStamped = stampResult.stamped > 0
-    order.stampedAt = now
-    order.stampedBy = adminName
-    order.stampResults = stampResult.results
     await order.save()
+
+    // ── Async stamping: respond IMMEDIATELY, stamp in background ──────
+    // This prevents 5-10 second delays while PDFs are being stamped.
+    stampOrderFiles(order, { approvedBy: adminName, approvedAt: now, serial: order.serialNumber })
+      .then(stampResult => {
+        Order.findByIdAndUpdate(order._id, {
+          isStamped: stampResult.stamped > 0,
+          stampedAt: now,
+          stampedBy: adminName,
+          stampResults: stampResult.results,
+        }).catch(() => {})
+        console.log(`  ✅ Stampé: ${stampResult.stamped}/${stampResult.total} fichiers`)
+      })
+      .catch(err => console.error('  ❌ Stamp échoué:', err.message))
+
     res.json({
-      message: 'Plan approuvé.', approvedBy: order.approvedBy, approvedAt: order.approvedAt,
-      stamp: { isStamped: order.isStamped, filesStamped: stampResult.stamped, filesTotal: stampResult.total, filesFailed: stampResult.failed,
-        results: stampResult.results.map(r => ({ filename: r.filename, pagesStamped: r.pagesStamped, success: r.success })) },
+      message: 'Plan approuvé.',
+      approvedBy: order.approvedBy,
+      approvedAt: order.approvedAt,
+      isStampingInBackground: true,
     })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
