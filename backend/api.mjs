@@ -238,9 +238,45 @@ if (fs.existsSync(distPath)) {
   })
 }
 
+// ═══ SENTRY ERROR REPORTING ═══════════════════════════════════════════
+const SENTRY_DSN = process.env.SENTRY_DSN || 'https://fa2884aa65c1f0a3446c5f4d5c85c5ed@o4511808265977856.ingest.de.sentry.io/4511808272466000'
+
+function reportToSentry(error, req = {}) {
+  if (!SENTRY_DSN) return
+  const dsnUrl = new URL(SENTRY_DSN)
+  const sentryUrl = `${dsnUrl.protocol}//${dsnUrl.host}/api/${dsnUrl.pathname.split('/').pop()}/envelope/`
+
+  const envelope = JSON.stringify({
+    event_id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    sent_at: new Date().toISOString(),
+    sdk: { name: 'rmasc-erp', version: '1.0.0' },
+    dsn: SENTRY_DSN,
+  }) + '\n' + JSON.stringify({ type: 'event' }) + '\n' + JSON.stringify({
+    event_id: Date.now().toString(36),
+    timestamp: new Date().toISOString(),
+    level: 'error',
+    platform: 'node',
+    server_name: process.env.HOSTNAME || 'rmasc-server',
+    environment: process.env.NODE_ENV || 'production',
+    exception: {
+      values: [{ type: error.name || 'Error', value: error.message || 'Unknown error', stacktrace: { frames: (error.stack || '').split('\n').map(line => ({ filename: line })) } }],
+    },
+    request: {
+      url: req.originalUrl || req.url || '',
+      method: req.method || 'GET',
+      headers: req.headers || {},
+    },
+  }) + '\n'
+
+  fetch(sentryUrl, { method: 'POST', body: envelope, headers: { 'Content-Type': 'application/x-sentry-envelope' } })
+    .then(r => { if (!r.ok) console.warn('  ⚠️  Sentry report failed'); else console.log('  📤 Error sent to Sentry') })
+    .catch(() => {})
+}
+
 // ═══ ERROR HANDLER ═════════════════════════════════════════════════════
 app.use((err, _req, res, _next) => {
   console.error(`[API ERROR] ${err.message || 'Erreur interne'}`)
+  reportToSentry(err, _req)
   res.status(err.statusCode || 500).json({ error: err.message || 'Erreur interne.' })
 })
 
@@ -280,8 +316,15 @@ async function start() {
 
   process.on('SIGINT', () => shutdown('SIGINT'))
   process.on('SIGTERM', () => shutdown('SIGTERM'))
-  process.on('uncaughtException', (err) => { console.error(`  ❌ Erreur non gérée: ${err.message}`); console.error(err.stack) })
-  process.on('unhandledRejection', (reason) => { console.error(`  ❌ Promise rejetée non gérée:`, reason) })
+  process.on('uncaughtException', (err) => {
+    console.error(`  ❌ Erreur non gérée: ${err.message}`)
+    console.error(err.stack)
+    reportToSentry(err)
+  })
+  process.on('unhandledRejection', (reason) => {
+    console.error(`  ❌ Promise rejetée non gérée:`, reason)
+    reportToSentry(reason instanceof Error ? reason : new Error(String(reason)))
+  })
 }
 
 const isMainModule = process.argv[1] && (process.argv[1].includes('api.mjs') || process.argv[1].includes('api'))

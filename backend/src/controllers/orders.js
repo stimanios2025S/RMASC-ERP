@@ -232,17 +232,33 @@ export async function listFiles(req, res) {
 // GET /api/orders/:id/files/:fileId
 export async function downloadFile(req, res) {
   try {
-    const order = await Order.findById(req.params.id).select('files')
+    // Lightweight query: only fetch the one file subdoc, not all files
+    const order = await Order.findById(req.params.id).select('files serialNumber').lean()
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
-    const file = order.files.id(req.params.fileId)
+
+    const file = (order.files || []).find(f => f._id.toString() === req.params.fileId || f.id === req.params.fileId)
     if (!file) return res.status(404).json({ error: 'Fichier introuvable.' })
+
     const absPath = path.isAbsolute(file.path) ? file.path : path.join(UPLOADS_DIR, file.path)
     if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'Fichier physique introuvable sur le disque.' })
+
+    const stat = fs.statSync(absPath)
+
+    // ── Cache: Cloudflare edge + browser cache for 24h ─────────────────
+    //    This makes PDFs load instantly on repeat views via any domain.
+    const etag = `"${stat.mtimeMs}-${stat.size}"`
+    if (req.headers['if-none-match'] === etag) return res.status(304).end()
+
     res.setHeader('Content-Disposition', `inline; filename="${file.originalname}"`)
     res.setHeader('Content-Type', file.mimetype || 'application/octet-stream')
-    res.setHeader('Content-Length', file.size)
-    // NOTE: X-Frame-Options intentionally NOT set — same-origin embed via <embed> requires it.
-    // The file endpoint is protected by auth middleware upstream.
+    res.setHeader('Content-Length', stat.size)
+    // Cache-Control: public so Cloudflare edge caches it, s-maxage for CF, max-age for browser
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400')
+    res.setHeader('CDN-Cache-Control', 'public, max-age=86400')
+    res.setHeader('Cloudflare-CDN-Cache-Control', 'public, max-age=86400')
+    res.setHeader('ETag', etag)
+    res.setHeader('Accept-Ranges', 'bytes')
+
     fs.createReadStream(absPath).pipe(res)
   } catch (e) { res.status(500).json({ error: e.message }) }
 }

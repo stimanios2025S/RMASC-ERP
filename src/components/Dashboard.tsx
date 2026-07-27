@@ -86,7 +86,7 @@ function Sidebar({ onNavigate, onLogout, userRole }: { onNavigate?: (view: ViewT
     try { return localStorage.getItem('rmasc_active_tab') || 'dashboard' } catch { return 'dashboard' }
   })
   return (
-    <aside className="hidden md:flex md:w-64 h-screen bg-slate-900 border-r border-white/10 flex-col flex-shrink-0">
+    <aside className="hidden md:flex md:w-64 h-dvh bg-slate-900 border-r border-white/10 flex-col flex-shrink-0">
       <div className="px-5 pt-6 pb-5">
         <div className="flex items-center gap-3 px-2">
           <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20 overflow-hidden flex-shrink-0">
@@ -653,9 +653,9 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   }
 
   // Route views
-  if (view === 'add-elevator') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><AddElevator onBack={() => persistView('dashboard')} /></div>
+  if (view === 'add-elevator') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><AddElevator onBack={() => persistView('dashboard')} /></div>
   if (view === 'be-inspect') return (
-    <div className="flex h-screen bg-slate-950">
+    <div className="flex h-dvh bg-slate-950">
       <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
       <div className="flex-1 flex flex-col bg-slate-950">
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-2.5 flex items-center justify-between shadow-lg">
@@ -666,17 +666,17 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       </div>
     </div>
   )
-  if (view === 'commandes') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><MesCommandesPage onBack={() => persistView('dashboard')} onFiche={id => { setFicheOrderId(id); persistView('fiche') }} /></div></div>
-  if (view === 'validations') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><ValidationsPage onBack={() => persistView('dashboard')} onFiche={id => { setFicheOrderId(id); persistView('fiche') }} /></div></div>
-  if (view === 'help') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><HelpPage onBack={() => persistView('dashboard')} /></div></div>
-  if (view === 'settings') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><SettingsPage onBack={() => persistView('dashboard')} session={session} onSessionUpdate={onSessionUpdate} /></div></div>
-  if (view === 'roadmap') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><RoadmapPage orders={orders as any} onBack={() => persistView('dashboard')} /></div></div>
-  if (view === 'fiche' && ficheOrderId) return <div className="h-screen bg-slate-950"><FicheTechniqueView orderId={ficheOrderId} onBack={() => { persistView('dashboard'); setFicheOrderId(null) }} variant="full" /></div>
-  if (view === 'invoicing') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><InvoicingPage onBack={() => persistView('dashboard')} /></div></div>
-  if (view === 'vault') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><BureauEtudeVault onBack={() => persistView('dashboard')} /></div></div>
-  if (view === 'lifecycle') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><LifecyclePipeline onBack={() => persistView('dashboard')} /></div></div>
+  if (view === 'commandes') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><MesCommandesPage onBack={() => persistView('dashboard')} onFiche={id => { setFicheOrderId(id); persistView('fiche') }} /></div></div>
+  if (view === 'validations') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><ValidationsPage onBack={() => persistView('dashboard')} onFiche={id => { setFicheOrderId(id); persistView('fiche') }} /></div></div>
+  if (view === 'help') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><HelpPage onBack={() => persistView('dashboard')} /></div></div>
+  if (view === 'settings') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><SettingsPage onBack={() => persistView('dashboard')} session={session} onSessionUpdate={onSessionUpdate} /></div></div>
+  if (view === 'roadmap') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><RoadmapPage orders={orders as any} onBack={() => persistView('dashboard')} /></div></div>
+  if (view === 'fiche' && ficheOrderId) return <div className="h-dvh bg-slate-950"><FicheTechniqueView orderId={ficheOrderId} onBack={() => { persistView('dashboard'); setFicheOrderId(null) }} variant="full" /></div>
+  if (view === 'invoicing') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><InvoicingPage onBack={() => persistView('dashboard')} /></div></div>
+  if (view === 'vault') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><BureauEtudeVault onBack={() => persistView('dashboard')} /></div></div>
+  if (view === 'lifecycle') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><LifecyclePipeline onBack={() => persistView('dashboard')} /></div></div>
   if (view === 'archives') return (
-    <div className="flex h-screen bg-slate-950">
+    <div className="flex h-dvh bg-slate-950">
       <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
       <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
         <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={buildCurrentUser(session)} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} />
@@ -684,13 +684,13 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       </div>
     </div>
   )
-  if (view === 'pieces-solo') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><PiecesSoloWorkspace onBack={() => persistView('dashboard')} session={session} /></div>
-  if (view === 'audit-log') return <div className="flex h-screen bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><AuditLogPage onBack={() => persistView('dashboard')} /></div></div>
+  if (view === 'pieces-solo') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><PiecesSoloWorkspace onBack={() => persistView('dashboard')} session={session} /></div>
+  if (view === 'audit-log') return <div className="flex h-dvh bg-slate-950"><Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} /><div className="flex-1 overflow-y-auto bg-slate-950"><AuditLogPage onBack={() => persistView('dashboard')} /></div></div>
 
   // Main Dashboard
   const currentUserData = buildCurrentUser(session)
   return (
-    <div className="flex h-screen bg-slate-950">
+    <div className="flex h-dvh bg-slate-950">
       <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
       <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
         <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={currentUserData} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} />

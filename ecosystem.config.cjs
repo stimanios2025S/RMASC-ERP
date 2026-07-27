@@ -10,8 +10,8 @@ module.exports = {
     cwd: '/home/sarlrmasc/rmasc-erp',
 
     // ── Execution ──────────────────────────────────────────────────────────
-    exec_mode: 'fork',
-    instances: 1,
+    exec_mode: 'cluster',
+    instances: 4,
     node_args: '--max-old-space-size=512',
 
     // ── Restart behavior (no more infinite crash loops) ────────────────────

@@ -60,7 +60,7 @@ export default function LoginScreen({ onLogin }: Props) {
   }
 
   return (
-    <div className="h-screen flex flex-col md:flex-row relative overflow-x-hidden overflow-y-auto bg-slate-950">
+    <div className="h-dvh flex flex-col md:flex-row relative overflow-hidden bg-slate-950">
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
@@ -71,7 +71,7 @@ export default function LoginScreen({ onLogin }: Props) {
       <AmbientParticles count={20} />
 
       {/* ── Left Panel ── */}
-      <div className="md:flex-1 flex flex-col justify-center relative z-10 overflow-hidden max-h-[40vh] md:max-h-none">
+      <div className="md:flex-1 flex flex-col justify-center relative z-10 overflow-hidden pb-12 md:pb-0">
         <div className="flex items-center justify-center flex-1 gap-3 md:gap-8 lg:gap-16 px-4 md:px-8">
           <div className="w-[130px] md:w-[200px] lg:w-[260px] flex-shrink-0 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <ElevatorAnimation />
@@ -104,7 +104,7 @@ export default function LoginScreen({ onLogin }: Props) {
       </div>
 
       {/* ── Right Panel: Login Form ── */}
-      <div className="w-full md:w-[440px] flex flex-col justify-center px-4 md:px-10 relative z-10">
+      <div className="w-full md:w-[440px] flex flex-col justify-center px-4 md:px-10 relative z-10 overflow-y-auto pb-12 md:pb-0">
         <div className="bg-slate-900/60 backdrop-blur-xl rounded-2xl p-5 md:p-8 border border-white/10 shadow-2xl">
           <div className="mb-5">
             <div className="flex items-center gap-2 mb-2">

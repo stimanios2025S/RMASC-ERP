@@ -642,7 +642,7 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
   }
 
   return (
-    <div className="bg-slate-950 h-screen flex flex-col">
+    <div className="bg-slate-950 h-dvh flex flex-col overflow-hidden">
       <style>{FICHE_STYLES}</style>
       <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between shadow-sm no-print flex-shrink-0">
         <div className="flex items-center gap-3">

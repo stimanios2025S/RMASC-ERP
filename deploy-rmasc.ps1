@@ -14,6 +14,16 @@ param(
 
 $SERVER = "sarlrmasc@100.73.62.52"
 $APP_DIR = "/home/sarlrmasc/rmasc-erp"
+$SSH_KEY = "$env:USERPROFILE\.ssh\github-deploy-key"
+
+# Use SSH key if it exists, otherwise fall back to password
+if (Test-Path $SSH_KEY) {
+    $SSH_OPTS = "-i $SSH_KEY -o PasswordAuthentication=no -o StrictHostKeyChecking=no"
+    $SCP_OPTS = "-i $SSH_KEY -o PasswordAuthentication=no -o StrictHostKeyChecking=no"
+} else {
+    $SSH_OPTS = ""
+    $SCP_OPTS = ""
+}
 
 function Write-Title { Write-Host "`n  $($args[0])" -ForegroundColor Cyan }
 function Write-OK    { Write-Host "  [OK] $($args[0])" -ForegroundColor Green }
@@ -27,7 +37,7 @@ Write-Host "  ==============================================" -ForegroundColor B
 
 if ($Status) {
     Write-Title "CHECKING SERVICES..."
-    ssh $SERVER @"
+    ssh $SSH_OPTS $SERVER @"
 echo "=== PM2 STATUS ==="
 pm2 status
 echo ""
@@ -45,7 +55,7 @@ free -h | head -2
 
 if ($Logs) {
     Write-Title "LAST 50 LOG LINES..."
-    ssh $SERVER "pm2 logs rmasc-api --lines 50"
+    ssh $SSH_OPTS $SERVER "pm2 logs rmasc-api --lines 50"
     exit
 }
 
@@ -60,38 +70,36 @@ Write-OK "Frontend built"
 
 # --- 2. CREATE DIRS ON SERVER ---
 Write-Title "[2/4] ENSURING DIRECTORIES ON SERVER..."
-ssh $SERVER "mkdir -p $APP_DIR/backend/src/controllers $APP_DIR/backend/src/middleware $APP_DIR/backend/src/schemas $APP_DIR/backend/src/utils $APP_DIR/backend/src/lib $APP_DIR/backend/src/models" 2>&1 | Out-Null
+ssh $SSH_OPTS $SERVER "mkdir -p $APP_DIR/backend/src/controllers $APP_DIR/backend/src/middleware $APP_DIR/backend/src/schemas $APP_DIR/backend/src/utils $APP_DIR/backend/src/lib $APP_DIR/backend/src/models" 2>&1 | Out-Null
 Write-OK "Directories ready"
 
 # --- 3. UPLOAD ---
 Write-Title "[3/4] UPLOADING FILES..."
 
-scp -q -r dist\* "${SERVER}:$APP_DIR/dist/"
-scp -q backend\api.mjs "${SERVER}:$APP_DIR/backend/"
-scp -q backend\src\controllers\*.js "${SERVER}:$APP_DIR/backend/src/controllers/"
-scp -q backend\src\middleware\*.js "${SERVER}:$APP_DIR/backend/src/middleware/"
-scp -q backend\src\schemas\*.js "${SERVER}:$APP_DIR/backend/src/schemas/"
-scp -q backend\src\utils\*.js "${SERVER}:$APP_DIR/backend/src/utils/"
-scp -q backend\src\lib\*.js "${SERVER}:$APP_DIR/backend/src/lib/"
-scp -q backend\src\models\*.js "${SERVER}:$APP_DIR/backend/src/models/"
-scp -q ecosystem.config.cjs "${SERVER}:$APP_DIR/"
+scp $SCP_OPTS -q -r dist\* "${SERVER}:$APP_DIR/dist/"
+scp $SCP_OPTS -q backend\api.mjs "${SERVER}:$APP_DIR/backend/"
+scp $SCP_OPTS -q backend\src\controllers\*.js "${SERVER}:$APP_DIR/backend/src/controllers/"
+scp $SCP_OPTS -q backend\src\middleware\*.js "${SERVER}:$APP_DIR/backend/src/middleware/"
+scp $SCP_OPTS -q backend\src\schemas\*.js "${SERVER}:$APP_DIR/backend/src/schemas/"
+scp $SCP_OPTS -q backend\src\utils\*.js "${SERVER}:$APP_DIR/backend/src/utils/"
+scp $SCP_OPTS -q backend\src\lib\*.js "${SERVER}:$APP_DIR/backend/src/lib/"
+scp $SCP_OPTS -q backend\src\models\*.js "${SERVER}:$APP_DIR/backend/src/models/"
+scp $SCP_OPTS -q ecosystem.config.cjs "${SERVER}:$APP_DIR/"
 
 Write-OK "All files uploaded"
 
-# --- 4. RESTART ---
+# --- 4. RESTART (systemd) ---
 Write-Title "[4/4] RESTARTING BACKEND..."
-ssh $SERVER @"
-pm2 delete rmasc-api 2>/dev/null
-pm2 kill 2>/dev/null
-sleep 1
-pm2 start $APP_DIR/ecosystem.config.cjs --env production 2>/dev/null || pm2 start $APP_DIR/backend/api.mjs --name rmasc-api
+ssh $SSH_OPTS $SERVER @"
+sudo systemctl daemon-reload 2>/dev/null
+sudo systemctl restart rmasc-api
 sleep 3
 curl -s --connect-timeout 5 http://localhost:4000/api/health
 "@
-Write-OK "Backend restarted"
+Write-OK "Backend restarted via systemd"
 
 # --- VERIFY ---
-$health = ssh $SERVER "curl -s --connect-timeout 5 http://localhost:4000/api/health 2>/dev/null || echo 'FAIL'"
+$health = ssh $SSH_OPTS $SERVER "curl -s --connect-timeout 5 http://localhost:4000/api/health 2>/dev/null || echo 'FAIL'"
 
 Write-Host "`n  ==============================================" -ForegroundColor Green
 Write-Host "    DEPLOY COMPLETE!" -ForegroundColor Green

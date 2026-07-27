@@ -338,7 +338,7 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
   const firstFile = serverFiles[0] || null
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-dvh flex flex-col">
       <div className="flex-shrink-0 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white">
@@ -435,7 +435,7 @@ function DeliveryDetail({ order, onBack, onConfirm, submitting, actionMsg, setAc
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-dvh flex flex-col">
       {/* Top bar */}
       <div className="flex-shrink-0 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-4">

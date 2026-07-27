@@ -25,7 +25,7 @@ export function PageBackground({ children, className = '' }: { children: React.R
       <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 min-h-0">
+      <div className="relative z-10 flex-1 flex flex-col min-h-0">
         {children}
       </div>
     </div>

@@ -1,13 +1,29 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import * as Sentry from '@sentry/react'
 import App from './App'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
+// ─── Sentry — Real-time error tracking ──────────────────────────────────
+Sentry.init({
+  dsn: 'https://fa2884aa65c1f0a3446c5f4d5c85c5ed@o4511808265977856.ingest.de.sentry.io/4511808272466000',
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+  tracePropagationTargets: ['localhost', /^https:\/\/sarl-rmasc\.com\/api/],
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  environment: 'production',
+  enableLogs: true,
+})
+
 // ─── Global JS error handler — prevents silent blank screens ──────────────
 window.onerror = (msg, source, line, col, error) => {
   console.error('[GLOBAL ERROR]', msg, 'at', source, line, col)
-  // Show a visible crash banner if the root fails to render
+  Sentry.captureException(error || new Error(String(msg)))
   const root = document.getElementById('root')
   if (root && !root.hasChildNodes()) {
     root.innerHTML = `
@@ -31,16 +47,14 @@ window.onerror = (msg, source, line, col, error) => {
   return true
 }
 
-// ─── Service Worker safeguard: unregister stale workers to prevent
-//     blank-screen crashes from cache corruption or CSP conflicts. ─────────
+// ─── Service Worker safeguard ──────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => {
     regs.forEach(r => r.unregister())
   })
 }
 
-// ─── Mount the React app with a fallback timeout ───────────────────────────
-// If React hasn't mounted within 5 seconds, show a manual recovery option.
+// ─── Mount timeout ──────────────────────────────────────────────────────
 const mountTimeout = setTimeout(() => {
   const root = document.getElementById('root')
   if (root && !root.hasChildNodes()) {
@@ -66,11 +80,27 @@ const mountTimeout = setTimeout(() => {
   }
 }, 8000)
 
+const SentryErrorBoundary = Sentry.withErrorBoundary(ErrorBoundary, {
+  fallback: ({ error }) => (
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-8">
+      <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl text-center">
+        <div className="text-5xl mb-4">⚠️</div>
+        <h2 className="text-xl font-bold text-white mb-2">Une erreur est survenue</h2>
+        <p className="text-sm text-white/50 mb-6">L'application a rencontré une erreur. L'équipe technique a été notifiée.</p>
+        <button onClick={() => window.location.reload()}
+          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-bold transition-all shadow-lg">
+          🔄 Recharger
+        </button>
+      </div>
+    </div>
+  ),
+})
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ErrorBoundary>
+    <SentryErrorBoundary>
       <App />
-    </ErrorBoundary>
+    </SentryErrorBoundary>
   </React.StrictMode>,
 )
 
