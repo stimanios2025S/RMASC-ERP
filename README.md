@@ -5,6 +5,16 @@
 Application web full-stack déployée sur serveur dédié (HP ProLiant) avec MongoDB auto-hébergé et tunnel Cloudflare.
 
 🌐 **Production :** [https://sarl-rmasc.com](https://sarl-rmasc.com)
+🖥️ **Direct :** [http://100.73.62.52:4000](http://100.73.62.52:4000)
+
+---
+## 🚀 Déploiement Rapide
+
+> 📖 **Guide complet** → [`DEPLOY-GUIDE.md`](./DEPLOY-GUIDE.md)
+
+**1 clic :** `.\deploy-rmasc.ps1`
+**Auto :** `git push origin main` (via GitHub Actions)
+**Vérifier :** `.\deploy-rmasc.ps1 -Status`
 
 ---
 
