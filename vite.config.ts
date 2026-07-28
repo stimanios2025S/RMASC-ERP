@@ -15,10 +15,18 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           sentry: ['@sentry/react'],
+          // Code-split heavy workspaces
+          dashboard: ['./src/components/Dashboard.tsx'],
+          ingenieurs: ['./src/components/IngenieurPortal.tsx'],
+          production: ['./src/components/ProductionWorkspace.tsx'],
+          stock: ['./src/components/StockWorkspace.tsx'],
+          // Agent AI (heavy - speech, multilingual NLP)
+          agent: ['./src/components/agent/AgentPanel.tsx'],
         },
         experimentalMinChunkSize: 20000,
       },
     },
+    chunkSizeWarningLimit: 400,
   },
   resolve: {
     alias: {

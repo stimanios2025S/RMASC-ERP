@@ -1,16 +1,19 @@
 // ═══════════════════════════════════════════════════════════════════════════
 //  RMASC FACTORY — Login Screen
 //  Design : Glassmorphism sombre, animations, responsive
+//  Heavy components (ElevatorAnimation) are lazy-loaded after render
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { login, initPortalUsers } from '../data/portalUsers'
 import type { PortalSession } from '../data/portalUsers'
 import InstallPWA from './InstallPWA'
-import ElevatorAnimation from './ElevatorAnimation'
 import AmbientParticles from './AmbientParticles'
 import IndustrialStatusBar from './IndustrialStatusBar'
 import AnimatedLogo from './AnimatedLogo'
+
+// Lazy load the heavy elevator animation (not needed on first paint)
+const ElevatorAnimation = lazy(() => import('./ElevatorAnimation'))
 
 interface Props { onLogin: (session: PortalSession) => void }
 
@@ -61,20 +64,28 @@ export default function LoginScreen({ onLogin }: Props) {
 
   return (
     <div className="h-dvh flex flex-col md:flex-row relative overflow-hidden bg-slate-950">
-      {/* Background */}
+      {/* Background — CSS gradients only, NO heavy image download */}
       <div className="absolute inset-0 z-0">
-        <img src="/images/login-bg.jpg" alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
+        <div className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 30%, rgba(251,146,60,0.5) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 70%, rgba(249,115,22,0.4) 0%, transparent 40%)`,
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/60 to-slate-950/85 md:bg-gradient-to-r md:from-slate-950/85 md:via-slate-950/55 md:to-slate-950/15" />
         <div className="absolute -top-48 -right-48 w-[600px] h-[600px] rounded-full bg-amber-500/10 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
       </div>
-      <AmbientParticles count={20} />
+      <AmbientParticles count={12} />
 
       {/* ── Left Panel ── */}
       <div className="md:flex-1 flex flex-col justify-center relative z-10 overflow-hidden pb-12 md:pb-0">
         <div className="flex items-center justify-center flex-1 gap-3 md:gap-8 lg:gap-16 px-4 md:px-8">
           <div className="w-[130px] md:w-[200px] lg:w-[260px] flex-shrink-0 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <ElevatorAnimation />
+            <Suspense fallback={<div className="w-full h-[300px] rounded-2xl bg-slate-800/40 border border-white/5 animate-pulse" />}>
+              <ElevatorAnimation />
+            </Suspense>
           </div>
           <div className="max-w-[200px] md:max-w-xs lg:max-w-sm">
             <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
