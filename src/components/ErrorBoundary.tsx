@@ -43,7 +43,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-8">
+        <div className="h-dvh flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-8">
           <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl text-center">
             <div className="text-5xl mb-4">⚠️</div>
             <h2 className="text-xl font-bold text-white mb-2">Une erreur est survenue</h2>

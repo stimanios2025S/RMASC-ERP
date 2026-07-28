@@ -315,7 +315,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                 { label: 'Fichiers', value: kpis.fichiers, icon: '📁' },
               ].map(kpi => (
                 <div key={kpi.label} className="bg-slate-800/60 rounded-xl p-3 border border-white/10 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center text-base">{kpi.icon}</div>
+                  <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-base">{kpi.icon}</div>
                   <div>
                     <p className="text-[10px] text-white/80 font-bold uppercase tracking-wider">{kpi.label}</p>
                     <p className="text-lg font-bold text-white">{kpi.value}</p>
@@ -347,14 +347,14 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                     ) : orders.map(order => {
                       const orderFiles = vaultFiles.filter(f => f.orderId === order.id)
                       return (
-                        <tr key={order.id} className="hover:bg-primary-50/30 transition-colors">
+                        <tr key={order.id} className="hover:bg-amber-500/10/30 transition-colors">
                           <td className="px-5 py-3"><span className="text-sm font-bold font-mono text-white">{order.serialNumber}</span></td>
                           <td className="px-5 py-3"><p className="text-sm font-semibold text-white">{order.clientName}</p><p className="text-[10px] text-white">{order.clientCity}</p></td>
                           <td className="px-5 py-3"><StatusBadge status={order.status} /></td>
                           <td className="px-5 py-3"><span className="text-xs font-semibold">{orderFiles.length > 0 ? `📄 ${orderFiles.length}` : '—'}</span></td>
                           <td className="px-5 py-3 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }} className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100">📄 Fiche</button>
+                              <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }} className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20">📄 Fiche</button>
                               <button onClick={() => { setSelectedOrder(order); setFileIndex(0); setShowFile(true) }} className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 text-white hover:bg-slate-700">Fichiers</button>
                             </div>
                           </td>
@@ -432,7 +432,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                           disabled={uploading} className="w-full py-2.5 rounded-lg text-sm font-bold text-white bg-sky-600 hover:bg-sky-700 shadow-md disabled:opacity-50">{currentPage.nextLabel}</button>
                       )}
                       <button onClick={() => { setFileIndex(0); setShowFile(true) }} className="w-full py-1.5 rounded-lg text-xs font-semibold bg-slate-800/60 text-white/80 hover:bg-white/[0.06]">👁️ Voir les fichiers</button>
-                      <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }} className="w-full py-1.5 rounded-lg text-xs font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100">📄 Fiche Technique</button>
+                      <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }} className="w-full py-1.5 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20">📄 Fiche Technique</button>
                     </div>
                   )}
                 </div>
@@ -543,7 +543,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                           {/* Quick actions */}
                           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
                             <button onClick={() => loadArchive(order.id)} className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-white/[0.06] text-white/80 hover:bg-white/[0.12]">🔄 Recharger</button>
-                            <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }} className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100">📄 Fiche Technique</button>
+                            <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }} className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20">📄 Fiche Technique</button>
                           </div>
                         </div>
                       )}

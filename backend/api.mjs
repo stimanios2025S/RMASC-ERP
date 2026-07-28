@@ -8,12 +8,13 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import multer from 'multer'
 import helmet from 'helmet'
+import compression from 'compression'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { connectDB, testDBConnection } from './src/lib/mongoose.js'
 import { authenticate, requireAdmin } from './src/middleware/auth.js'
-import { rateLimitLogin } from './src/middleware/rateLimit.js'
+import { rateLimitLogin, rateLimitApi } from './src/middleware/rateLimit.js'
 import { auditMiddleware } from './src/middleware/audit.js'
 import { healthCheck } from './src/controllers/health.js'
 import {
@@ -24,7 +25,7 @@ import {
   listOrders, getOrder, getOrderDatasheet, createOrder, updateOrderStatus,
   updateProductionPhase, uploadFile, listFiles, downloadFile, deleteFile,
   searchArchives, getOrderArchive, approvePlan, restampOrder, rejectPlan,
-  markDelivery, confirmDelivery, updateOrder, deleteOrder,
+  markDelivery, confirmDelivery, updateOrder, deleteOrder, deleteAllOrders, exportOrders,
 } from './src/controllers/orders.js'
 import {
   listItems, createItem, getItem, updateItem, deleteItem, uploadItemImage,
@@ -43,7 +44,7 @@ import { sendWhatsApp } from './src/controllers/notifications.js'
 import { subscribe, sendEvent } from './src/controllers/realtime.js'
 import { getAuditLogs, getAuditActions } from './src/controllers/audit.js'
 import {
-  getDashboardStats, getOrderMetrics, getStockKPIs, getInvoicingStats, getEngineerStats,
+  getDashboardStats, getOrderMetrics, getStockKPIs, getInvoicingStats, getEngineerStats, getOrderTrends,
 } from './src/controllers/stats.js'
 import { loadOrder, validateStatusTransition } from './src/middleware/statusValidation.js'
 
@@ -60,11 +61,22 @@ if (!process.env.JWT_SECRET) {
 
 // ═══ MIDDLEWARE ═════════════════════════════════════════════════════════
 app.set('trust proxy', 1)
+app.use(compression({ threshold: 512, level: 6 }))
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: false }))
 app.use(cors({ origin: ['https://sarl-rmasc.com', 'https://192.168.1.95', 'http://192.168.1.95', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:4000', 'http://localhost:4001'], credentials: true }))
 app.use(express.json({ limit: '100mb' }))
 app.use(express.urlencoded({ limit: '100mb', extended: true }))
 app.use(auditMiddleware)
+app.use('/api', rateLimitApi)
+
+// ─── No-cache headers for ALL API responses (prevents Cloudflare/browser cache desync) ──
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, private')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
+  res.setHeader('Surrogate-Control', 'no-store')
+  next()
+})
 
 // ─── Request timeout (30s) ──────────────────────────────────────────────
 app.use((req, res, next) => {
@@ -140,7 +152,9 @@ app.post('/api/orders/:id/reject-plan', authenticate, requireAdmin, loadOrder, r
 app.post('/api/orders/:id/restamp', authenticate, requireAdmin, restampOrder)
 app.post('/api/orders/:id/mark-delivery', authenticate, loadOrder, markDelivery)
 app.post('/api/orders/:id/confirm-delivery', authenticate, requireAdmin, loadOrder, confirmDelivery)
+app.delete('/api/orders/admin/cleanup-all', authenticate, requireAdmin, deleteAllOrders)
 app.delete('/api/orders/:id', authenticate, requireAdmin, deleteOrder)
+app.get('/api/orders/export/csv', authenticate, exportOrders)
 
 // Stock — Items
 app.get('/api/stock/items', authenticate, listItems)
@@ -201,6 +215,7 @@ app.get('/api/stats/orders', authenticate, getOrderMetrics)
 app.get('/api/stats/stock', authenticate, getStockKPIs)
 app.get('/api/stats/invoicing', authenticate, getInvoicingStats)
 app.get('/api/stats/engineer', authenticate, getEngineerStats)
+app.get('/api/stats/trends', authenticate, getOrderTrends)
 
 // ═══ VAULT FILES (backend-persisted) ═══════════════════════════════════════
 app.get('/api/vault/files', authenticate, async (req, res) => {

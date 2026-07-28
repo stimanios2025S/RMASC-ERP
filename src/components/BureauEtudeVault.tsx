@@ -193,7 +193,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
             {/* Actions */}
             <div className="flex gap-3">
               <button onClick={() => { setPreviewFile(null); handleDownload(previewFile) }}
-                className="flex-1 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold transition-all flex items-center justify-center gap-2">
+                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-all flex items-center justify-center gap-2">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Telecharger le fichier
               </button>
@@ -227,7 +227,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
         </button>
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-white/80">Bureau d'Etude — File Vault</span>
-          {engineerName && <span className="text-[10px] bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full font-semibold">{engineerName}</span>}
+          {engineerName && <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-semibold">{engineerName}</span>}
         </div>
       </div>
 
@@ -245,13 +245,13 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
           {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Fichiers Total', value: metrics.total, icon: '📄', color: 'text-primary-600' },
+              { label: 'Fichiers Total', value: metrics.total, icon: '📄', color: 'text-amber-400' },
               { label: 'Documents PDF', value: metrics.pdf, icon: '📑', color: 'text-accent-600' },
               { label: 'Plans DWG', value: metrics.dwg, icon: '📐', color: 'text-emerald-600' },
               { label: 'Ingenieurs', value: metrics.engineers, icon: '👥', color: 'text-white' },
             ].map(kpi => (
               <div key={kpi.label} className="bg-slate-800/60 rounded-2xl p-4 shadow-card border border-white/5 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center text-lg">{kpi.icon}</div>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-lg">{kpi.icon}</div>
                 <div>
                   <p className="text-xs text-white font-semibold">{kpi.label}</p>
                   <p className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -288,7 +288,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
                     {files.map(f => {
                       const order = getOrderInfo(f.orderId)
                       return (
-                        <tr key={f.id} className="hover:bg-primary-50/30 transition-colors">
+                        <tr key={f.id} className="hover:bg-amber-500/10/30 transition-colors">
                           <td className="px-6 py-3">
                             <div className="flex items-center gap-2.5">
                               <span className="text-base">{getFileIcon(f.type)}</span>
@@ -311,7 +311,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
                           <td className="px-6 py-3 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <button onClick={() => setPreviewFile(f)}
-                                className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-primary-50 text-primary-600 hover:bg-primary-100 transition-all">
+                                className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all">
                                 Visualiser
                               </button>
                               <button onClick={() => handleDownload(f)}

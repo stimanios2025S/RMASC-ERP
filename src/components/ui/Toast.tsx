@@ -73,7 +73,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   return (
     <ToastContext.Provider value={{ toast }}>
-      <div className="h-full flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0">
         {children}
       </div>
       {/* Toast container — fixed bottom-right */}

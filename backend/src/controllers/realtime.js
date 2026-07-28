@@ -119,3 +119,11 @@ export function notifyFileUploaded(serialNumber, fileName, uploadedBy) {
     message: `Fichier ajouté à ${serialNumber}: ${fileName}`,
   })
 }
+
+export function notifyOrderDeleted(serialNumber, deletedBy) {
+  broadcast('order:deleted', {
+    serialNumber,
+    deletedBy,
+    message: `Commande ${serialNumber} supprimée par ${deletedBy}`,
+  })
+}

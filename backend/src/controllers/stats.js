@@ -338,3 +338,23 @@ export async function getEngineerStats(req, res) {
     res.status(500).json({ error: e.message })
   }
 }
+
+// ─── GET /api/stats/trends ─────────────────────────────────────────────────
+export async function getOrderTrends(req, res) {
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000)
+    const dailyOrders = await Order.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 }, revenue: { $sum: { $ifNull: ['$salePriceDZD', 0] } } } },
+      { $sort: { _id: 1 } },
+    ]).option({ allowDiskUse: false })
+    const dailyDeliveries = await Order.aggregate([
+      { $match: { completedAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$completedAt' } }, count: { $sum: 1 }, revenue: { $sum: { $ifNull: ['$salePriceDZD', 0] } } } },
+      { $sort: { _id: 1 } },
+    ]).option({ allowDiskUse: false })
+    const statusBreakdown = await Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]).option({ allowDiskUse: false })
+    const sm = {}; for (const r of statusBreakdown) sm[r._id] = r.count
+    res.json({ dailyOrders, dailyDeliveries, statusBreakdown: sm, period: { from: thirtyDaysAgo.toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] }, generatedAt: new Date().toISOString() })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+}

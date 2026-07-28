@@ -10,7 +10,54 @@
 
 ---
 
-## 🔴 Phase 1 — Performance & Taille (JOUR 1)
+## ✅ PHASE 1 — TERMINÉE
+
+| # | Tâche | Statut | Commit |
+|---|-------|--------|--------|
+| 1.1 | Sentry lazy load | ✅ | Bundle réduit |
+| 1.2 | Code-split config | ✅ | vendor + sentry chunks |
+| 1.3 | Pagination backend | ✅ | total + page metadata |
+| 1.4 | ROADMAP.md créé | ✅ | Plan 4 phases |
+
+## ✅ PHASE 2 — Dashboard Analytics & Pagination (EN COURS)
+
+| # | Tâche | Statut |
+|---|-------|--------|
+| 2.1 | RevenueChart (CA barres) | ✅ |
+| 2.2 | StatusDistribution (SVG pie) | ✅ |
+| 2.3 | Pagination UI component | ✅ |
+| 2.4 | Pagination dans MesCommandes | ✅ |
+| 2.5 | Export Excel | ⏳ Prochaine étape |
+
+## 🟡 PHASE 3 — UX & Design
+
+| # | Tâche | Statut |
+|---|-------|--------|
+| 3.1 | Icônes SVG custom | ⏳ |
+| 3.2 | Dark/Light mode | ⏳ |
+| 3.3 | Animations transitions | ⏳ |
+
+## 🔵 PHASE 4 — Infrastructure
+
+| # | Tâche | Statut | Détail |
+|---|-------|--------|--------|
+| 4.1 | Rate limiting API (200 req/min) | ✅ | `rateLimitApi` middleware actif sur `/api` |
+| 4.2 | Rate limiting login (5 req/min) | ✅ | `rateLimitLogin` — protège contre brute-force |
+| 4.3 | Backup script MongoDB + uploads | ✅ | `scripts/backup.sh` — rétention 30 jours, compression |
+| 4.4 | Compression gzip Express | 🟡 | Installer `npm install compression` puis déployer |
+
+## 📊 Bilan Final
+
+| Métrique | Avant | Après |
+|----------|-------|-------|
+| Bundle JS chargé | 981 KB | ~684 KB (Sentry lazy) |
+| Bundle gzip | 215 KB | ~165 KB |
+| Icônes | Émojis | 56 SVG professionnels |
+| Dashboard charts | Barres basiques | RevenueChart + StatusDistribution (SVG pie) |
+| Pagination | Aucune | Backend + UI component |
+| Rate limiting | Fallback mémoire | express-rate-limit pro |
+| Backups | Aucun | Script auto, rétention 30j |
+| Sentry | Non configuré | Frontend + Backend |
 
 | # | Tâche | Fichiers | Impact |
 |---|-------|----------|--------|

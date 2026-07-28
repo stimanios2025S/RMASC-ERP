@@ -10,6 +10,8 @@ interface SSEEvent {
   data: any
 }
 
+export type { SSEEvent }
+
 type EventHandler = (event: SSEEvent) => void
 
 // ─── Hook principal ──────────────────────────────────────────────────────
@@ -48,6 +50,14 @@ export function useSSE(onEvent?: EventHandler) {
 
     es.addEventListener('order:file', (e: MessageEvent) => {
       try { onEventRef.current?.({ type: 'order:file', data: JSON.parse(e.data) }) } catch {}
+    })
+
+    es.addEventListener('order:deleted', (e: MessageEvent) => {
+      try { onEventRef.current?.({ type: 'order:deleted', data: JSON.parse(e.data) }) } catch {}
+    })
+
+    es.addEventListener('force:sync', (e: MessageEvent) => {
+      try { onEventRef.current?.({ type: 'force:sync', data: JSON.parse(e.data) }) } catch {}
     })
 
     es.onerror = () => {

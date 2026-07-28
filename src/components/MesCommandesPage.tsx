@@ -4,6 +4,7 @@ import { addNotice, getNotices, addUpload, getUploads } from '../config/runtime-
 import AddElevator from './AddElevator'
 import FileManager from './FileManager'
 import FicheTechniqueView from './FicheTechniqueView'
+import Pagination from './ui/Pagination'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 interface OrderRow {
@@ -112,6 +113,8 @@ interface Props { onBack?: () => void; onFiche?: (id: string) => void }
 
 export default function MesCommandesPage({ onBack, onFiche }: Props) {
   const [orders, setOrders] = useState<OrderRow[]>([])
+  const [pagination, setPagination] = useState({ page: 1, total: 0, totalPages: 0, hasNext: false, hasPrev: false })
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -122,18 +125,27 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState<OrderRow | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(async (pageNum?: number) => {
     try {
-      const data: OrderRow[] = await apiFetch('/orders')
-      setOrders(data)
+      const p = pageNum || page
+      const data: any = await apiFetch(`/orders?page=${p}&limit=50`)
+      setOrders(Array.isArray(data) ? data : data)
+      if (data.pagination) setPagination(data.pagination)
     } catch (err: any) {
       console.error('Failed to load orders:', err.message)
     } finally {
       setLoading(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { loadOrders() }, [loadOrders])
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+    setLoading(true)
+    loadOrders(newPage)
+  }
+
+  useEffect(() => { loadOrders(1) }, [])
 
   const filtered = orders
     .filter(o => filterStatus === 'all' || o.status === filterStatus)
@@ -184,7 +196,11 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
                 await apiFetch(`/orders/${deleteConfirm.id}`, { method: 'DELETE' })
                 setDeleteConfirm(null)
                 loadOrders()
-              } catch { setDeleteConfirm(null) }
+              } catch (err: any) {
+                const msg = err?.message || 'Erreur lors de la suppression'
+                alert(`❌ ${msg}\n\nLa commande n'a PAS été supprimée. Vérifiez votre connexion au serveur.`)
+                setDeleteConfirm(null)
+              }
               setDeleting(false)
             }} disabled={deleting}
               className="px-4 py-2 rounded-xl text-sm font-bold bg-red-500 text-white hover:bg-red-400 disabled:opacity-50 transition-all flex items-center gap-2">
@@ -208,7 +224,7 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6 space-y-6 text-slate-100">
+    <div className="min-h-0 bg-slate-950 p-6 space-y-6 text-slate-100">
 
       {/* ── Header Card ── */}
       <header className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
@@ -355,6 +371,7 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
               )}
             </tbody>
           </table>
+          <Pagination meta={pagination} onPageChange={handlePageChange} />
             </div>
         </div>
       </div>
@@ -506,7 +523,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
   const docCount = (archive?.cadSubmissions?.length || 0) + (archive?.stockDocuments?.length || 0) + uploadedFiles.length
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-0">
       {/* Top bar */}
       <div className="sticky top-0 z-40 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">

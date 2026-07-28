@@ -8,7 +8,7 @@ import StockDocument from '../models/StockDocument.js'
 import StockMovement from '../models/StockMovement.js'
 import { stampOrderFiles } from '../utils/pdfStamper.js'
 import { createOrderSchema, updateOrderSchema, updateStatusSchema, updateProductionPhaseSchema } from '../schemas/validation.js'
-import { notifyOrderCreated, notifyOrderStatusChanged, notifyOrderApproval, notifyFileUploaded } from './realtime.js'
+import { notifyOrderCreated, notifyOrderStatusChanged, notifyOrderApproval, notifyFileUploaded, notifyOrderDeleted } from './realtime.js'
 
 const UPLOADS_DIR = path.resolve(process.argv[1] ? path.dirname(process.argv[1]) : '.', '..', 'uploads')
 
@@ -471,6 +471,9 @@ export async function deleteOrder(req, res) {
     // 3. Delete the order itself
     await Order.findByIdAndDelete(req.params.id)
 
+    // Broadcast deletion to all connected clients in real-time
+    notifyOrderDeleted(order.serialNumber, req.user?.name || 'Administrateur')
+
     res.json({
       success: true,
       message: 'Commande supprimée avec cascade complète.',
@@ -481,4 +484,60 @@ export async function deleteOrder(req, res) {
       },
     })
   } catch (e) { res.status(500).json({ error: e.message }) }
+}
+
+// DELETE /api/orders/admin/cleanup-all — DELETE ALL orders (admin only, full cascade)
+export async function deleteAllOrders(req, res) {
+  try {
+    const allOrders = await Order.find({}).select('serialNumber files').lean()
+    let totalFiles = 0
+
+    // 1. Delete physical files from disk for every order
+    for (const order of allOrders) {
+      for (const file of (order.files || [])) {
+        if (file.path) {
+          const absPath = path.isAbsolute(file.path) ? file.path : path.join(UPLOADS_DIR, file.path)
+          if (fs.existsSync(absPath)) try { fs.unlinkSync(absPath); totalFiles++ } catch {}
+        }
+      }
+    }
+
+    // 2. Cascade delete ALL related data
+    const [orderCount, cadCount, docCount, moveCount] = await Promise.all([
+      Order.deleteMany({}),
+      CAD_Submission.deleteMany({}),
+      StockDocument.deleteMany({}),
+      StockMovement.deleteMany({}),
+    ])
+
+    // 3. Notify all connected clients
+    notifyOrderDeleted('TOUTES', req.user?.name || 'Administrateur')
+
+    res.json({
+      success: true,
+      message: `✅ ${orderCount.deletedCount} commande(s) supprimée(s) avec cascade complète.`,
+      cascade: {
+        orders: orderCount.deletedCount,
+        cadSubmissions: cadCount.deletedCount,
+        stockDocuments: docCount.deletedCount,
+        stockMovements: moveCount.deletedCount,
+        filesDeleted: totalFiles,
+      },
+    })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+}
+
+// GET /api/orders/export — CSV export
+export async function exportOrders(req, res) {
+  try {
+    const orders = await Order.find()
+      .select('serialNumber clientName clientPhone clientCity typeMotorisation status priority createdAt totalCostDZD salePriceDZD')
+      .sort({ createdAt: -1 }).lean()
+    const head = ['Serie','Client','Telephone','Ville','Motorisation','Statut','Priorite','Cree le','Cout DZD','Prix DZD']
+    const rows = orders.map(o => [o.serialNumber,`"${o.clientName||''}"`,o.clientPhone||'',o.clientCity,o.typeMotorisation,o.status,o.priority||'NORMAL',o.createdAt?new Date(o.createdAt).toISOString().split('T')[0]:'',o.totalCostDZD||0,o.salePriceDZD||0])
+    const csv = '﻿' + [head.join(','),...rows.map(r=>r.join(','))].join('\n')
+    res.setHeader('Content-Type','text/csv;charset=utf-8')
+    res.setHeader('Content-Disposition',`attachment;filename="rmasc-orders-${new Date().toISOString().split('T')[0]}.csv"`)
+    res.send(csv)
+  } catch(e) { res.status(500).json({ error: e.message }) }
 }

@@ -31,6 +31,7 @@ import KpiCard from './dashboard/KpiCard'
 import AuditLogPage from './AuditLogPage'
 import { showToast } from './ui/Toast'
 import { CardSkeleton } from './ui/Skeleton'
+import { useSSE } from '../hooks/useSSE'
 
 interface OrderSummary {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -193,7 +194,7 @@ function MobileNav({ activeView, onNavigate, onLogout }: { activeView: string; o
 }
 
 // ─── Header ──────────────────────────────────────────────────────────────
-function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentActive, onSmartSearch }: any) {
+function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentActive, onSmartSearch, onForceSync, syncStatus }: any) {
   const [showProfile, setShowProfile] = useState(false)
   return (
     <header className="h-14 md:h-16 bg-slate-900 border-b border-white/10 flex items-center justify-between px-3 md:px-6 shadow-sm">
@@ -219,6 +220,11 @@ function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentAc
             agentActive ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
           }`} title="Assistant IA Salim (⌘I)">
           <span className="text-base md:text-lg">🤖</span>
+        </button>
+        <button onClick={onForceSync} disabled={syncStatus === 'syncing'}
+          className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center transition-all bg-white/10 text-white/70 hover:bg-white/20 hover:text-white disabled:opacity-50"
+          title="Forcer la synchronisation de tous les appareils">
+          <span className="text-base md:text-lg">{syncStatus === 'syncing' ? '⏳' : '🔄'}</span>
         </button>
         <SmartNotificationCenter onNavigate={onNotifClick} orders={orders} />
         <div className="w-px h-5 md:h-7 bg-white/10" />
@@ -504,6 +510,137 @@ function ProgressArc({ orders }: { orders: OrderSummary[] }) {
   )
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  REVENUE CHART — Chiffre d'affaires mensuel (CSS bars)
+// ═══════════════════════════════════════════════════════════════════════════
+function RevenueChart({ stats }: { stats: DashboardStats | null }) {
+  const revenue = stats?.revenue?.totalDZD ?? 0
+  const delivered = stats?.revenue?.deliveredCount ?? 0
+  const active = stats?.activeOrders ?? 0
+  const completionRate = stats?.completionRate ?? 0
+  if (!stats && revenue === 0) return null
+
+  const months = [
+    { label: 'CA Total', value: revenue, color: 'from-emerald-400 to-emerald-600' },
+    { label: 'Livrées', value: delivered * 500000, color: 'from-amber-400 to-amber-600' },
+    { label: 'Actives', value: active * 300000, color: 'from-blue-400 to-blue-600' },
+  ]
+  const maxVal = Math.max(...months.map(m => m.value), 1)
+  return (
+    <div className="bg-slate-800/70 rounded-2xl border border-white/10 p-5 col-span-1 md:col-span-2">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-white flex items-center gap-2">💰 Chiffre d'Affaires</h3>
+        <span className="text-xs text-white/60 bg-white/10 px-2.5 py-1 rounded-full">{delivered} commandes facturées</span>
+      </div>
+      <div className="flex items-end justify-between gap-6 h-[120px] pt-4">
+        {months.map((m, i) => (
+          <div key={i} className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
+            <span className="text-xs font-bold text-white/80">{m.value >= 1000000 ? `${(m.value / 1000000).toFixed(1)}M` : `${(m.value / 1000).toFixed(0)}k`} DZD</span>
+            <div className="relative w-full max-w-[60px] rounded-lg overflow-hidden" style={{ height: `${(m.value / maxVal) * 100}%` }}>
+              <div className={`absolute bottom-0 w-full rounded-t-lg bg-gradient-to-t ${m.color}`} style={{ height: '100%' }} />
+            </div>
+            <span className="text-[10px] font-medium text-white/60">{m.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+        <span className="text-white/60">Taux de complétion</span>
+        <span className="font-bold text-amber-400">{completionRate}%</span>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STATUS DISTRIBUTION — Pie chart (SVG)
+// ═══════════════════════════════════════════════════════════════════════════
+function StatusDistribution({ stats }: { stats: DashboardStats | null }) {
+  if (!stats) return null
+  const items = [
+    { label: 'Terminées', value: stats.completedOrders, color: '#10b981' },
+    { label: 'En Cours', value: stats.activeOrders, color: '#f59e0b' },
+    { label: 'Bloquées', value: stats.blockedOrders, color: '#ef4444' },
+    { label: 'Annulées', value: stats.cancelledOrders, color: '#6b7280' },
+  ]
+  const total = items.reduce((s, i) => s + i.value, 0) || 1
+  let cumulative = 0
+  const slices = items.filter(i => i.value > 0).map(i => {
+    const start = cumulative
+    cumulative += (i.value / total) * 360
+    return { ...i, start, end: cumulative }
+  })
+  return (
+    <div className="bg-slate-800/70 rounded-2xl border border-white/10 p-5 flex flex-col items-center">
+      <h3 className="text-base font-semibold text-white mb-4 w-full">Distribution des Statuts</h3>
+      <div className="relative w-[120px] h-[120px] mb-4">
+        <svg viewBox="0 0 42 42" className="w-full h-full -rotate-90">
+          {slices.map((s, i) => {
+            const [x1, y1] = [1 + 20 * Math.cos((s.start * Math.PI) / 180), 1 + 20 * Math.sin((s.start * Math.PI) / 180)]
+            const [x2, y2] = [1 + 20 * Math.cos((s.end * Math.PI) / 180), 1 + 20 * Math.sin((s.end * Math.PI) / 180)]
+            const largeArc = s.end - s.start > 180 ? 1 : 0
+            return <path key={i} d={`M 21 21 L ${1 + x1 * 20} ${1 + y1 * 20} A 20 20 0 ${largeArc} 1 ${1 + x2 * 20} ${1 + y2 * 20} Z`} fill={s.color} />
+          })}
+          <circle cx="21" cy="21" r="12" fill="#1e293b" />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-lg font-bold text-white">{total}</span>
+          <span className="text-[8px] text-white/50">Total</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+        {items.filter(i => i.value > 0).map(i => (
+          <div key={i.label} className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ background: i.color }} />
+            <span className="text-white/60">{i.label}</span>
+            <span className="font-bold text-white">{i.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TRENDS CHART — 30-day order trends (CSS bar chart)
+// ═══════════════════════════════════════════════════════════════════════════
+function TrendsChart() {
+  const [trends, setTrends] = useState<{ dailyOrders: { _id: string; count: number }[] } | null>(null)
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    let c = false
+    apiFetch('/stats/trends').then((d: any) => { if (!c) { setTrends(d); setLoading(false) } }).catch(() => { if (!c) setLoading(false) })
+    return () => { c = true }
+  }, [])
+  if (loading || !trends || trends.dailyOrders.length === 0) return null
+  const maxCount = Math.max(...trends.dailyOrders.map(d => d.count), 1)
+  return (
+    <div className="bg-slate-800/70 rounded-2xl border border-white/10 p-5 mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <Icon name="TrendingUp" className="w-4 h-4" /> Tendances 30 jours
+        </h3>
+        <span className="text-[10px] text-white/60">{trends.dailyOrders.length} jours</span>
+      </div>
+      <div className="flex items-end gap-[2px] h-[60px] overflow-x-auto pb-1">
+        {trends.dailyOrders.map(d => (
+          <div key={d._id} className="flex-shrink-0 w-[6px] rounded-t-sm bg-gradient-to-t from-amber-500/60 to-amber-400 hover:from-amber-400 hover:to-amber-300 transition-all relative group cursor-pointer"
+            style={{ height: `${(d.count / maxCount) * 100}%` }}
+            title={`${d._id}: ${d.count} commande(s)`}
+          />
+        ))}
+      </div>
+      <div className="flex items-center justify-between mt-2 text-[9px] text-white/50">
+        <span>{trends.dailyOrders[0]?._id}</span>
+        <span>Aujourd'hui</span>
+      </div>
+      <p className="text-[10px] text-white/50 mt-2 flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-amber-400/60" />
+        Commandes créées par jour
+      </p>
+    </div>
+  )
+}
+
 const PHASE_HOURS: Record<string, number> = {
   BROUILLON: 0, ATTENTE_DESSIN_TECH: 16, ATTENTE_APPROBATION_ADMIN: 4,
   ATTENTE_DESSIN_2D: 24, ATTENTE_VERIFICATION: 8, PRET_POUR_PRODUCTION: 0,
@@ -567,6 +704,25 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   const [showSmartSearch, setShowSmartSearch] = useState(false)
   const [apiOnline, setApiOnline] = useState<boolean | null>(null) // null = checking, true = online, false = offline
   const [apiError, setApiError] = useState<string | null>(null)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle')
+
+  const handleForceSync = useCallback(async () => {
+    setSyncStatus('syncing')
+    try {
+      // Broadcast force-sync event to ALL connected devices
+      await apiFetch('/realtime/broadcast', {
+        method: 'POST',
+        body: JSON.stringify({ event: 'force:sync', data: { triggeredAt: new Date().toISOString(), triggeredBy: session.name } }),
+      })
+      // Also refresh local data
+      loadFullRef.current()
+      setSyncStatus('done')
+      setTimeout(() => setSyncStatus('idle'), 3000)
+    } catch {
+      setSyncStatus('error')
+      setTimeout(() => setSyncStatus('idle'), 3000)
+    }
+  }, [session.name])
 
   useEffect(() => { const t = setTimeout(() => setShowAgent(true), 2000); requestNotificationPermission(); return () => clearTimeout(t) }, [])
   useEffect(() => {
@@ -576,6 +732,14 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     }
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  // ─── SSE real-time listener: auto-reload when other devices make changes ─────
+  const loadFullRef = useRef<() => void>(() => {})
+  useSSE(useCallback((event: { type: string; data: any }) => {
+    if (event.type === 'order:created' || event.type === 'order:deleted' || event.type === 'order:status' || event.type === 'order:file' || event.type === 'force:sync') {
+      loadFullRef.current()
+    }
+  }, []))
 
   const prevNotifCount = useRef(0)
   useEffect(() => {
@@ -632,6 +796,9 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
       }
     }
 
+    // Make loadFull accessible to the SSE handler via ref
+    loadFullRef.current = loadFull
+
     // First load: full (orders + stats)
     loadFull()
 
@@ -679,7 +846,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     <div className="flex h-dvh bg-slate-950">
       <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
       <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
-        <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={buildCurrentUser(session)} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} />
+        <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={buildCurrentUser(session)} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} onForceSync={handleForceSync} syncStatus={syncStatus} />
         <main className="flex-1 overflow-y-auto"><ArchiveOrders onSelectOrder={id => { setFicheOrderId(id); persistView('fiche') }} /></main>
       </div>
     </div>
@@ -693,7 +860,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     <div className="flex h-dvh bg-slate-950">
       <Sidebar onNavigate={persistView} onLogout={onLogout} userRole={session.role} />
       <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
-        <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={currentUserData} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} />
+        <Header notifCount={notifications.length} onNotifClick={() => setShowNotifPanel(p => !p)} orders={orders} user={currentUserData} onAgentToggle={() => setShowAgent(p => !p)} agentActive={showAgent} onSmartSearch={() => setShowSmartSearch(true)} onForceSync={handleForceSync} syncStatus={syncStatus} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">
           {apiOnline === false && (
             <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-sm">
@@ -819,7 +986,16 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
             <ProjectList orders={orders} onFiche={id => { setFicheOrderId(id); persistView('fiche') }} />
           </div>
 
-          {/* Bottom Row */}
+          {/* Bottom Row — Analytics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
+            <RevenueChart stats={stats} />
+            <StatusDistribution stats={stats} />
+          </div>
+
+          {/* Trends Row — 30-day chart */}
+          <TrendsChart />
+
+          {/* Pipeline Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
             <CollaborationCard orders={orders} />
             <ProgressArc orders={orders} />

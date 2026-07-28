@@ -593,7 +593,7 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
       </div>
     )
     if (isInline) return <div className="bg-slate-800/70 rounded-xl border border-white/10 p-6">{spinner}</div>
-    return <div className="flex items-center justify-center min-h-screen bg-slate-950">{spinner}</div>
+    return <div className="flex items-center justify-center min-h-dvh bg-slate-950">{spinner}</div>
   }
 
   if (error || !data) {
@@ -605,7 +605,7 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
       </div>
     )
     if (isInline) return <div className="bg-slate-800/70 rounded-xl border border-white/10 p-6">{errorBox}</div>
-    return <div className="flex items-center justify-center min-h-screen bg-slate-950">{errorBox}</div>
+    return <div className="flex items-center justify-center min-h-dvh bg-slate-950">{errorBox}</div>
   }
 
   if (isInline) {
