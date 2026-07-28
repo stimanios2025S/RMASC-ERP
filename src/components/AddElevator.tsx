@@ -416,7 +416,7 @@ function StepDimensions({ data, setData }: any) {
     </div>
 
     {/* SH AI Calculator */}
-    {isActive && <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-5 space-y-4 shadow-2xl">
+    {isActive && <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700 rounded-xl md:rounded-2xl p-3 md:p-5 space-y-3 md:space-y-4 shadow-2xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg"><span className="text-sm font-black text-white">SH</span></div>
@@ -792,25 +792,46 @@ export default function AddElevator({ onBack, editOrder }: Props) {
   </div>
 
   return <div className="flex-1 flex flex-col overflow-hidden">
-    <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-800/60 backdrop-blur-sm">
-      <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-white hover:text-white transition-all"><span>←</span> Retour</button>
-      <div className="flex items-center gap-2"><span className="text-xs text-white/50 font-medium">Étape {step + 1} / {STEPS.length}</span>
-        <div className="w-24 h-1.5 rounded-full bg-white/[0.08] overflow-hidden"><div className="h-full rounded-full bg-amber-400 transition-all duration-300" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} /></div>
+    <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-white/5 bg-slate-800/60 backdrop-blur-sm">
+      <button onClick={onBack} className="flex items-center gap-1 md:gap-2 text-xs md:text-sm font-medium text-white hover:text-white transition-all"><span>←</span> Retour</button>
+      <div className="flex items-center gap-2"><span className="text-[10px] md:text-xs text-white/50 font-medium">Étape {step + 1} / {STEPS.length}</span>
+        <div className="w-16 md:w-24 h-1.5 rounded-full bg-white/[0.08] overflow-hidden"><div className="h-full rounded-full bg-amber-400 transition-all duration-300" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} /></div>
       </div>
     </div>
+
+    {/* Mobile: horizontal step indicators */}
+    <div className="md:hidden flex overflow-x-auto px-3 py-2 gap-1.5 bg-slate-800/40 border-b border-white/5">
+      {STEPS.map((s, i) => {
+        const isA = i === step
+        const isC = i < step
+        return (
+          <button key={s.key} onClick={() => setStep(i)}
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+              isA ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                : isC ? 'bg-emerald-500/10 text-emerald-400'
+                  : 'bg-white/[0.04] text-white/60'
+            }`}>
+            {isC ? '✓' : isA ? '●' : i + 1} {s.label}
+          </button>
+        )
+      })}
+    </div>
+
     <div className="flex flex-1 overflow-hidden">
-      <aside className="w-56 bg-slate-800/60 border-r border-white/5 flex-shrink-0 p-4 overflow-y-auto">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:block w-56 bg-slate-800/60 border-r border-white/5 flex-shrink-0 p-4 overflow-y-auto">
         <div className="space-y-1">{STEPS.map((s, i) => { const isA = i === step; const isC = i < step; return <button key={s.key} onClick={() => setStep(i)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${isA ? 'bg-amber-500/15 text-amber-400 font-bold' : isC ? 'text-amber-400' : 'text-white/50'}`}><div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isA ? 'bg-amber-400 text-slate-900' : isC ? 'bg-amber-500/20 text-amber-400' : 'bg-white/[0.06] text-white/50'}`}>{isC ? <Icon name="Check" className="w-3.5 h-3.5" /> : i + 1}</div><span>{s.label}</span></button> })}</div>
       </aside>
-      <main className="flex-1 overflow-y-auto p-6">
+
+      <main className="flex-1 overflow-y-auto p-3 md:p-6">
         <div className="max-w-2xl mx-auto">
-          <div className="mb-2"><h2 className="text-xl font-bold text-white">{STEPS[step].label}</h2></div>
-          <div className="bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-slate-700/50">{renderStep()}
+          <div className="mb-2"><h2 className="text-base md:text-xl font-bold text-white">{STEPS[step].label}</h2></div>
+          <div className="bg-slate-800/60 backdrop-blur-xl rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg border border-slate-700/50">{renderStep()}
             {triedNext && STEPS[step].key === 'client' && !canProceed() && <div className="mt-4 flex items-center gap-2 text-sm text-red-400 bg-red-500/10 rounded-xl px-4 py-3"><span>⚠️</span><span>Champs obligatoires requis.</span></div>}
           </div>
-          <div className="flex items-center justify-between mt-6">
-            <button onClick={handlePrev} disabled={isFirstStep} className={`px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all ${isFirstStep ? 'text-white cursor-not-allowed' : 'border border-white/10 text-white/60 hover:bg-white/[0.06]'}`}><span>←</span> Précédent</button>
-            <button onClick={handleNext} disabled={(isLastStep && !isFinalValid()) || submitting} className={`px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-lg ${isLastStep ? (isFinalValid() && !submitting ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-amber-500/25' : 'bg-white/[0.06] text-white/50 cursor-not-allowed') : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'}`}>
+          <div className="flex items-center justify-between mt-4 md:mt-6 gap-2">
+            <button onClick={handlePrev} disabled={isFirstStep} className={`px-4 md:px-5 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1 md:gap-2 transition-all ${isFirstStep ? 'text-white cursor-not-allowed' : 'border border-white/10 text-white/60 hover:bg-white/[0.06]'}`}><span>←</span> Précédent</button>
+            <button onClick={handleNext} disabled={(isLastStep && !isFinalValid()) || submitting} className={`px-4 md:px-6 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1 md:gap-2 transition-all shadow-lg flex-1 md:flex-none ${isLastStep ? (isFinalValid() && !submitting ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-amber-500/25' : 'bg-white/[0.06] text-white/50 cursor-not-allowed') : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'}`}>
               {isLastStep ? <><Icon name="Check" className="w-4 h-4" /> Confirmer</> : <>Suivant <span>→</span></>}
             </button>
           </div>
