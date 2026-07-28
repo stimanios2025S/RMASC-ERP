@@ -295,16 +295,28 @@ const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderS
 
   const now = Date.now()
   const createdAt = new Date(order.createdAt).getTime()
-  const currentIdx = statusStep.findIndex(s => s.key === order.status)
+
+  // Map status to progress index — VALIDEE = terminal = same as LIVREE
+  const STATUS_ORDER = ['BROUILLON','ATTENTE_DESSIN_TECH','ATTENTE_APPROBATION_ADMIN','ATTENTE_DESSIN_2D','ATTENTE_VERIFICATION','PRET_POUR_PRODUCTION','EN_LIVRAISON','LIVREE']
+  const rawIdx = STATUS_ORDER.indexOf(order.status)
+  const currentIdx = rawIdx >= 0 ? rawIdx : (order.status === 'VALIDEE' ? STATUS_ORDER.length - 1 : -1)
   const activeIdx = currentIdx >= 0 ? currentIdx : 0
 
   // Determine if order is in production zone
-  const productionStepIdx = statusStep.findIndex(s => s.key === 'PRET_POUR_PRODUCTION')
+  const productionStepIdx = STATUS_ORDER.indexOf('PRET_POUR_PRODUCTION')
   const isInProduction = currentIdx >= productionStepIdx && currentIdx >= 0
 
-  // Find current production phase index
-  const prodPhaseIdx = PRODUCTION_PHASES.findIndex(p => p.id === order.productionPhase)
-  const activeProdIdx = prodPhaseIdx >= 0 ? prodPhaseIdx : 0
+  // Production phase: for old orders without a productionPhase,
+  // default based on current status
+  const defaultPhaseForStatus = () => {
+    if (order.productionPhase) return order.productionPhase
+    if (order.status === 'PRET_POUR_PRODUCTION') return 'decoupe'
+    if (order.status === 'EN_LIVRAISON') return 'livraison'
+    if (order.status === 'LIVREE' || order.status === 'VALIDEE') return 'livraison'
+    return 'decoupe'
+  }
+  const resolvedPhase = defaultPhaseForStatus()
+  const activeProdIdx = PRODUCTION_PHASES.findIndex(p => p.id === resolvedPhase)
 
   // Check if a production phase is done based on status
   const isProductionPhasePast = (phaseIndex: number) => {
