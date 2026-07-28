@@ -320,8 +320,26 @@ export async function getOrderArchive(req, res) {
       CAD_Submission.find({ order: order._id }).sort({ createdAt: -1 }),
       StockDocument.find({ order: order._id }).populate('supplier').populate({ path: 'lines.item' }).sort({ createdAt: -1 }),
     ])
+    // Build clean file list from order files
+    const files = (order.files || []).map(f => ({
+      id: f._id?.toString(),
+      fieldname: f.fieldname,
+      originalname: f.originalname,
+      mimetype: f.mimetype,
+      filename: f.filename,
+      size: f.size,
+      uploadedBy: f.uploadedBy,
+      uploadedAt: f.uploadedAt,
+      url: `/api/orders/${order._id}/files/${f._id}`,
+    }))
     res.json({
-      order: { id: order._id, serialNumber: order.serialNumber, clientName: order.clientName, clientCity: order.clientCity, status: order.status, createdAt: order.createdAt, completedAt: order.completedAt },
+      order: {
+        id: order._id, serialNumber: order.serialNumber, clientName: order.clientName,
+        clientCity: order.clientCity, status: order.status, typeMotorisation: order.typeMotorisation,
+        createdAt: order.createdAt, completedAt: order.completedAt,
+        isStamped: order.isStamped, stampedBy: order.stampedBy, stampedAt: order.stampedAt,
+      },
+      files,
       cadSubmissions: addIdField(cadSubmissions),
       stockDocuments: addIdField(stockDocuments),
     })
