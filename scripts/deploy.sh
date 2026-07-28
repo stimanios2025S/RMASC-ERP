@@ -5,7 +5,7 @@
 #  Run from project root (cd /home/sarlrmasc/rmasc-erp)
 # ═══════════════════════════════════════════════════════════════════════════
 
-set -e  # Stop on any error
+set -o pipefail
 
 echo ""
 echo "  ╔══════════════════════════════════════════════╗"
@@ -23,29 +23,23 @@ npm ci
 
 # ── 3. Install backend dependencies ──────────────────────────────────────
 echo "  📦 Installation dépendances backend..."
-cd backend && npm ci && cd ..
+(cd backend && npm ci) || echo "  ⚠️  Erreur backend npm ci"
 
 # ── 4. Build frontend ────────────────────────────────────────────────────
 echo "  🔨 Build frontend..."
 npm run build
 
-# ── 5. Gracefully stop old backend ───────────────────────────────────────
+# ── 5. Kill old backend by PORT (most reliable method) ───────────────────
 echo "  🛑 Arrêt de l'ancien backend..."
-# Kill by PID file if exists, otherwise by port
-OLD_PID=$(pgrep -f "node.*backend/api.mjs" 2>/dev/null || true)
-if [ -n "$OLD_PID" ]; then
-  kill "$OLD_PID" 2>/dev/null || true
-  # Wait for it to die
-  for i in 1 2 3 4 5; do
-    if ! kill -0 "$OLD_PID" 2>/dev/null; then
-      break
-    fi
-    sleep 1
-  done
-  # Force kill if still alive
-  kill -9 "$OLD_PID" 2>/dev/null || true
+# Try fuser first, then lsof, then pkill as fallback
+if command -v fuser &>/dev/null; then
+  fuser -k 4001/tcp 2>/dev/null || true
+elif command -v lsof &>/dev/null; then
+  lsof -ti:4001 | xargs kill -9 2>/dev/null || true
+else
+  pkill -f "node.*backend/api\.mjs" 2>/dev/null || true
 fi
-sleep 1
+sleep 2
 
 # ── 6. Start new backend ─────────────────────────────────────────────────
 echo "  ▶️  Démarrage du nouveau backend..."
@@ -54,16 +48,34 @@ NEW_PID=$!
 echo "  ✅ PID: $NEW_PID"
 
 # ── 7. Wait and verify ───────────────────────────────────────────────────
-sleep 3
+echo "  ⏳ Attente du démarrage..."
+sleep 4
 echo ""
 echo "  ── Vérification ──"
-curl -s http://localhost:4001/api/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:4001/api/health
+HEALTH=$(curl -s http://localhost:4001/api/health 2>/dev/null || echo '{"error":"curl failed"}')
+echo "$HEALTH" | python3 -m json.tool 2>/dev/null || echo "$HEALTH"
+
+# If uptime is >30s, the new process didn't start — force restart
+UPTIME=$(echo "$HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin).get('uptimeSeconds',''))" 2>/dev/null)
+if [ -n "$UPTIME" ] && [ "$UPTIME" -gt 30 ] 2>/dev/null; then
+  echo ""
+  echo "  ⚠️  Ancien serveur encore actif (uptime=${UPTIME}s). Redémarrage forcé..."
+  fuser -k 4001/tcp 2>/dev/null || true
+  sleep 2
+  PORT=4001 nohup node /home/sarlrmasc/rmasc-erp/backend/api.mjs > /tmp/rmasc.log 2>&1 &
+  sleep 4
+  echo ""
+  echo "  ── Vérification après force ──"
+  curl -s http://localhost:4001/api/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:4001/api/health
+fi
+
+# ── 8. Version info ──────────────────────────────────────────────────────
+echo ""
+echo "  ── Version déployée ──"
+VERSION=$(curl -s http://localhost:4001/api/version 2>/dev/null)
+echo "$VERSION" | python3 -m json.tool 2>/dev/null || echo "$VERSION"
 echo ""
 
-# ── 8. Deploy version info ───────────────────────────────────────────────
-echo "  ── Version déployée ──"
-curl -s http://localhost:4001/api/version | python3 -m json.tool 2>/dev/null || curl -s http://localhost:4001/api/version
-echo ""
-echo "  ✅ Déploiement terminé avec succès !"
+echo "  ✅ Déploiement terminé !"
 echo "  ℹ️  Logs: tail -f /tmp/rmasc.log"
 echo ""

@@ -246,7 +246,29 @@ app.get('/api/vault/files', authenticate, async (req, res) => {
 // ═══ SERVE FRONTEND BUILD (dist/) ═══════════════════════════════════════
 const distPath = path.resolve(__dirname, '..', 'dist')
 if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath))
+  // sw.js MUST NEVER be cached — otherwise service worker updates break
+  app.get('/sw.js', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, private, max-age=0')
+    res.setHeader('Pragma', 'no-cache')
+    res.setHeader('Expires', '0')
+    res.setHeader('Surrogate-Control', 'no-store')
+    res.sendFile(path.join(distPath, 'sw.js'))
+  })
+
+  // Static assets with fingerprint hash: cache forever (immutable)
+  // Everything else (HTML, non-fingerprinted): no cache
+  app.use(express.static(distPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.includes('/assets/') && /[a-fA-F0-9]{8,}/.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+      } else {
+        res.setHeader('Cache-Control', 'no-store, must-revalidate, private')
+        res.setHeader('Pragma', 'no-cache')
+        res.setHeader('Expires', '0')
+      }
+    }
+  }))
+
   app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
       return res.status(404).json({ error: 'Route API introuvable.' })
