@@ -4,69 +4,39 @@ import App from './App'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
+// ═══ Sentry — Initialisé au plus tôt (import statique, chunk séparé) ─────
+import * as Sentry from '@sentry/react'
+
+Sentry.init({
+  dsn: 'https://1d656a08e00f5e785cf080aa537baebb@o4511808265977856.ingest.de.sentry.io/4511812636704848',
+  integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
+  tracesSampleRate: 0.3,
+  replaysSessionSampleRate: 0.05,
+  replaysOnErrorSampleRate: 0.5,
+  environment: 'production',
+})
+
 // ═══ VERSION CONTROL — forces cache reset on all devices when deployed ═════
-// Every deploy MUST increment this version. It's checked against localStorage.
-// If it doesn't match, ALL localStorage is wiped and the page reloads.
-// This ensures the old cached data (orders, items, etc.) never persists.
 const APP_VERSION = 'v2.6.2-force-sync'
 
-// ─── Force localStorage reset on version change ──────────────────────────
-// This is the FIRST thing that runs — before React mounts, before anything.
-// Old versions of RMASC stored orders in localStorage. This wipes them ALL.
 ;(() => {
   try {
     const storedVersion = localStorage.getItem('rmasc_app_version')
     if (storedVersion !== APP_VERSION) {
       console.log(`[VERSION] ${storedVersion || 'none'} → ${APP_VERSION}. Clearing all local data...`)
-
-      // Wipe EVERYTHING in localStorage (old orders, cache, sessions, everything)
       localStorage.clear()
-
-      // Set new version
       localStorage.setItem('rmasc_app_version', APP_VERSION)
-
       console.log('[VERSION] Local storage wiped. Fresh start.')
     }
   } catch (e) {
-    // Silently fail — never block app rendering
     console.warn('[VERSION] Could not check version:', e)
   }
 })()
 
-// ─── Sentry via CDN (0 KB dans le bundle, chargé après rendu) ──────────
-function initSentry() {
-  if (window.location.hostname === 'localhost') return
-  try {
-    const script = document.createElement('script')
-    script.src = 'https://browser.sentry-cdn.com/7.120.3/bundle.tracing.replay.min.js'
-    script.crossOrigin = 'anonymous'
-    script.onload = () => {
-      const Sentry = (window as any).Sentry
-      if (Sentry) {
-        Sentry.init({
-          dsn: 'https://f3cde073733f6aed715a64a4082e87e9@o4511808265977856.ingest.de.sentry.io/4511812633493584',
-          integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
-          tracesSampleRate: 0.3,
-          replaysSessionSampleRate: 0.05,
-          replaysOnErrorSampleRate: 0.5,
-          environment: 'production',
-        })
-        console.log('[Sentry] Initialized from CDN')
-      }
-    }
-    document.head.appendChild(script)
-  } catch { /* silent fail */ }
-}
-if (typeof requestIdleCallback === 'function') {
-  requestIdleCallback(() => initSentry(), { timeout: 5000 })
-} else {
-  setTimeout(initSentry, 3000)
-}
-
 // ─── Global error handler ────────────────────────────────────────────────
 window.onerror = (_msg, _source, _line, _col, error) => {
   console.error('[GLOBAL ERROR]', error?.message)
-  try { (window as any).Sentry?.captureException(error) } catch {}
+  Sentry.captureException(error)
   const root = document.getElementById('root')
   if (root && !root.hasChildNodes()) {
     root.innerHTML = `
@@ -91,43 +61,30 @@ window.onerror = (_msg, _source, _line, _col, error) => {
 }
 
 // ─── Service Worker management ──────────────────────────────────────────
-// Unregister ALL old service workers (legacy), and listen for updates
 ;(async () => {
   if ('serviceWorker' in navigator) {
     try {
-      // 1. Unregister any OLD service workers (pre-v2.6.2)
       const oldRegistrations = await navigator.serviceWorker.getRegistrations()
       for (const reg of oldRegistrations) {
-        // If it's an old SW (not our new one), unregister it
         if (reg.active?.scriptURL && !reg.active.scriptURL.includes('sw.js')) {
           await reg.unregister()
         }
       }
-
-      // 2. Register the new service worker
       const registration = await navigator.serviceWorker.register('/sw.js')
-
-      // 3. Listen for messages from the SW
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data?.type === 'SW_UPDATED') {
           console.log('[SW] New service worker activated. Reloading...')
-          // Force a hard reload from server (not cache)
           window.location.reload()
         }
       })
-
-      // 4. If there's a waiting SW, tell it to activate now
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' })
       }
-
-      // 5. Listen for updates
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New SW installed but not active — tell it to take over
               newWorker.postMessage({ type: 'SKIP_WAITING' })
             }
             if (newWorker.state === 'activated') {
@@ -137,12 +94,7 @@ window.onerror = (_msg, _source, _line, _col, error) => {
           })
         }
       })
-
-      // 6. Check for SW updates every 5 minutes
-      setInterval(() => {
-        registration.update().catch(() => {})
-      }, 5 * 60 * 1000)
-
+      setInterval(() => { registration.update().catch(() => {}) }, 5 * 60 * 1000)
     } catch (err) {
       console.warn('[SW] Service Worker registration failed:', err)
     }
