@@ -74,3 +74,11 @@ export async function updatePartStatus(req, res) {
     res.json({ message: `Statut mis à jour → ${parsed.data.status}`, part })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
+
+export async function deletePart(req, res) {
+  try {
+    const part = await StandalonePart.findByIdAndDelete(req.params.id)
+    if (!part) return res.status(404).json({ error: 'Pièce introuvable.' })
+    res.json({ message: `Pièce ${part.partNumber} supprimée.`, partNumber: part.partNumber })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+}

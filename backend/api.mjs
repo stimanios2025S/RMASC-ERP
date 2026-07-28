@@ -38,7 +38,7 @@ import {
   addCatalogItem, deleteCatalogItem,
 } from './src/controllers/catalog.js'
 import {
-  createPart, listActiveParts, listAllParts, updatePartStatus,
+  createPart, listActiveParts, listAllParts, updatePartStatus, deletePart,
 } from './src/controllers/parts.js'
 import { sendWhatsApp } from './src/controllers/notifications.js'
 import { subscribe, sendEvent } from './src/controllers/realtime.js'
@@ -198,6 +198,7 @@ app.post('/api/standalone-parts/create', authenticate, upload.single('cadFile'),
 app.get('/api/standalone-parts/active', authenticate, listActiveParts)
 app.get('/api/standalone-parts/all', authenticate, listAllParts)
 app.patch('/api/standalone-parts/:id/status', authenticate, updatePartStatus)
+app.delete('/api/standalone-parts/:id', authenticate, deletePart)
 
 // Notifications
 app.post('/api/notifications/whatsapp', authenticate, sendWhatsApp)

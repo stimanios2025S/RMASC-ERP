@@ -94,6 +94,17 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
     } catch { /* silent */ }
   }, [])
 
+  const handleDeletePart = async (id: string, partNumber: string) => {
+    if (!window.confirm(`🗑️ Supprimer la pièce ${partNumber} ?`)) return
+    try {
+      await apiFetch(`/standalone-parts/${id}`, { method: 'DELETE' })
+      setMessage({ type: 'success', text: `🗑️ Pièce ${partNumber} supprimée.` })
+      loadParts()
+    } catch (e: any) {
+      setMessage({ type: 'error', text: e.message || 'Erreur lors de la suppression.' })
+    }
+  }
+
   useEffect(() => { loadParts() }, [loadParts])
   useEffect(() => {
     const iv = setInterval(loadParts, 10_000)
@@ -312,6 +323,7 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                         <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Qté</th>
                         <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Statut</th>
                         <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Date</th>
+                        <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -344,6 +356,17 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                             </td>
                             <td className="px-5 py-3 text-right">
                               <span className="text-xs text-white/80 font-mono">{fmtDate(part.createdAt)}</span>
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              <button
+                                onClick={() => handleDeletePart(part._id, part.partNumber)}
+                                className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-all"
+                                title="Supprimer la pièce"
+                              >
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                                </svg>
+                              </button>
                             </td>
                           </tr>
                         )
