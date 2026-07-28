@@ -80,17 +80,17 @@ export default function RoadmapPage({ orders, onBack }: Props) {
         </div>
       </div>
 
-      {/* KPI */}
+      {/* KPI cards — dark theme consistent */}
       <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total', value: total, color: 'text-white', bg: 'bg-white/[0.04] border border-white/10' },
-          { label: 'En cours', value: enCours, color: 'text-cyan-700', bg: 'bg-cyan-50 border border-cyan-100' },
-          { label: 'En attente', value: enAttente, color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-100' },
-          { label: 'Terminées', value: termines, color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-100' },
+          { label: 'Total', value: total, color: 'text-white', bg: 'bg-slate-800/60 border border-white/10' },
+          { label: 'En cours', value: enCours, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border border-cyan-500/20' },
+          { label: 'En attente', value: enAttente, color: 'text-amber-400', bg: 'bg-amber-500/10 border border-amber-500/20' },
+          { label: 'Terminées', value: termines, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border border-emerald-500/20' },
         ].map(kpi => (
           <div key={kpi.label} className={`rounded-xl px-4 py-3 flex items-center justify-between ${kpi.bg}`}>
-            <span className="text-xs font-semibold text-white/60">{kpi.label}</span>
-            <span className={`text-xl font-extrabold ${kpi.color}`}>{kpi.value}</span>
+            <span className="text-xs font-semibold text-white/80">{kpi.label}</span>
+            <span className={`text-2xl font-extrabold ${kpi.color}`}>{kpi.value}</span>
           </div>
         ))}
       </div>
@@ -153,7 +153,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
 
                 {/* Expanded timeline */}
                 {isExpanded && (
-                  <div className="px-5 pb-5 border-t border-slate-100 pt-4">
+                  <div className="px-5 pb-5 border-t border-white/10 pt-4">
                     <div className="relative ml-1">
                       {STATUS_STEPS.map((step, i) => {
                         const isPast = i <= activeIdx
@@ -171,7 +171,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
                                 {isPast ? '✓' : i + 1}
                               </div>
                               {i < STATUS_STEPS.length - 1 && (
-                                <div className={`w-0.5 flex-1 min-h-[18px] ${isPast ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                                <div className={`w-0.5 flex-1 min-h-[18px] ${isPast ? 'bg-emerald-400/50' : 'bg-white/10'}`} />
                               )}
                             </div>
                             <div className="flex-1 pb-1">
@@ -189,7 +189,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
                                 )}
                               </div>
                               {isCurrent && step.hours > 0 && (
-                                <div className="w-full h-1.5 rounded-full bg-slate-200 mt-2 overflow-hidden">
+                                <div className="w-full h-1.5 rounded-full bg-white/10 mt-2 overflow-hidden">
                                   <div className={`h-full rounded-full ${phaseProgress > 80 ? 'bg-amber-500' : 'bg-emerald-500'}`}
                                     style={{ width: `${Math.min(100, phaseProgress)}%` }} />
                                 </div>
@@ -206,7 +206,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
                     </div>
 
                     {/* Materials & options summary */}
-                    <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-3 text-xs">
+                    <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-2 gap-3 text-xs">
                       <div>
                         <p className="font-bold text-white/60 uppercase tracking-wider text-[10px] mb-1">Matériaux</p>
                         <p className="text-white">Cabine: {order.materiauCabine || '—'}</p>
