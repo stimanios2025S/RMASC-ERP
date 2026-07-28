@@ -14,7 +14,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          sentry: ['@sentry/react'],
           // Code-split heavy workspaces
           dashboard: ['./src/components/Dashboard.tsx'],
           ingenieurs: ['./src/components/IngenieurPortal.tsx'],

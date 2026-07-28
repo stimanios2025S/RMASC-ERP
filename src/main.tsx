@@ -33,29 +33,40 @@ const APP_VERSION = 'v2.6.2-force-sync'
   }
 })()
 
-// ─── Lazy load Sentry (keeps main bundle small) ────────────────────────
-let SentryModule: any = null
-async function initSentry() {
+// ─── Sentry via CDN (0 KB dans le bundle, chargé après rendu) ──────────
+function initSentry() {
   if (window.location.hostname === 'localhost') return
   try {
-    SentryModule = await import('@sentry/react')
-    SentryModule.init({
-      dsn: 'https://f3cde073733f6aed715a64a4082e87e9@o4511808265977856.ingest.de.sentry.io/4511812633493584',
-      integrations: [SentryModule.browserTracingIntegration(), SentryModule.replayIntegration()],
-      tracesSampleRate: 0.3,
-      replaysSessionSampleRate: 0.05,
-      replaysOnErrorSampleRate: 0.5,
-      environment: 'production',
-    })
-    console.log('[Sentry] Initialized')
+    const script = document.createElement('script')
+    script.src = 'https://browser.sentry-cdn.com/7.120.3/bundle.tracing.replay.min.js'
+    script.crossOrigin = 'anonymous'
+    script.onload = () => {
+      const Sentry = (window as any).Sentry
+      if (Sentry) {
+        Sentry.init({
+          dsn: 'https://f3cde073733f6aed715a64a4082e87e9@o4511808265977856.ingest.de.sentry.io/4511812633493584',
+          integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
+          tracesSampleRate: 0.3,
+          replaysSessionSampleRate: 0.05,
+          replaysOnErrorSampleRate: 0.5,
+          environment: 'production',
+        })
+        console.log('[Sentry] Initialized from CDN')
+      }
+    }
+    document.head.appendChild(script)
   } catch { /* silent fail */ }
 }
-initSentry()
+if (typeof requestIdleCallback === 'function') {
+  requestIdleCallback(() => initSentry(), { timeout: 5000 })
+} else {
+  setTimeout(initSentry, 3000)
+}
 
 // ─── Global error handler ────────────────────────────────────────────────
 window.onerror = (_msg, _source, _line, _col, error) => {
   console.error('[GLOBAL ERROR]', error?.message)
-  if (SentryModule) SentryModule.captureException(error)
+  try { (window as any).Sentry?.captureException(error) } catch {}
   const root = document.getElementById('root')
   if (root && !root.hasChildNodes()) {
     root.innerHTML = `
