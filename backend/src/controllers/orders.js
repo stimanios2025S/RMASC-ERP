@@ -185,6 +185,7 @@ export async function updateOrderStatus(req, res) {
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
     order.status = parsed.data.status
     order.lifecycleStage = mapStatusToLifecycle(parsed.data.status)
+    order.statusChangedAt = new Date()
     // If moving to production, set the timestamp
     if (parsed.data.status === 'PRET_POUR_PRODUCTION') {
       order.productionStartedAt = new Date()
@@ -337,6 +338,7 @@ export async function approvePlan(req, res) {
     const now = new Date()
 
     order.status = 'ATTENTE_DESSIN_2D'
+    order.statusChangedAt = new Date()
     order.approvedBy = adminName
     order.approvedAt = now
     await order.save()
@@ -388,6 +390,7 @@ export async function rejectPlan(req, res) {
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
     if (order.status !== 'ATTENTE_APPROBATION_ADMIN') return res.status(409).json({ error: 'Pas en attente.' })
     order.status = 'ATTENTE_DESSIN_TECH'
+    order.statusChangedAt = new Date()
     order.rejectionReason = req.body.reason || 'Aucune raison spécifiée'
     order.rejectedBy = req.user?.name || 'Administrateur'
     order.rejectedAt = new Date()
@@ -403,6 +406,7 @@ export async function markDelivery(req, res) {
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
     if (order.status !== 'PRET_POUR_PRODUCTION') return res.status(409).json({ error: `Statut actuel: ${order.status}` })
     order.status = 'EN_LIVRAISON'
+    order.statusChangedAt = new Date()
     await order.save()
     res.json({ message: '✅ Commande marquée prête pour livraison.', order })
   } catch (e) { res.status(500).json({ error: e.message }) }
@@ -415,6 +419,7 @@ export async function confirmDelivery(req, res) {
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
     if (order.status !== 'EN_LIVRAISON') return res.status(409).json({ error: `Statut actuel: ${order.status}` })
     order.status = 'LIVREE'
+    order.statusChangedAt = new Date()
     order.lifecycleStage = 'delivered'
     order.completedAt = new Date()
     await order.save()

@@ -36,7 +36,7 @@ import { useSSE } from '../hooks/useSSE'
 interface OrderSummary {
   id: string; serialNumber: string; clientName: string; clientCity: string
   typeMotorisation: string; typeCabine?: string; status: string; createdAt: string
-  priority?: string; productionPhase?: string; _count: { cadSubmissions: number }
+  statusChangedAt?: string; priority?: string; productionPhase?: string; _count: { cadSubmissions: number }
 }
 interface DashboardStats {
   totalOrders: number; activeOrders: number; blockedOrders: number
@@ -269,6 +269,20 @@ function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentAc
   )
 }
 
+// ─── Professional elapsed time formatter ───────────────────────────────
+function formatElapsed(ms: number): string {
+  if (ms < 0) return '—'
+  const totalSeconds = Math.floor(ms / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+
+  if (days > 0) return `${days}j ${hours}h`
+  if (hours > 0) return `${hours}h ${minutes}m`
+  if (minutes > 0) return `${minutes}m`
+  return '< 1m'
+}
+
 // ─── Production Phases (synced with ProductionWorkspace) ───────────────
 const PRODUCTION_PHASES = [
   { id: 'decoupe', icon: '✂️', label: 'Découpe' },
@@ -280,84 +294,87 @@ const PRODUCTION_PHASES = [
   { id: 'livraison', icon: '🚛', label: 'Livraison' },
 ]
 
-// ─── OrderRoadmap (timeline) ────────────────────────────────────────────
+// ─── OrderRoadmap (timeline with live counters) ────────────────────────
 const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderSummary }) {
-  const statusStep = [
-    { key: 'BROUILLON', label: 'Création', icon: '📝', hours: 0 },
-    { key: 'ATTENTE_DESSIN_TECH', label: 'Plan Installation', icon: '📐', hours: 16 },
-    { key: 'ATTENTE_APPROBATION_ADMIN', label: 'Validation Admin', icon: '✅', hours: 4 },
-    { key: 'ATTENTE_DESSIN_2D', label: 'Dessin 2D Cabine', icon: '✏️', hours: 24 },
-    { key: 'ATTENTE_VERIFICATION', label: 'Vérification', icon: '🔍', hours: 8 },
-    { key: 'PRET_POUR_PRODUCTION', label: 'Prêt Production', icon: '🏭', hours: 0 },
-    { key: 'EN_LIVRAISON', label: 'Livraison', icon: '🚛', hours: 8 },
-    { key: 'LIVREE', label: 'Livrée', icon: '✅', hours: 0 },
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const iv = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(iv)
+  }, [])
+
+  const STATUS_ORDER: { key: string; label: string; icon: string }[] = [
+    { key: 'BROUILLON', label: 'Création', icon: '📝' },
+    { key: 'ATTENTE_DESSIN_TECH', label: 'Plan Installation', icon: '📐' },
+    { key: 'ATTENTE_APPROBATION_ADMIN', label: 'Validation Admin', icon: '✅' },
+    { key: 'ATTENTE_DESSIN_2D', label: 'Dessin 2D Cabine', icon: '✏️' },
+    { key: 'ATTENTE_VERIFICATION', label: 'Vérification', icon: '🔍' },
+    { key: 'PRET_POUR_PRODUCTION', label: 'Prêt Production', icon: '🏭' },
+    { key: 'EN_LIVRAISON', label: 'Livraison', icon: '🚛' },
+    { key: 'LIVREE', label: 'Livrée', icon: '✅' },
   ]
+  const STATUS_KEYS = STATUS_ORDER.map(s => s.key)
 
-  const now = Date.now()
-  const createdAt = new Date(order.createdAt).getTime()
-
-  // Map status to progress index — VALIDEE = terminal = same as LIVREE
-  const STATUS_ORDER = ['BROUILLON','ATTENTE_DESSIN_TECH','ATTENTE_APPROBATION_ADMIN','ATTENTE_DESSIN_2D','ATTENTE_VERIFICATION','PRET_POUR_PRODUCTION','EN_LIVRAISON','LIVREE']
-  const rawIdx = STATUS_ORDER.indexOf(order.status)
-  const currentIdx = rawIdx >= 0 ? rawIdx : (order.status === 'VALIDEE' ? STATUS_ORDER.length - 1 : -1)
+  // Current step index (VALIDEE maps to LIVREE)
+  const rawIdx = STATUS_KEYS.indexOf(order.status)
+  const currentIdx = rawIdx >= 0 ? rawIdx : (order.status === 'VALIDEE' ? STATUS_KEYS.length - 1 : -1)
   const activeIdx = currentIdx >= 0 ? currentIdx : 0
 
-  // Determine if order is in production zone
-  const productionStepIdx = STATUS_ORDER.indexOf('PRET_POUR_PRODUCTION')
-  const isInProduction = currentIdx >= productionStepIdx && currentIdx >= 0
+  // Reference timestamp for the live counter
+  const statusChangedAt = order.statusChangedAt
+    ? new Date(order.statusChangedAt).getTime()
+    : new Date(order.createdAt).getTime()
 
-  // Production phase: for old orders without a productionPhase,
-  // default based on current status
+  // Production zone detection
+  const prodStepIdx = STATUS_KEYS.indexOf('PRET_POUR_PRODUCTION')
+  const isInProduction = currentIdx >= prodStepIdx && currentIdx >= 0
+
+  // Resolve production phase (backward compat)
   const defaultPhaseForStatus = () => {
     if (order.productionPhase) return order.productionPhase
     if (order.status === 'PRET_POUR_PRODUCTION') return 'decoupe'
-    if (order.status === 'EN_LIVRAISON') return 'livraison'
-    if (order.status === 'LIVREE' || order.status === 'VALIDEE') return 'livraison'
+    if (['EN_LIVRAISON', 'LIVREE', 'VALIDEE'].includes(order.status)) return 'livraison'
     return 'decoupe'
   }
   const resolvedPhase = defaultPhaseForStatus()
   const activeProdIdx = PRODUCTION_PHASES.findIndex(p => p.id === resolvedPhase)
 
-  // Check if a production phase is done based on status
-  const isProductionPhasePast = (phaseIndex: number) => {
-    if (order.status === 'PRET_POUR_PRODUCTION') return phaseIndex < activeProdIdx
-    // EN_LIVRAISON, LIVREE, VALIDEE → all phases are done
+  const isProductionPhasePast = (pi: number) => {
+    if (order.status === 'PRET_POUR_PRODUCTION') return pi < activeProdIdx
     return true
   }
-
-  const isProductionPhaseCurrent = (phaseIndex: number) => {
-    if (order.status === 'PRET_POUR_PRODUCTION') return phaseIndex === activeProdIdx
-    return false
+  const isProductionPhaseCurrent = (pi: number) => {
+    return order.status === 'PRET_POUR_PRODUCTION' && pi === activeProdIdx
   }
 
   return (
     <div className="bg-white/5 rounded-xl border border-white/10 p-4">
+      {/* ── Header ── */}
       <div className="flex items-center justify-between mb-3">
         <div>
           <p className="text-sm font-bold text-white font-mono">{order.serialNumber}</p>
           <p className="text-[11px] text-white/60">{order.clientName} — {order.clientCity}</p>
         </div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-          order.status === 'PRET_POUR_PRODUCTION' || order.status === 'VALIDEE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-        }`}>{order.status === 'PRET_POUR_PRODUCTION' ? 'Terminée' : 'En cours'}</span>
+          ['LIVREE', 'VALIDEE'].includes(order.status) ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+        }`}>
+          {['LIVREE', 'VALIDEE'].includes(order.status) ? '✅ Terminée' : '🔄 En cours'}
+        </span>
       </div>
+
+      {/* ── Timeline ── */}
       <div className="relative ml-2">
-        {statusStep.map((step, i) => {
+        {STATUS_ORDER.map((step, i) => {
           const isPast = i <= activeIdx
           const isCurrent = i === activeIdx
-          const elapsedH = (now - createdAt) / 3600000
-          const phaseProgress = Math.min(100, Math.round((elapsedH / step.hours) * 100))
 
-          // ── SPECIAL: PRET_POUR_PRODUCTION step expands into production sub-phases ──
+          // ── EXPANDED PRODUCTION SECTION ──
           if (step.key === 'PRET_POUR_PRODUCTION' && isInProduction) {
             return (
               <div key={step.key}>
-                {/* Production header line */}
+                {/* Production parent step */}
                 <div className="flex gap-3 pb-2">
                   <div className="flex flex-col items-center">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs bg-emerald-500 text-white">
-                      ✓
-                    </div>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs bg-emerald-500 text-white">✓</div>
                     <div className="w-0.5 flex-1 min-h-[12px] bg-emerald-400/50" />
                   </div>
                   <div className="flex-1 pb-1">
@@ -365,12 +382,12 @@ const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderS
                     <p className="text-[9px] text-white/60 mt-0.5">
                       {order.status === 'PRET_POUR_PRODUCTION'
                         ? `Phase: ${PRODUCTION_PHASES[activeProdIdx]?.label || '—'}`
-                        : '✅ Terminée'}
+                        : '✅ Ensemble des phases terminées'}
                     </p>
                   </div>
                 </div>
 
-                {/* Production sub-phases (indented) */}
+                {/* Production sub-phases */}
                 <div className="ml-6 pl-3 border-l-2 border-emerald-400/30 mb-1">
                   {PRODUCTION_PHASES.map((phase, pi) => {
                     const past = isProductionPhasePast(pi)
@@ -379,10 +396,8 @@ const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderS
                       <div key={phase.id} className="flex gap-3 pb-2 last:pb-1">
                         <div className="flex flex-col items-center">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                            past
-                              ? 'bg-emerald-500 text-white'
-                              : current
-                                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/40'
+                            past ? 'bg-emerald-500 text-white'
+                              : current ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/40 animate-pulse-soft'
                                 : 'bg-white/10 text-white/60'
                           }`}>
                             {past ? '✓' : current ? '●' : pi + 1}
@@ -398,7 +413,7 @@ const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderS
                             {phase.icon} {phase.label}
                           </p>
                           {current && (
-                            <p className="text-[9px] text-amber-400 font-medium mt-0.5">● En cours...</p>
+                            <p className="text-[9px] text-amber-400 font-medium mt-0.5 animate-pulse-soft">● En cours...</p>
                           )}
                           {past && !current && (
                             <p className="text-[9px] text-emerald-400/60 mt-0.5">✓ Terminée</p>
@@ -412,7 +427,7 @@ const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderS
                   })}
                 </div>
 
-                {/* Connector from last production phase to next status */}
+                {/* Connector to next status */}
                 <div className="flex gap-3 pb-3">
                   <div className="flex flex-col items-center">
                     <div className="w-0.5 h-3 bg-white/10" />
@@ -423,30 +438,50 @@ const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderS
             )
           }
 
-          // ── Skip the original PRET_POUR_PRODUCTION if we already rendered it expanded ──
+          // Skip the collapsed PRET_POUR_PRODUCTION when expanded
           if (step.key === 'PRET_POUR_PRODUCTION' && isInProduction) return null
 
-          // ── Regular status step ──
+          // ── REGULAR STATUS STEP ──
           return (
             <div key={step.key} className="flex gap-3 pb-3 last:pb-0">
+              {/* Circle */}
               <div className="flex flex-col items-center">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${isPast ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/60'}`}>
-                  {isPast ? '✓' : i + 1}
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  isPast && !isCurrent ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
+                    : isCurrent ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/40 animate-pulse-soft'
+                      : 'bg-white/10 text-white/60'
+                }`}>
+                  {isPast && !isCurrent ? '✓' : isCurrent ? '●' : i + 1}
                 </div>
-                {i < statusStep.length - 1 && <div className={`w-0.5 flex-1 min-h-[12px] ${isPast ? 'bg-emerald-400/50' : 'bg-white/10'}`} />}
+                {i < STATUS_ORDER.length - 1 && (
+                  <div className={`w-0.5 flex-1 min-h-[12px] ${isPast && !isCurrent ? 'bg-emerald-400/50' : isCurrent ? 'bg-amber-400/30' : 'bg-white/10'}`} />
+                )}
               </div>
+
+              {/* Content */}
               <div className="flex-1 pb-1">
                 <div className="flex items-center justify-between">
-                  <p className={`text-xs font-bold ${isCurrent ? 'text-white' : isPast ? 'text-white/70' : 'text-white/60'}`}>{step.icon} {step.label}</p>
-                  {isCurrent && step.hours > 0 && <span className={`text-[10px] font-bold ${phaseProgress > 80 ? 'text-amber-400' : 'text-emerald-400'}`}>{Math.max(0, Math.round(step.hours - elapsedH))}h restantes</span>}
-                  {isPast && !isCurrent && step.hours > 0 && <span className="text-[10px] text-white/60 font-medium">✓ {step.hours}h</span>}
+                  <p className={`text-xs font-bold ${
+                    isCurrent ? 'text-white' : isPast ? 'text-white/70' : 'text-white/50'
+                  }`}>
+                    {step.icon} {step.label}
+                  </p>
+
+                  {/* Live timer on the current step */}
+                  {isCurrent && (
+                    <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 whitespace-nowrap">
+                      ⏱️ {formatElapsed(now - statusChangedAt)}
+                    </span>
+                  )}
                 </div>
-                {isCurrent && step.hours > 0 && (
-                  <div className="w-full h-1 rounded-full bg-white/10 mt-1.5 overflow-hidden">
-                    <div className={`h-full rounded-full ${phaseProgress > 80 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${Math.min(100, phaseProgress)}%` }} />
-                  </div>
-                )}
-                <p className="text-[9px] text-white/60 mt-0.5">{isCurrent ? 'En cours...' : isPast ? (step.hours > 0 ? `Durée: ${step.hours}h` : '—') : 'En attente'}</p>
+
+                <p className="text-[9px] text-white/50 mt-0.5">
+                  {isCurrent
+                    ? 'En cours...'
+                    : isPast
+                      ? '✓ Terminée'
+                      : 'En attente'}
+                </p>
               </div>
             </div>
           )

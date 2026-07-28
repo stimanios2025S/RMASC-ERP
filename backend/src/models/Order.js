@@ -77,6 +77,9 @@ const orderSchema = new mongoose.Schema({
   stampedBy:          String,   // Who applied the electronic stamp
   stampResults:       [mongoose.Schema.Types.Mixed], // Per-file stamp results [{fileId, filename, success, pagesStamped}]
 
+  // ── Status change timestamp (for live count-up in roadmap) ──────────────
+  statusChangedAt:    { type: Date, default: Date.now },
+
   // ── Production tracking (persisted to DB, syncs across all browsers) ───
   productionPhase:    { type: String, default: 'decoupe', enum: ['decoupe','pliage','soudeur','peinture','assemblage','emballage','livraison'] },
 
