@@ -148,6 +148,15 @@ function Sidebar({ onNavigate, onLogout, userRole }: { onNavigate?: (view: ViewT
         </nav>
       </div>
       <InstallPWA variant="sidebar" />
+
+      {/* Sentry test button — hidden but accessible */}
+      <button
+        onClick={() => { throw new Error('🧪 Sentry RMASC test — admin dashboard') }}
+        className="mx-4 mb-2 px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-white/[0.03] text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-all"
+        title="Test Sentry"
+      >
+        🧪 Sentry Test
+      </button>
     </aside>
   )
 }
