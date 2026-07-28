@@ -30,7 +30,7 @@ jobs:
             git reset --hard
             git pull origin main
             npm run build
-            sudo systemctl restart rmasc-api
+            sudo systemctl restart rmasc-erp
             sleep 3
             curl -s --fail http://localhost:4000/api/health || exit 1
 

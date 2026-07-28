@@ -8,8 +8,8 @@ module.exports = {
   apps: [
     {
       // ── Backend API ─────────────────────────────────────────────────────
-      name: 'rmasc-api',
-      cwd: '/opt/rmasc',
+      name: 'rmasc-erp',
+      cwd: '/home/sarlrmasc/rmasc-erp',
       script: './backend/api.mjs',
       interpreter: 'node',
       instances: 1,
@@ -29,8 +29,8 @@ module.exports = {
 
       // ── Logs ──────────────────────────────────────────────────────────
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      error_file: '/var/log/rmasc/api-error.log',
-      out_file: '/var/log/rmasc/api-out.log',
+      error_file: '/var/log/rmasc/rmasc-erp-error.log',
+      out_file: '/var/log/rmasc/rmasc-erp-out.log',
       merge_logs: true,
       log_type: 'json',
 
@@ -49,12 +49,12 @@ module.exports = {
   deploy: {
     production: {
       user: 'sarlrmasc',
-      host: '192.168.1.95',
+      host: '100.73.62.52',
       ref: 'origin/main',
-      repo: '',  // À configurer si vous utilisez Git
-      path: '/opt/rmasc',
+      repo: 'https://github.com/stimanios2025S/RMASC-ERP.git',
+      path: '/home/sarlrmasc/rmasc-erp',
       'pre-deploy': 'git fetch --all && git reset --hard origin/main',
-      'post-deploy': 'cd /opt/rmasc && npm install --production && npm run build && pm2 reload ecosystem.config.cjs --only rmasc-api',
+      'post-deploy': 'npm ci && npm run build && pm2 reload ecosystem.config.cjs --only rmasc-erp',
       'pre-setup': 'sudo apt-get update && sudo apt-get install -y nodejs nginx',
     },
   },

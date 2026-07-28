@@ -5,7 +5,7 @@
 
 module.exports = {
   apps: [{
-    name: 'rmasc-api',
+    name: 'rmasc-erp',
     script: 'backend/api.mjs',
     cwd: '/home/sarlrmasc/rmasc-erp',
 
@@ -33,8 +33,8 @@ module.exports = {
     },
 
     // ── Logs (rotated, never fill disk) ────────────────────────────────────
-    error_file: '/home/sarlrmasc/.pm2/logs/rmasc-api-error.log',
-    out_file: '/home/sarlrmasc/.pm2/logs/rmasc-api-out.log',
+    error_file: '/home/sarlrmasc/.pm2/logs/rmasc-erp-error.log',
+    out_file: '/home/sarlrmasc/.pm2/logs/rmasc-erp-out.log',
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     merge_logs: true,
 
