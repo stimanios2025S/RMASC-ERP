@@ -249,7 +249,7 @@ function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentAc
                 <div className="p-4 space-y-3">
                   {orders.length === 0 ? (
                     <p className="text-sm text-white/60 italic text-center py-4">Aucune commande enregistrée.</p>
-                  ) : orders.map(order => <OrderRoadmap key={order.id} order={order} />)}
+                  ) : orders.map((order: any) => <OrderRoadmap key={order.id} order={order} />)}
                 </div>
               </div>
             </>

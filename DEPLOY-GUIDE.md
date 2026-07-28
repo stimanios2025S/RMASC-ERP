@@ -1,70 +1,131 @@
 # 🚀 RMASC FACTORY ERP — Guide de Déploiement
 
-> **Nom PM2 :** `rmasc-erp`  
-> **Dossier projet :** `/home/sarlrmasc/rmasc-erp`  
-> **Dépôt GitHub :** `stimanios2025S/RMASC-ERP`  
-> **Temps estimé :** 2 minutes
+> **⚠️ INFRASTRUCTURE ACTUELLE :**
+> - **Process :** Lancé avec `nohup node backend/api.mjs &` (pas de PM2)
+> - **Port :** `4001` (Cloudflare tunnel → `http://localhost:4001`)
+> - **Dossier :** `/home/sarlrmasc/rmasc-erp`
+> - **Dépôt GitHub :** `stimanios2025S/RMASC-ERP` (branche `main`)
+> - **Base :** MongoDB locale `mongodb://localhost:27017/rmasc-erp`
 
 ---
 
-## ⚡ Déploiement Rapide (SSH)
+## ⚡ À FAIRE APRÈS UNE MODIFICATION DU CODE
 
-Dans **PowerShell** sur ton PC :
+### 1️⃣ Pusher les changements sur GitHub
 
 ```powershell
-# 1. Build le frontend
 cd C:\Users\stimanios\RMASC-ERP
-npm run build
+git add -A
+git commit -m "Description des changements"
+git push origin main
+```
 
-# 2. Connexion au serveur
+### 2️⃣ Se connecter au serveur
+
+```powershell
 ssh sarlrmasc@100.73.62.52
 ```
 
-**Une fois connecté (SSH),** copie/colle ça :
+### 3️⃣ Récupérer et builder (dans le terminal SSH)
 
 ```bash
-cd /home/sarlrmasc/rmasc-erp && \
-git reset --hard && \
-git pull origin main && \
-npm ci && \
-npm run build && \
-pm2 restart rmasc-erp --update-env && \
-curl http://localhost:4000/api/health
+cd /home/sarlrmasc/rmasc-erp
+git pull origin main
+npm ci
+npm run build
 ```
 
-✅ **Fini.** Vérifie que le dernier `curl` renvoie `{"status":"ok"}`.
+### 4️⃣ Redémarrer le serveur
+
+```bash
+# Tuer l'ancien processus
+pkill -f "node backend/api.mjs" || true
+sleep 2
+
+# Redémarrer sur le port 4001
+PORT=4001 nohup node backend/api.mjs > /tmp/rmasc.log 2>&1 &
+sleep 3
+
+# Vérifier
+curl http://localhost:4001/api/version
+curl http://localhost:4001/api/health
+```
+
+✅ Si les deux curl retournent du JSON, **c'est bon.**
 
 ---
 
-## 📋 Autres commandes utiles (sur le serveur)
+## ⚡ DÉPLOIEMENT RAPIDE (une seule commande)
+
+SSH + tout faire d'un coup :
 
 ```bash
-pm2 status              # Voir si rmasc-erp tourne
-pm2 logs rmasc-erp      # Voir les logs en direct
-pm2 restart rmasc-erp   # Redémarrer le backend
-pm2 stop rmasc-erp      # Arrêter le backend
-pm2 monit              # Surveiller CPU/RAM
+ssh sarlrmasc@100.73.62.52 "cd /home/sarlrmasc/rmasc-erp && git pull origin main && npm ci && npm run build && pkill -f 'node backend/api.mjs' || true && sleep 2 && PORT=4001 nohup node backend/api.mjs > /tmp/rmasc.log 2>&1 & sleep 3 && curl -s http://localhost:4001/api/version"
 ```
 
 ---
 
-## 🐛 En cas de problème
+## 🔄 APRÈS UNE COUPURE DE COURANT / REDÉMARRAGE DU SERVEUR
 
-### Le backend ne répond pas
 ```bash
-pm2 logs rmasc-erp --lines 30
-```
+ssh sarlrmasc@100.73.62.52
 
-### MongoDB ne répond pas
-```bash
-sudo systemctl status mongod
+# Lancer MongoDB (si pas déjà démarré)
 sudo systemctl start mongod
+
+# Lancer le backend
+cd /home/sarlrmasc/rmasc-erp
+PORT=4001 nohup node backend/api.mjs > /tmp/rmasc.log 2>&1 &
+sleep 3
+curl http://localhost:4001/api/health
 ```
 
-### Erreur "port already in use"
+---
+
+## 🩺 VÉRIFIER L'ÉTAT DU SERVEUR
+
 ```bash
-# Trouver le processus sur le port 4000
-lsof -i :4000
-kill -9 <PID>
-pm2 restart rmasc-erp
+# Santé de l'API
+curl https://sarl-rmasc.com/api/health
+
+# Version déployée
+curl https://sarl-rmasc.com/api/version
+
+# MongoDB
+sudo systemctl status mongod
+
+# Processus backend
+ps aux | grep "node backend/api.mjs"
+
+# Logs
+tail -50 /tmp/rmasc.log
 ```
+
+---
+
+## 🆘 DÉPANNAGE
+
+| Problème | Solution |
+|----------|----------|
+| `Connection refused` | Le backend n'est pas lancé → `cd /home/sarlrmasc/rmasc-erp && PORT=4001 nohup node backend/api.mjs > /tmp/rmasc.log 2>&1 &` |
+| `MongoDB indisponible` | `sudo systemctl start mongod` |
+| `Route API introuvable` | L'ancien processus tourne encore → `pkill -f "node backend/api.mjs"` puis relancer |
+| Site ne répond pas | Vérifier Cloudflare Tunnel → `cloudflared tunnel list` |
+| `Version Mismatch` | Le build n'a pas été refait → `npm run build` puis redémarrer |
+
+---
+
+## 💾 BACKUP
+
+```bash
+# Backup manuel
+sudo bash /home/sarlrmasc/rmasc-erp/scripts/backup.sh
+
+# Backup automatique (via cron)
+# sudo crontab -e
+# 0 2 * * * sudo bash /home/sarlrmasc/rmasc-erp/scripts/backup.sh
+```
+
+---
+
+> Dernière mise à jour : 28/07/2026 — RMASC FACTORY ERP v2.6.2

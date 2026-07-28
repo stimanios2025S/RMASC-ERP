@@ -85,7 +85,7 @@ export const localApi = {
   },
   getUsers: () => {
     const users: LocalUser[] = ls('rmasc_local_users')
-    return users.map(({ password, ...u }) => u)
+    return users.map(({ password, ...u }) => ({ ...u, canChangePassword: u.role === 'ADMIN' }))
   },
   updateUser: (id: string, name: string) => {
     const users: LocalUser[] = ls('rmasc_local_users')

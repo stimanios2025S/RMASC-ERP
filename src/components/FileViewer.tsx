@@ -33,7 +33,7 @@ export default function FileViewer({ fileData, fileName, fileType, fileUrl }: Pr
   // Pour les fichiers PDF via Cloudflare, on utilise l'IP directe pour éviter le buffering
   // Le token JWT est passé en query param pour l'auth
   const directServerUrl = isCloudflare && fileUrl
-    ? fileUrl.replace(window.location.origin, 'http://100.73.62.52:4000')
+    ? fileUrl.replace(window.location.origin, 'http://100.73.62.52:4001')
     : fileUrl
 
   const directUrl = directServerUrl && token
@@ -41,7 +41,7 @@ export default function FileViewer({ fileData, fileName, fileType, fileUrl }: Pr
     : null
 
   // Source finale d'affichage : URL directe (avec token) ou base64 (legacy)
-  const displaySrc = directUrl || fileData
+  const displaySrc = (directUrl || fileData) ?? undefined
 
   const handleDownload = () => {
     // Use authed URL (with token query param) for download

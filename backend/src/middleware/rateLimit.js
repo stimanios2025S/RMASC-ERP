@@ -11,9 +11,6 @@ export const rateLimitLogin = rateLimit({
   message: { error: 'Trop de tentatives. Réessayez dans 60 secondes.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.ip || req.connection?.remoteAddress || 'unknown'
-  },
 })
 
 // ─── API générale rate limiter: 200 requêtes par minute ─────────────────

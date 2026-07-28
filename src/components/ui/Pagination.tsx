@@ -1,9 +1,9 @@
 // ─── RMASC FACTORY — Universal Pagination Component ─────────────────────
 // Pure CSS, no dependencies. Works with the backend pagination metadata.
 
-interface PaginationMeta {
+export interface PaginationMeta {
   page: number
-  limit: number
+  limit?: number
   total: number
   totalPages: number
   hasNext: boolean

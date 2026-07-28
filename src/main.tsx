@@ -13,7 +13,7 @@ const APP_VERSION = 'v2.6.2-force-sync'
 // ─── Force localStorage reset on version change ──────────────────────────
 // This is the FIRST thing that runs — before React mounts, before anything.
 // Old versions of RMASC stored orders in localStorage. This wipes them ALL.
-(function enforceVersion() {
+;(() => {
   try {
     const storedVersion = localStorage.getItem('rmasc_app_version')
     if (storedVersion !== APP_VERSION) {
@@ -81,7 +81,7 @@ window.onerror = (_msg, _source, _line, _col, error) => {
 
 // ─── Service Worker management ──────────────────────────────────────────
 // Unregister ALL old service workers (legacy), and listen for updates
-(async function manageServiceWorker() {
+;(async () => {
   if ('serviceWorker' in navigator) {
     try {
       // 1. Unregister any OLD service workers (pre-v2.6.2)
