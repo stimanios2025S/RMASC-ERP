@@ -250,7 +250,7 @@ function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentAc
           {showProfile && (
             <>
               <div className="fixed inset-0 z-[99]" onClick={() => setShowProfile(false)} />
-              <div className="fixed inset-0 right-0 md:right-6 top-0 md:top-16 z-[100] w-full md:w-[580px] max-h-dvh md:max-h-[70vh] bg-slate-900 md:rounded-2xl shadow-2xl border-0 md:border border-white/10 animate-slide-up md:animate-scale-in overflow-hidden flex flex-col">
+              <div className="fixed bottom-0 md:bottom-auto md:right-6 right-0 md:top-16 z-[100] w-full md:w-[580px] max-h-[85dvh] md:max-h-[70vh] bg-slate-900 md:rounded-t-2xl md:rounded-b-2xl md:rounded-2xl shadow-2xl border-0 md:border border-white/10 animate-slide-up md:animate-scale-in overflow-hidden flex flex-col">
                 <div className="sticky top-0 bg-slate-900 px-5 py-4 border-b border-white/10 flex items-center justify-between rounded-t-2xl">
                   <h3 className="text-sm font-bold text-white">📊 Roadmap — Suivi des commandes</h3>
                   <span className="text-xs text-white/60">{orders.length} commande{orders.length > 1 ? 's' : ''}</span>

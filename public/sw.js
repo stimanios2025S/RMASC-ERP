@@ -21,13 +21,6 @@ self.addEventListener('activate', (event) => {
     }).then(() => {
       // Take control of ALL open tabs immediately
       return self.clients.claim()
-    }).then(() => {
-      // Tell all open tabs to reload
-      self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({ type: 'SW_UPDATED', version: SW_VERSION })
-        })
-      })
     })
   )
 })

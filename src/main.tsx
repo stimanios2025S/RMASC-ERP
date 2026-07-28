@@ -71,29 +71,14 @@ window.onerror = (_msg, _source, _line, _col, error) => {
         }
       }
 
-      // Force unregister ALL existing SWs first to clear stale caches
-      // Then re-register fresh
-      for (const reg of oldRegistrations) {
-        await reg.unregister()
-      }
-
-      // Clear ALL caches before registering new SW
-      if ('caches' in window) {
-        const cacheKeys = await caches.keys()
-        await Promise.allSettled(cacheKeys.map(k => caches.delete(k)))
-      }
-
       const registration = await navigator.serviceWorker.register('/sw.js')
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data?.type === 'SW_UPDATED') {
-          console.log('[SW] New service worker activated. Reloading...')
-          window.location.reload()
-        }
-      })
+
+      // If a new SW is waiting, activate it silently (no page reload)
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-        window.location.reload()
       }
+
+      // When a new SW is found, activate it silently
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing
         if (newWorker) {
@@ -101,16 +86,12 @@ window.onerror = (_msg, _source, _line, _col, error) => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               newWorker.postMessage({ type: 'SKIP_WAITING' })
             }
-            if (newWorker.state === 'activated') {
-              console.log('[SW] New version activated. Reloading...')
-              window.location.reload()
-            }
           })
         }
       })
-      // Immediate update check + periodic checks
-      registration.update().catch(() => {})
-      setInterval(() => { registration.update().catch(() => {}) }, 2 * 60 * 1000)
+
+      // Check for SW updates every 10 minutes (silent, no reload)
+      setInterval(() => { registration.update().catch(() => {}) }, 10 * 60 * 1000)
     } catch (err) {
       console.warn('[SW] Service Worker registration failed:', err)
     }
