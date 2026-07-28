@@ -200,7 +200,14 @@ app.get('/api/standalone-parts/all', authenticate, listAllParts)
 app.patch('/api/standalone-parts/:id/status', authenticate, updatePartStatus)
 app.delete('/api/standalone-parts/:id', authenticate, deletePart)
 
-// Notifications
+// ═══ Serve uploaded files (for standalone parts CAD files) ═══════════════
+app.get('/api/uploads/:filename', authenticate, (req, res) => {
+  const filePath = path.join(UPLOADS_DIR, req.params.filename)
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Fichier introuvable.' })
+  }
+  res.sendFile(filePath)
+})
 app.post('/api/notifications/whatsapp', authenticate, sendWhatsApp)
 
 // Real-time SSE

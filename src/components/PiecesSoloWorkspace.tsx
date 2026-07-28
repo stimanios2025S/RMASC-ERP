@@ -535,29 +535,39 @@ function PartCard({ part, updating, onStart, onComplete }: {
   const handleDownloadCad = async () => {
     if (!part.cadFileUrl) return
     const token = localStorage.getItem('rmasc_token')
-    const a = document.createElement('a')
-    a.href = part.cadFileUrl
-    a.download = part.partNumber + '_plan.pdf'
-    // Try blob download with auth first
+
+    // Normalize path: old data uses /uploads/, new uses /api/uploads/
+    const url = part.cadFileUrl.startsWith('/api/')
+      ? part.cadFileUrl
+      : part.cadFileUrl.replace(/^\/uploads\//, '/api/uploads/')
+
     try {
-      const res = await fetch(part.cadFileUrl, {
+      const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
-      if (res.ok) {
-        const blob = await res.blob()
-        const url = URL.createObjectURL(blob)
-        a.href = url
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        setTimeout(() => URL.revokeObjectURL(url), 2000)
-        return
-      }
-    } catch { /* fallback below */ }
-    // Fallback: direct link
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+      if (!res.ok) throw new Error('Download failed')
+      const blob = await res.blob()
+      const ext = blob.type.includes('pdf') ? '.pdf'
+        : blob.type.includes('png') ? '.png'
+        : blob.type.includes('jpeg') || blob.type.includes('jpg') ? '.jpg'
+        : '.bin'
+      const filename = `${part.partNumber}_${part.projectName.replace(/[^a-zA-Z0-9]/g, '_')}${ext}`
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000)
+    } catch {
+      const a = document.createElement('a')
+      a.href = url
+      a.target = '_blank'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
   }
 
   return (

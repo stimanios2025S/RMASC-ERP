@@ -38,7 +38,7 @@ export async function createPart(req, res) {
       partNumber, projectName: parsed.data.projectName.trim(),
       material: parsed.data.material || undefined, thickness: parsed.data.thickness || undefined,
       quantity: parseInt(parsed.data.quantity) || 1,
-      cadFileUrl: req.file ? `/uploads/${req.file.filename}` : undefined,
+      cadFileUrl: req.file ? `/api/uploads/${req.file.filename}` : undefined,
       fileMeta, status: 'EN_ATTENTE', createdBy: req.user.name || req.user.userId,
     })
     res.status(201).json({
