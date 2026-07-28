@@ -70,6 +70,19 @@ window.onerror = (_msg, _source, _line, _col, error) => {
           await reg.unregister()
         }
       }
+
+      // Force unregister ALL existing SWs first to clear stale caches
+      // Then re-register fresh
+      for (const reg of oldRegistrations) {
+        await reg.unregister()
+      }
+
+      // Clear ALL caches before registering new SW
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys()
+        await Promise.allSettled(cacheKeys.map(k => caches.delete(k)))
+      }
+
       const registration = await navigator.serviceWorker.register('/sw.js')
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data?.type === 'SW_UPDATED') {
@@ -79,6 +92,7 @@ window.onerror = (_msg, _source, _line, _col, error) => {
       })
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+        window.location.reload()
       }
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing
@@ -94,7 +108,9 @@ window.onerror = (_msg, _source, _line, _col, error) => {
           })
         }
       })
-      setInterval(() => { registration.update().catch(() => {}) }, 5 * 60 * 1000)
+      // Immediate update check + periodic checks
+      registration.update().catch(() => {})
+      setInterval(() => { registration.update().catch(() => {}) }, 2 * 60 * 1000)
     } catch (err) {
       console.warn('[SW] Service Worker registration failed:', err)
     }

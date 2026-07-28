@@ -1,9 +1,25 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import fs from 'fs'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), {
+    name: 'inject-sw-version',
+    closeBundle() {
+      const swPath = path.resolve(__dirname, 'dist', 'sw.js')
+      if (fs.existsSync(swPath)) {
+        let content = fs.readFileSync(swPath, 'utf-8')
+        const buildStamp = Date.now().toString(36)
+        content = content.replace(
+          "const SW_VERSION = 'v2.6.2'",
+          `const SW_VERSION = 'v2.6.2-${buildStamp}'`
+        )
+        fs.writeFileSync(swPath, content)
+        console.log(`  🏷️  SW_VERSION injecté: v2.6.2-${buildStamp}`)
+      }
+    }
+  }],
   base: '/',
   build: {
     outDir: 'dist',
