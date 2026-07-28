@@ -127,3 +127,13 @@ export function notifyOrderDeleted(serialNumber, deletedBy) {
     message: `Commande ${serialNumber} supprimée par ${deletedBy}`,
   })
 }
+
+export function notifyProductionPhaseChanged(orderId, serialNumber, productionPhase, updatedBy) {
+  broadcast('production:phase', {
+    id: orderId,
+    serialNumber,
+    productionPhase,
+    updatedBy,
+    message: `Phase production mise à jour: ${serialNumber} → ${productionPhase}`,
+  })
+}

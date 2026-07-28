@@ -36,7 +36,7 @@ import { useSSE } from '../hooks/useSSE'
 interface OrderSummary {
   id: string; serialNumber: string; clientName: string; clientCity: string
   typeMotorisation: string; typeCabine?: string; status: string; createdAt: string
-  priority?: string; _count: { cadSubmissions: number }
+  priority?: string; productionPhase?: string; _count: { cadSubmissions: number }
 }
 interface DashboardStats {
   totalOrders: number; activeOrders: number; blockedOrders: number
@@ -269,6 +269,17 @@ function Header({ notifCount, onNotifClick, orders, user, onAgentToggle, agentAc
   )
 }
 
+// ─── Production Phases (synced with ProductionWorkspace) ───────────────
+const PRODUCTION_PHASES = [
+  { id: 'decoupe', icon: '✂️', label: 'Découpe' },
+  { id: 'pliage', icon: '🔧', label: 'Pliage' },
+  { id: 'soudeur', icon: '⚡', label: 'Soudure' },
+  { id: 'peinture', icon: '🎨', label: 'Peinture' },
+  { id: 'assemblage', icon: '🔩', label: 'Assemblage' },
+  { id: 'emballage', icon: '📦', label: 'Emballage' },
+  { id: 'livraison', icon: '🚛', label: 'Livraison' },
+]
+
 // ─── OrderRoadmap (timeline) ────────────────────────────────────────────
 const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderSummary }) {
   const statusStep = [
@@ -281,10 +292,32 @@ const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderS
     { key: 'EN_LIVRAISON', label: 'Livraison', icon: '🚛', hours: 8 },
     { key: 'LIVREE', label: 'Livrée', icon: '✅', hours: 0 },
   ]
+
   const now = Date.now()
   const createdAt = new Date(order.createdAt).getTime()
   const currentIdx = statusStep.findIndex(s => s.key === order.status)
   const activeIdx = currentIdx >= 0 ? currentIdx : 0
+
+  // Determine if order is in production zone
+  const productionStepIdx = statusStep.findIndex(s => s.key === 'PRET_POUR_PRODUCTION')
+  const isInProduction = currentIdx >= productionStepIdx && currentIdx >= 0
+
+  // Find current production phase index
+  const prodPhaseIdx = PRODUCTION_PHASES.findIndex(p => p.id === order.productionPhase)
+  const activeProdIdx = prodPhaseIdx >= 0 ? prodPhaseIdx : 0
+
+  // Check if a production phase is done based on status
+  const isProductionPhasePast = (phaseIndex: number) => {
+    if (order.status === 'PRET_POUR_PRODUCTION') return phaseIndex < activeProdIdx
+    // EN_LIVRAISON, LIVREE, VALIDEE → all phases are done
+    return true
+  }
+
+  const isProductionPhaseCurrent = (phaseIndex: number) => {
+    if (order.status === 'PRET_POUR_PRODUCTION') return phaseIndex === activeProdIdx
+    return false
+  }
+
   return (
     <div className="bg-white/5 rounded-xl border border-white/10 p-4">
       <div className="flex items-center justify-between mb-3">
@@ -298,9 +331,90 @@ const OrderRoadmap = React.memo(function OrderRoadmap({ order }: { order: OrderS
       </div>
       <div className="relative ml-2">
         {statusStep.map((step, i) => {
-          const isPast = i <= activeIdx; const isCurrent = i === activeIdx
+          const isPast = i <= activeIdx
+          const isCurrent = i === activeIdx
           const elapsedH = (now - createdAt) / 3600000
           const phaseProgress = Math.min(100, Math.round((elapsedH / step.hours) * 100))
+
+          // ── SPECIAL: PRET_POUR_PRODUCTION step expands into production sub-phases ──
+          if (step.key === 'PRET_POUR_PRODUCTION' && isInProduction) {
+            return (
+              <div key={step.key}>
+                {/* Production header line */}
+                <div className="flex gap-3 pb-2">
+                  <div className="flex flex-col items-center">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs bg-emerald-500 text-white">
+                      ✓
+                    </div>
+                    <div className="w-0.5 flex-1 min-h-[12px] bg-emerald-400/50" />
+                  </div>
+                  <div className="flex-1 pb-1">
+                    <p className="text-xs font-bold text-white/70">🏭 Prêt Production</p>
+                    <p className="text-[9px] text-white/60 mt-0.5">
+                      {order.status === 'PRET_POUR_PRODUCTION'
+                        ? `Phase: ${PRODUCTION_PHASES[activeProdIdx]?.label || '—'}`
+                        : '✅ Terminée'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Production sub-phases (indented) */}
+                <div className="ml-6 pl-3 border-l-2 border-emerald-400/30 mb-1">
+                  {PRODUCTION_PHASES.map((phase, pi) => {
+                    const past = isProductionPhasePast(pi)
+                    const current = isProductionPhaseCurrent(pi)
+                    return (
+                      <div key={phase.id} className="flex gap-3 pb-2 last:pb-1">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                            past
+                              ? 'bg-emerald-500 text-white'
+                              : current
+                                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/40'
+                                : 'bg-white/10 text-white/60'
+                          }`}>
+                            {past ? '✓' : current ? '●' : pi + 1}
+                          </div>
+                          {pi < PRODUCTION_PHASES.length - 1 && (
+                            <div className={`w-0.5 flex-1 min-h-[12px] ${past ? 'bg-emerald-400/50' : 'bg-white/10'}`} />
+                          )}
+                        </div>
+                        <div className="flex-1 pb-0.5">
+                          <p className={`text-[11px] font-semibold ${
+                            current ? 'text-white' : past ? 'text-white/70' : 'text-white/50'
+                          }`}>
+                            {phase.icon} {phase.label}
+                          </p>
+                          {current && (
+                            <p className="text-[9px] text-amber-400 font-medium mt-0.5">● En cours...</p>
+                          )}
+                          {past && !current && (
+                            <p className="text-[9px] text-emerald-400/60 mt-0.5">✓ Terminée</p>
+                          )}
+                          {!past && !current && (
+                            <p className="text-[9px] text-white/40 mt-0.5">En attente</p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Connector from last production phase to next status */}
+                <div className="flex gap-3 pb-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-0.5 h-3 bg-white/10" />
+                  </div>
+                  <div className="flex-1" />
+                </div>
+              </div>
+            )
+          }
+
+          // ── Skip the original PRET_POUR_PRODUCTION if we already rendered it expanded ──
+          if (step.key === 'PRET_POUR_PRODUCTION' && isInProduction) return null
+
+          // ── Regular status step ──
           return (
             <div key={step.key} className="flex gap-3 pb-3 last:pb-0">
               <div className="flex flex-col items-center">
@@ -745,7 +859,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   // ─── SSE real-time listener: auto-reload when other devices make changes ─────
   const loadFullRef = useRef<() => void>(() => {})
   useSSE(useCallback((event: { type: string; data: any }) => {
-    if (event.type === 'order:created' || event.type === 'order:deleted' || event.type === 'order:status' || event.type === 'order:file' || event.type === 'force:sync') {
+    if (event.type === 'order:created' || event.type === 'order:deleted' || event.type === 'order:status' || event.type === 'order:file' || event.type === 'production:phase' || event.type === 'force:sync') {
       loadFullRef.current()
     }
   }, []))

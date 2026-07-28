@@ -8,7 +8,7 @@ import StockDocument from '../models/StockDocument.js'
 import StockMovement from '../models/StockMovement.js'
 import { stampOrderFiles } from '../utils/pdfStamper.js'
 import { createOrderSchema, updateOrderSchema, updateStatusSchema, updateProductionPhaseSchema } from '../schemas/validation.js'
-import { notifyOrderCreated, notifyOrderStatusChanged, notifyOrderApproval, notifyFileUploaded, notifyOrderDeleted } from './realtime.js'
+import { notifyOrderCreated, notifyOrderStatusChanged, notifyOrderApproval, notifyFileUploaded, notifyOrderDeleted, notifyProductionPhaseChanged } from './realtime.js'
 
 const UPLOADS_DIR = path.resolve(process.argv[1] ? path.dirname(process.argv[1]) : '.', '..', 'uploads')
 
@@ -204,6 +204,7 @@ export async function updateProductionPhase(req, res) {
     if (!parsed.success) return res.status(400).json({ error: 'Phase invalide.' })
     const order = await Order.findByIdAndUpdate(req.params.id, { productionPhase: parsed.data.productionPhase }, { new: true })
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    notifyProductionPhaseChanged(order._id.toString(), order.serialNumber, order.productionPhase, req.user?.name || 'Production')
     res.json({ success: true, productionPhase: order.productionPhase, message: 'Phase sauvegardée.' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }

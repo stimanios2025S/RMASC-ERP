@@ -60,6 +60,10 @@ export function useSSE(onEvent?: EventHandler) {
       try { onEventRef.current?.({ type: 'force:sync', data: JSON.parse(e.data) }) } catch {}
     })
 
+    es.addEventListener('production:phase', (e: MessageEvent) => {
+      try { onEventRef.current?.({ type: 'production:phase', data: JSON.parse(e.data) }) } catch {}
+    })
+
     es.onerror = () => {
       // Reconnexion automatique — EventSource le fait nativement
       console.warn('[SSE] Reconnexion...')
