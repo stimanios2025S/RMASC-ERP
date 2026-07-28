@@ -4,7 +4,7 @@
 //  Design : Glassmorphism — textes blancs hiérarchisés
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import FicheTechniqueView from './FicheTechniqueView'
 import FileViewer from './FileViewer'
 import type { PortalSession } from '../data/portalUsers'
@@ -17,6 +17,7 @@ import AgentPanel from './agent/AgentPanel'
 import SmartSearch from './smart/SmartSearch'
 import ArchiveOrders from './ArchiveOrders'
 import PiecesSoloWorkspace from './PiecesSoloWorkspace'
+import { useSSE } from '../hooks/useSSE'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface OrderRow {
@@ -144,6 +145,16 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
       setVaultFiles(files)
     } catch { setVaultFiles([]) }
   }, [])
+
+  // ─── SSE real-time listener: auto-refresh when Dashboard deletes/updates orders ───
+  const sseLoadRef = useRef({ loadOrders, loadVault })
+  sseLoadRef.current = { loadOrders, loadVault }
+  useSSE(useCallback((event: { type: string; data: any }) => {
+    if (event.type === 'order:created' || event.type === 'order:deleted' || event.type === 'order:status' || event.type === 'force:sync') {
+      sseLoadRef.current.loadOrders()
+      sseLoadRef.current.loadVault()
+    }
+  }, []))
 
   useEffect(() => { loadOrders(); loadVault() }, [])
   useEffect(() => {

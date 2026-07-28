@@ -16,7 +16,7 @@ import { connectDB, testDBConnection } from './src/lib/mongoose.js'
 import { authenticate, requireAdmin } from './src/middleware/auth.js'
 import { rateLimitLogin, rateLimitApi } from './src/middleware/rateLimit.js'
 import { auditMiddleware } from './src/middleware/audit.js'
-import { healthCheck } from './src/controllers/health.js'
+import { healthCheck, versionCheck } from './src/controllers/health.js'
 import {
   login, seedUsers, fixPasswords, resetAndReseed, seedAdmins,
   listUsers, updateUserName, changeAdminCredentials, changeUserPassword,
@@ -121,6 +121,7 @@ app.use(async (req, res, next) => {
 
 // Health
 app.get('/api/health', healthCheck)
+app.get('/api/version', versionCheck)
 
 // Users
 app.post('/api/users/login', rateLimitLogin, login)

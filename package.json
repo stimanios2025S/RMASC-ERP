@@ -1,7 +1,7 @@
 {
   "name": "rmasc-erp",
-  "version": "2.5.3",
-  "description": "RMASC FACTORY — ERP Ascenseur | MongoDB Edition",
+  "version": "2.6.2",
+  "description": "RMASC FACTORY — ERP Ascenseur | MongoDB Edition | Force Sync",
   "type": "module",
   "private": true,
   "scripts": {

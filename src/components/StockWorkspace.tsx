@@ -5,6 +5,7 @@ import { PageBackground } from './PageBackground'
 import InstallPWA from './InstallPWA'
 import AgentPanel from './agent/AgentPanel'
 import SmartSearch from './smart/SmartSearch'
+import { useSSE } from '../hooks/useSSE'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface StockItem {
@@ -128,6 +129,15 @@ export default function StockWorkspace({ onBack, session }: Props) {
       if (Array.isArray(d)) setDocuments(d)
     } catch (err: any) { console.error('[STOCK] load failed:', err.message) }
   }, [])
+
+  // ─── SSE real-time listener: auto-refresh when other devices make changes ─────
+  const sseLoadRef = useRef({ loadData })
+  sseLoadRef.current = { loadData }
+  useSSE(useCallback((event: { type: string; data: any }) => {
+    if (event.type === 'stock:movement' || event.type === 'force:sync') {
+      sseLoadRef.current.loadData()
+    }
+  }, []))
 
   useEffect(() => { loadData() }, [loadData])
   // ── Auto-refresh: every 8s + on window focus + visibility change ───────

@@ -4,8 +4,36 @@ import App from './App'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
+// ═══ VERSION CONTROL — forces cache reset on all devices when deployed ═════
+// Every deploy MUST increment this version. It's checked against localStorage.
+// If it doesn't match, ALL localStorage is wiped and the page reloads.
+// This ensures the old cached data (orders, items, etc.) never persists.
+const APP_VERSION = 'v2.6.2-force-sync'
+
+// ─── Force localStorage reset on version change ──────────────────────────
+// This is the FIRST thing that runs — before React mounts, before anything.
+// Old versions of RMASC stored orders in localStorage. This wipes them ALL.
+(function enforceVersion() {
+  try {
+    const storedVersion = localStorage.getItem('rmasc_app_version')
+    if (storedVersion !== APP_VERSION) {
+      console.log(`[VERSION] ${storedVersion || 'none'} → ${APP_VERSION}. Clearing all local data...`)
+
+      // Wipe EVERYTHING in localStorage (old orders, cache, sessions, everything)
+      localStorage.clear()
+
+      // Set new version
+      localStorage.setItem('rmasc_app_version', APP_VERSION)
+
+      console.log('[VERSION] Local storage wiped. Fresh start.')
+    }
+  } catch (e) {
+    // Silently fail — never block app rendering
+    console.warn('[VERSION] Could not check version:', e)
+  }
+})()
+
 // ─── Lazy load Sentry (keeps main bundle small) ────────────────────────
-// Sentry is loaded AFTER the app renders, so it doesn't delay page load
 let SentryModule: any = null
 async function initSentry() {
   if (window.location.hostname === 'localhost') return
@@ -51,10 +79,64 @@ window.onerror = (_msg, _source, _line, _col, error) => {
   return true
 }
 
-// ─── Service Worker safeguard ──────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()))
-}
+// ─── Service Worker management ──────────────────────────────────────────
+// Unregister ALL old service workers (legacy), and listen for updates
+(async function manageServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    try {
+      // 1. Unregister any OLD service workers (pre-v2.6.2)
+      const oldRegistrations = await navigator.serviceWorker.getRegistrations()
+      for (const reg of oldRegistrations) {
+        // If it's an old SW (not our new one), unregister it
+        if (reg.active?.scriptURL && !reg.active.scriptURL.includes('sw.js')) {
+          await reg.unregister()
+        }
+      }
+
+      // 2. Register the new service worker
+      const registration = await navigator.serviceWorker.register('/sw.js')
+
+      // 3. Listen for messages from the SW
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data?.type === 'SW_UPDATED') {
+          console.log('[SW] New service worker activated. Reloading...')
+          // Force a hard reload from server (not cache)
+          window.location.reload()
+        }
+      })
+
+      // 4. If there's a waiting SW, tell it to activate now
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+      }
+
+      // 5. Listen for updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New SW installed but not active — tell it to take over
+              newWorker.postMessage({ type: 'SKIP_WAITING' })
+            }
+            if (newWorker.state === 'activated') {
+              console.log('[SW] New version activated. Reloading...')
+              window.location.reload()
+            }
+          })
+        }
+      })
+
+      // 6. Check for SW updates every 5 minutes
+      setInterval(() => {
+        registration.update().catch(() => {})
+      }, 5 * 60 * 1000)
+
+    } catch (err) {
+      console.warn('[SW] Service Worker registration failed:', err)
+    }
+  }
+})()
 
 // ─── Mount timeout fallback ────────────────────────────────────────────
 const mountTimeout = setTimeout(() => {
@@ -67,7 +149,6 @@ const mountTimeout = setTimeout(() => {
           <h1 style="font-size:20px;margin-bottom:8px;">RMASC ERP — Chargement</h1>
           <p style="color:#94a3b8;font-size:14px;">L'application prend plus de temps que prévu...</p>
           <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;">
-            <button onclick="location.reload()" style="padding:10px 20px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:13px;cursor:pointer;">🔁 Recharger</button>
             <button onclick="localStorage.clear();location.reload()" style="padding:10px 20px;border-radius:12px;border:none;background:linear-gradient(135deg,#f59e0b,#ea580c);color:white;font-weight:bold;font-size:13px;cursor:pointer;">🗑️ Vider le cache & recharger</button>
           </div>
         </div>

@@ -32,6 +32,9 @@ export async function apiFetch<T = any>(
   const headers: Record<string, string> = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    // Force no-cache on every API call — prevents browsers/CDN from serving stale data
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
     ...((options.headers as Record<string, string>) || {}),
   }
 

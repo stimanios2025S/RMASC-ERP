@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import FicheTechniqueView from './FicheTechniqueView'
 import type { PortalSession } from '../data/portalUsers'
 import { apiFetch } from '../config/api'
@@ -8,6 +8,7 @@ import FileManager from './FileManager'
 import AgentPanel from './agent/AgentPanel'
 import SmartSearch from './smart/SmartSearch'
 import ArchiveOrders from './ArchiveOrders'
+import { useSSE } from '../hooks/useSSE'
 
 interface OrderRow {
   id: string; serialNumber: string; clientName: string; clientCity: string
@@ -56,6 +57,15 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       setOrders(data.filter(o => ['PRET_POUR_PRODUCTION', 'VALIDEE'].includes(o.status)))
     } catch { /* silent */ }
   }, [])
+
+  // ─── SSE real-time listener: auto-refresh when Dashboard deletes/updates orders ───
+  const sseLoadRef = useRef({ loadOrders })
+  sseLoadRef.current = { loadOrders }
+  useSSE(useCallback((event: { type: string; data: any }) => {
+    if (event.type === 'order:created' || event.type === 'order:deleted' || event.type === 'order:status' || event.type === 'force:sync') {
+      sseLoadRef.current.loadOrders()
+    }
+  }, []))
 
   useEffect(() => { loadOrders() }, [])
   useEffect(() => {

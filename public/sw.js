@@ -1,222 +1,94 @@
-// ─── RMASC FACTORY — Service Worker v2.6.1 ──────────────────────────────
-// Stratégie : Cache-first pour les assets, réseau d'abord pour l'API.
-// File d'attente offline pour les mutations (POST/PATCH/DELETE).
-// Sync automatique via Background Sync API quand la connexion revient.
-// v2.6.1: All Cache.put() wrapped in catch() to prevent blank-screen crashes.
+// ─── RMASC FACTORY — Service Worker v2.6.2 (CACHE BUSTER) ──────────────────
+// CRITICAL: Every deploy changes SW_VERSION. On activate, ALL old caches
+// are DELETED. This forces all devices to fetch fresh files immediately.
+// No cache-first strategy — always network-first to prevent stale apps.
+// ──────────────────────────────────────────────────────────────────────────
 
-const SW_VERSION = 'v2.6.1'
-const CACHE_STATIC = 'rmasc-static'
-const CACHE_DYNAMIC = 'rmasc-dynamic'
-const CACHE_ASSETS = 'rmasc-assets'
+const SW_VERSION = 'v2.6.2'
 
-const STATIC_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/images/icon-192.svg',
-  '/images/icon-512.svg',
-  '/images/rmasc-logo.svg',
-  '/images/rmasc-logo.png',
-]
-
-const API_PREFIX = '/api'
-
-// ─── Safe cache put — never throws, never crashes the page ───────────────
-async function safeCachePut(cacheName, request, response) {
-  try {
-    if (!response || !response.ok) return
-    // Only cache same-origin or CORS responses (opaque responses can't be cached via put)
-    const type = response.type
-    if (type === 'opaque' || type === 'opaqueredirect') return
-    const cache = await caches.open(cacheName)
-    await cache.put(request, response.clone())
-  } catch {
-    // Silently ignore cache failures — never crash the SW or the page
-  }
-}
-
-// ─── INSTALL ───────────────────────────────────────────────────────────────
+// ─── INSTALL: Skip waiting so new SW activates immediately ────────────────
 self.addEventListener('install', (event) => {
   self.skipWaiting()
+})
+
+// ─── ACTIVATE: DELETE ALL OLD CACHES, take control of all tabs ───────────
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.open(CACHE_STATIC).then((cache) => {
-      return Promise.allSettled(
-        STATIC_URLS.map((url) => cache.add(url).catch(() => {}))
-      )
+    caches.keys().then((keys) => {
+      // Delete EVERY cache — forces fresh downloads on next fetch
+      const deletions = keys.map((key) => caches.delete(key))
+      return Promise.allSettled(deletions)
+    }).then(() => {
+      // Take control of ALL open tabs immediately
+      return self.clients.claim()
+    }).then(() => {
+      // Tell all open tabs to reload
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ type: 'SW_UPDATED', version: SW_VERSION })
+        })
+      })
     })
   )
 })
 
-// ─── ACTIVATE ──────────────────────────────────────────────────────────────
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k.startsWith('rmasc-') && k !== CACHE_STATIC && k !== CACHE_DYNAMIC && k !== CACHE_ASSETS)
-          .map((k) => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
-  )
-})
-
-// ─── FETCH ─────────────────────────────────────────────────────────────────
+// ─── FETCH: Network-first for EVERYTHING (no cache-first) ─────────────────
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // API calls: Network First with cache fallback
-  if (url.pathname.startsWith(API_PREFIX)) {
-    event.respondWith(networkFirstWithQueue(request))
+  // API calls: Network only (no cache fallback for mutations)
+  if (url.pathname.startsWith('/api')) {
+    event.respondWith(networkOnly(request))
     return
   }
 
-  // Static assets (JS, CSS, images): Cache First
-  if (isStaticAsset(request)) {
-    event.respondWith(cacheFirst(request))
-    return
-  }
-
-  // Navigation: Network First with offline fallback
-  if (request.mode === 'navigate') {
-    event.respondWith(networkFirstWithOfflineFallback(request))
-    return
-  }
-
-  // Default: Network only
-  event.respondWith(fetch(request).catch(() => new Response('Offline', { status: 503 })))
+  // Everything else (HTML, JS, CSS, images): Network first, fallback to cache
+  event.respondWith(networkFirstWithCacheFallback(request))
 })
 
-// ─── STRATÉGIES ─────────────────────────────────────────────────────────────
+// ─── STRATEGIES ───────────────────────────────────────────────────────────
 
-async function cacheFirst(request) {
-  const cached = await caches.match(request)
-  if (cached) return cached
+async function networkFirstWithCacheFallback(request) {
   try {
     const response = await fetch(request)
-    if (response.ok && request.method === 'GET') {
-      safeCachePut(CACHE_ASSETS, request, response)
+    if (response.ok && response.type !== 'opaque') {
+      // Cache the response for offline fallback, but DON'T serve from cache first
+      const cache = await caches.open(SW_VERSION)
+      cache.put(request, response.clone()).catch(() => {})
     }
     return response
   } catch {
-    return new Response('Resource offline', { status: 503 })
+    // Offline: serve from cache if available
+    const cached = await caches.match(request)
+    if (cached) return cached
+    // Last resort for navigation: serve index.html (SPA fallback)
+    if (request.mode === 'navigate') {
+      const indexCached = await caches.match('/index.html')
+      if (indexCached) return indexCached
+    }
+    return new Response('Hors-ligne', { status: 503 })
   }
 }
 
-async function networkFirstWithQueue(request) {
+async function networkOnly(request) {
   try {
-    const response = await fetch(request)
-    if (response.ok && request.method === 'GET') {
-      safeCachePut(CACHE_DYNAMIC, request, response)
-    }
-    return response
+    return await fetch(request)
   } catch {
-    const cached = await caches.match(request)
-    if (cached) return cached
-    // Queue mutations for later sync
-    if (request.method !== 'GET') {
-      await addToQueue(request)
-      return new Response(JSON.stringify({ offline: true, queued: true, message: 'File d\'attente offline' }), {
-        headers: { 'Content-Type': 'application/json' },
-      })
-    }
     return new Response(JSON.stringify({ offline: true, error: 'Hors-ligne' }), {
+      status: 503,
       headers: { 'Content-Type': 'application/json' },
     })
   }
 }
 
-async function networkFirstWithOfflineFallback(request) {
-  try {
-    const response = await fetch(request)
-    if (response.ok) {
-      safeCachePut(CACHE_DYNAMIC, request, response)
-    }
-    return response
-  } catch {
-    const cached = await caches.match(request)
-    if (cached) return cached
-    return caches.match('/index.html') || new Response('Hors-ligne', { status: 503 })
-  }
-}
-
-// ─── FILE D'ATTENTE OFFLINE (IndexedDB) ────────────────────────────────────
-async function addToQueue(request) {
-  try {
-    const db = await openDB()
-    const tx = db.transaction('queue', 'readwrite')
-    const store = tx.objectStore('queue')
-    const clone = request.clone()
-    const body = await clone.text()
-    store.add({
-      id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-      url: request.url,
-      method: request.method,
-      headers: JSON.stringify(Array.from(request.headers.entries())),
-      body: body || null,
-      createdAt: new Date().toISOString(),
-      retries: 0,
-    })
-  } catch (err) {
-    console.error('[SW] Queue error:', err)
-  }
-}
-
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open('rmasc-offline-queue', 1)
-    req.onupgradeneeded = () => {
-      const db = req.result
-      if (!db.objectStoreNames.contains('queue')) {
-        db.createObjectStore('queue', { keyPath: 'id' })
-      }
-    }
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
-}
-
-// ─── SYNC ──────────────────────────────────────────────────────────────────
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-rmasc') event.waitUntil(processQueue())
-})
-
-async function processQueue() {
-  try {
-    const db = await openDB()
-    const tx = db.transaction('queue', 'readonly')
-    const entries = await new Promise((resolve) => {
-      const req = tx.objectStore('queue').getAll()
-      req.onsuccess = () => resolve(req.result || [])
-      req.onerror = () => resolve([])
-    })
-    for (const entry of entries) {
-      try {
-        await fetch(entry.url, {
-          method: entry.method,
-          headers: JSON.parse(entry.headers).reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}),
-          body: entry.body || undefined,
-        })
-        const delTx = db.transaction('queue', 'readwrite')
-        delTx.objectStore('queue').delete(entry.id)
-      } catch {
-        entry.retries++
-        if (entry.retries < 5) {
-          const updTx = db.transaction('queue', 'readwrite')
-          updTx.objectStore('queue').put(entry)
-        }
-      }
-    }
-  } catch {}
-}
-
-// ─── MESSAGE HANDLER ────────────────────────────────────────────────────────
+// ─── MESSAGE HANDLER: Listen for messages from the app ────────────────────
 self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting()
+  const { data } = event
+  if (data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+  if (data?.type === 'CLEAR_CACHES') {
+    caches.keys().then(keys => Promise.allSettled(keys.map(k => caches.delete(k))))
+  }
 })
-
-// ─── UTILITIES ──────────────────────────────────────────────────────────────
-function isStaticAsset(request) {
-  const ext = new URL(request.url).pathname.split('.').pop()?.toLowerCase()
-  return ['js', 'css', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'woff', 'woff2', 'ttf'].includes(ext || '')
-}
