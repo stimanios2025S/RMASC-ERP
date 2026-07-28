@@ -255,7 +255,7 @@ if (fs.existsSync(distPath)) {
 }
 
 // ═══ SENTRY ERROR REPORTING ═══════════════════════════════════════════
-const SENTRY_DSN = process.env.SENTRY_DSN || 'https://fa2884aa65c1f0a3446c5f4d5c85c5ed@o4511808265977856.ingest.de.sentry.io/4511808272466000'
+const SENTRY_DSN = process.env.SENTRY_DSN || 'https://f3cde073733f6aed715a64a4082e87e9@o4511808265977856.ingest.de.sentry.io/4511812633493584'
 
 function reportToSentry(error, req = {}) {
   if (!SENTRY_DSN) return

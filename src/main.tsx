@@ -40,7 +40,7 @@ async function initSentry() {
   try {
     SentryModule = await import('@sentry/react')
     SentryModule.init({
-      dsn: 'https://fa2884aa65c1f0a3446c5f4d5c85c5ed@o4511808265977856.ingest.de.sentry.io/4511808272466000',
+      dsn: 'https://f3cde073733f6aed715a64a4082e87e9@o4511808265977856.ingest.de.sentry.io/4511812633493584',
       integrations: [SentryModule.browserTracingIntegration(), SentryModule.replayIntegration()],
       tracesSampleRate: 0.3,
       replaysSessionSampleRate: 0.05,
