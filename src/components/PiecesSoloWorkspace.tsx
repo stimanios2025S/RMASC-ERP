@@ -19,6 +19,12 @@ interface StandalonePart {
   status: 'EN_ATTENTE' | 'EN_PRODUCTION' | 'TERMINE'
   createdAt: string
   createdBy?: string | null
+  fileMeta?: {
+    originalname: string
+    mimetype: string
+    filename: string
+    size: number
+  } | null
 }
 
 interface Props {
@@ -541,17 +547,20 @@ function PartCard({ part, updating, onStart, onComplete }: {
       ? part.cadFileUrl
       : part.cadFileUrl.replace(/^\/uploads\//, '/api/uploads/')
 
+    // Get original filename + extension from fileMeta
+    const originalName = part.fileMeta?.originalname || `${part.partNumber}.bin`
+    const originalExt = originalName.includes('.')
+      ? originalName.substring(originalName.lastIndexOf('.'))
+      : '.bin'
+    const cleanName = part.projectName.replace(/[^a-zA-Z0-9_-]/g, '_')
+    const filename = `${part.partNumber}_${cleanName}${originalExt}`
+
     try {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       if (!res.ok) throw new Error('Download failed')
       const blob = await res.blob()
-      const ext = blob.type.includes('pdf') ? '.pdf'
-        : blob.type.includes('png') ? '.png'
-        : blob.type.includes('jpeg') || blob.type.includes('jpg') ? '.jpg'
-        : '.bin'
-      const filename = `${part.partNumber}_${part.projectName.replace(/[^a-zA-Z0-9]/g, '_')}${ext}`
       const blobUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = blobUrl

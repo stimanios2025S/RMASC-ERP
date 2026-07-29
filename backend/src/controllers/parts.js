@@ -51,7 +51,7 @@ export async function createPart(req, res) {
 export async function listActiveParts(_req, res) {
   try {
     const parts = await StandalonePart.find({ status: { $ne: 'TERMINE' } })
-      .sort({ createdAt: -1 }).select('partNumber projectName material thickness quantity cadFileUrl status createdAt createdBy')
+      .sort({ createdAt: -1 }).select('partNumber projectName material thickness quantity cadFileUrl fileMeta status createdAt createdBy')
     res.json(parts)
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
@@ -59,7 +59,7 @@ export async function listActiveParts(_req, res) {
 export async function listAllParts(_req, res) {
   try {
     const parts = await StandalonePart.find().sort({ createdAt: -1 })
-      .select('partNumber projectName material thickness quantity cadFileUrl status createdAt createdBy')
+      .select('partNumber projectName material thickness quantity cadFileUrl fileMeta status createdAt createdBy')
     res.json(parts)
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
