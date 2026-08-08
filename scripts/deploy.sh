@@ -52,13 +52,11 @@ sleep 2
 
 # ── 6. Relancer le backend via PM2 (SEUL patron — tue l'ancien proprement) ──
 # PM2 est le gestionnaire unique (comme OnSite) : plus de doublons nohup/systemd.
+# ── 6. Relancer le backend via PM2 (SEUL patron) ─────────────────────────
+# ecosystem.config.js contient PORT=4001 en dur → startOrRestart applique
+# le bon port à chaque fois, sans --update-env ni préfixe shell.
 echo "  ▶️  Démarrage du nouveau backend (PM2)..."
-if pm2 describe rmasc-erp > /dev/null 2>&1; then
-  PORT=4001 pm2 restart rmasc-erp
-else
-  cd /home/sarlrmasc/rmasc-erp/backend
-  PORT=4001 pm2 start api.mjs --name rmasc-erp
-fi
+pm2 startOrRestart /home/sarlrmasc/rmasc-erp/ecosystem.config.js
 pm2 save > /dev/null 2>&1 || true
 
 # ── 7. Wait and verify (poll up to 40s — PM2 restart + index build + boot) ──
@@ -79,7 +77,7 @@ UPTIME=$(echo "$HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin
 if [ -n "$UPTIME" ] && [ "$UPTIME" -gt 30 ] 2>/dev/null; then
   echo ""
   echo "  ⚠️  Ancien serveur encore actif (uptime=${UPTIME}s). Redémarrage forcé via PM2..."
-  PORT=4001 pm2 restart rmasc-erp
+  pm2 startOrRestart /home/sarlrmasc/rmasc-erp/ecosystem.config.js
   sleep 4
   echo ""
   echo "  ── Vérification après force ──"
