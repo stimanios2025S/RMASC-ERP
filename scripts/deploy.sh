@@ -17,6 +17,15 @@ echo ""
 echo "  📥 Pull depuis GitHub..."
 git pull origin main
 
+# ── 1bis. Re-exec: bash a chargé l'ANCIENNE version de ce script en mémoire ──
+# Le git pull ci-dessus a remplacé le fichier sur disque, mais le run en cours
+# exécute encore l'ancien code. On se relance une fois pour utiliser le nouveau.
+export DEPLOY_REEXEC
+if [ -z "$DEPLOY_REEXEC" ]; then
+  DEPLOY_REEXEC=1
+  exec bash "$0" "$@"
+fi
+
 # ── 2. Install frontend dependencies ─────────────────────────────────────
 echo "  📦 Installation dépendances frontend..."
 npm ci
