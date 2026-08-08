@@ -245,28 +245,28 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
       <input ref={replaceRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={handleReplaceFile} />
 
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-white/5 bg-white/[0.03] gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/80 hover:text-white transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/80 hover:text-white transition-all flex-shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-base font-extrabold text-white flex items-center gap-2">
-            <span className="text-amber-400">🖨️</span> Fichiers Laser
+          <h1 className="text-base font-extrabold text-white flex items-center gap-2 truncate">
+            <span className="text-amber-400">🖨️</span> <span className="truncate">Fichiers Laser</span>
           </h1>
-          <span className="text-[10px] text-white/80 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full">Découpe</span>
+          <span className="hidden sm:inline-block text-[10px] text-white/80 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full flex-shrink-0">Découpe</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/80">
-            <span className="text-amber-400 font-bold">{enAttente.length}</span> en attente ·{' '}
-            <span className="text-emerald-400 font-bold">{approuves.length}</span> tamponnés
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-xs text-white/80 whitespace-nowrap">
+            <span className="text-amber-400 font-bold">{enAttente.length}</span><span className="hidden sm:inline"> en attente</span> ·{' '}
+            <span className="text-emerald-400 font-bold">{approuves.length}</span><span className="hidden sm:inline"> tamponnés</span>
           </span>
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto bg-slate-950 p-6">
+      <div className="flex-1 overflow-y-auto bg-slate-950 p-3 md:p-6">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
           {/* ── LEFT: Submission Form ─────────────────────────────────── */}
           <div className="w-full lg:w-96 flex-shrink-0 space-y-5">
@@ -628,28 +628,28 @@ function ProductionLaserView({ onBack }: { onBack?: () => void }) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-white/5 bg-white/[0.03] gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/80 hover:text-white transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/80 hover:text-white transition-all flex-shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-base font-extrabold text-white flex items-center gap-2">
-            <span className="text-amber-400">🖨️</span> Approbation Laser
+          <h1 className="text-base font-extrabold text-white flex items-center gap-2 truncate">
+            <span className="text-amber-400">🖨️</span> <span className="truncate">Approbation Laser</span>
           </h1>
-          <span className="text-[10px] text-white/80 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full">Production — Tamponnage</span>
+          <span className="hidden sm:inline-block text-[10px] text-white/80 font-medium bg-white/[0.06] px-2 py-0.5 rounded-full flex-shrink-0">Production — Tamponnage</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/80">
-            <span className="text-amber-400 font-bold">{enAttente.length}</span> en attente ·{' '}
-            <span className="text-emerald-400 font-bold">{approuves.length}</span> tamponnés
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-xs text-white/80 whitespace-nowrap">
+            <span className="text-amber-400 font-bold">{enAttente.length}</span><span className="hidden sm:inline"> en attente</span> ·{' '}
+            <span className="text-emerald-400 font-bold">{approuves.length}</span><span className="hidden sm:inline"> tamponnés</span>
           </span>
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto bg-slate-950 p-6">
+      <div className="flex-1 overflow-y-auto bg-slate-950 p-3 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {message && (
             <div className={`px-4 py-3 rounded-xl text-xs font-semibold border ${

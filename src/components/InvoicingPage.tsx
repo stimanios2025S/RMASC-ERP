@@ -150,16 +150,16 @@ export default function InvoicingPage({ onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden print:overflow-visible">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03] print:hidden">
+      <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-white/5 bg-white/[0.03] print:hidden">
         <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-white hover:text-white transition-all">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Retour
         </button>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/80 font-semibold">Salim Hamoun AI — Facturation</span>
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline text-xs text-white/80 font-semibold">Salim Hamoun AI — Facturation</span>
           <button onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-sm font-bold transition-all shadow-lg shadow-amber-500/25">
-            📥 Exporter / Imprimer
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs sm:text-sm font-bold transition-all shadow-lg shadow-amber-500/25">
+            📥 <span className="hidden sm:inline">Exporter / Imprimer</span>
           </button>
         </div>
       </div>

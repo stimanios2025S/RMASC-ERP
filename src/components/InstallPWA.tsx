@@ -71,13 +71,13 @@ export default function InstallPWA({ variant = 'default' }: { variant?: 'default
   // ── Compact variant (inline bar for engineer portals) ──
   if (variant === 'compact') {
     return (
-      <div className="flex-shrink-0 px-6 py-2 bg-amber-500/10 border-b border-amber-500/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-amber-300">
-            <span>Installer RMASC FACTORY sur votre appareil</span>
+      <div className="flex-shrink-0 px-3 md:px-6 py-2 bg-amber-500/10 border-b border-amber-500/20">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs text-amber-300 min-w-0">
+            <span className="truncate">Installer RMASC FACTORY sur votre appareil</span>
           </div>
           <button onClick={handleInstall}
-            className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold transition-all shadow-sm">
+            className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold transition-all shadow-sm flex-shrink-0">
             Installer
           </button>
         </div>
@@ -87,7 +87,7 @@ export default function InstallPWA({ variant = 'default' }: { variant?: 'default
 
   // ── Default variant (bottom banner) ──
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
+    <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-4 sm:bottom-4 z-50 animate-fade-in">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl shadow-2xl border border-amber-400/30 overflow-hidden max-w-sm">
         <div className="px-5 py-4">
           <div className="flex items-start gap-3">

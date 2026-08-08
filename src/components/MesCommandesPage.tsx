@@ -224,24 +224,24 @@ export default function MesCommandesPage({ onBack, onFiche }: Props) {
   }
 
   return (
-    <div className="min-h-0 bg-slate-950 p-6 space-y-6 text-slate-100">
+    <div className="min-h-0 bg-slate-950 p-3 md:p-6 space-y-4 md:space-y-6 text-slate-100">
 
       {/* ── Header Card ── */}
-      <header className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <header className="bg-slate-900 border border-slate-800 rounded-xl p-4 md:p-5 shadow-lg flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4 min-w-0">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all flex-shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">📋 Mes Commandes</h1>
-          <span className="px-3 py-1 rounded-lg bg-amber-500/15 text-amber-400 text-xs font-bold border border-amber-500/20">{stats.total}</span>
+          <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2 min-w-0"><span className="truncate">📋 Mes Commandes</span></h1>
+          <span className="px-3 py-1 rounded-lg bg-amber-500/15 text-amber-400 text-xs font-bold border border-amber-500/20 flex-shrink-0">{stats.total}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex items-center gap-3 sm:flex-shrink-0">
+          <div className="relative flex-1 sm:flex-none">
             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher par série ou client..."
-              className="w-56 px-3.5 py-2 rounded-xl bg-white/[0.08] border border-slate-700 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
+              className="w-full sm:w-56 px-3.5 py-2 rounded-xl bg-white/[0.08] border border-slate-700 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
           </div>
         </div>
       </header>
@@ -525,33 +525,33 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
   return (
     <div className="min-h-0">
       {/* Top bar */}
-      <div className="sticky top-0 z-40 bg-slate-800/70 border-b border-white/5 px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/60 hover:text-white transition-all">
+      <div className="sticky top-0 z-40 bg-slate-800/70 border-b border-white/5 px-3 md:px-6 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between shadow-sm">
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/60 hover:text-white transition-all flex-shrink-0">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           </button>
-          <h2 className="text-base font-extrabold text-white font-mono">{order.serialNumber}</h2>
+          <h2 className="text-base font-extrabold text-white font-mono truncate">{order.serialNumber}</h2>
           <StatusBadge status={order.status} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {onEdit && (
             <button onClick={onEdit} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.06] text-white/60 hover:bg-white/[0.1] transition-all">
-              ✏️ Modifier
+              ✏️ <span className="hidden sm:inline">Modifier</span>
             </button>
           )}
           {onDelete && (
             <button onClick={onDelete} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">
-              🗑️ Supprimer
+              🗑️ <span className="hidden sm:inline">Supprimer</span>
             </button>
           )}
           <button onClick={() => setTab('fiche')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab === 'fiche' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.1]'}`}>
-            📄 Fiche Technique
+            📄 <span className="hidden sm:inline">Fiche Technique</span><span className="sm:hidden">Fiche</span>
           </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+      <div className="border-b border-white/5 px-3 md:px-6 flex gap-0 overflow-x-auto">
         {[
           { key: 'info' as const, label: '📋 Informations' },
           { key: 'edit' as const, label: '✏️ Modifier & Fichiers' },
@@ -579,7 +579,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
 
       {/* ═══ TAB 1: Info ═══ */}
       {tab === 'info' && (
-        <div className="max-w-4xl mx-auto p-6 space-y-5">
+        <div className="max-w-4xl mx-auto p-3 md:p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-slate-800/70 rounded-xl p-4 border border-white/5">
               <p className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-1">Client</p>
@@ -642,7 +642,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
       {tab === 'edit' && showFullEdit && fullEditOrder ? (
         <AddElevator onBack={() => { setShowFullEdit(false); setFullEditOrder(null) }} editOrder={fullEditOrder} />
       ) : tab === 'edit' ? (
-        <div className="max-w-3xl mx-auto p-6 space-y-5">
+        <div className="max-w-3xl mx-auto p-3 md:p-6 space-y-5">
           <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl border border-amber-500/20 p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -720,7 +720,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
 
       {/* ═══ TAB 3: Production & Notifications ═══ */}
       {tab === 'production' && (
-        <div className="max-w-3xl mx-auto p-6 space-y-5">
+        <div className="max-w-3xl mx-auto p-3 md:p-6 space-y-5">
           <div className="bg-slate-800/70 rounded-xl border border-white/10 p-5 shadow-sm">
             <h3 className="text-sm font-bold text-white mb-3">🏭 Statut Production</h3>
             <div className="flex items-center gap-3 mb-3">
@@ -788,13 +788,13 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
       {/* ════════════════════════════════════════════════════════════════════ */}
       {/* ═══ TAB 5: Fichiers — File Manager ═══ */}
       {tab === 'fichiers' && (
-        <div className="max-w-3xl mx-auto p-6">
+        <div className="max-w-3xl mx-auto p-3 md:p-6">
           <FileManager orderId={order.id} orderSerial={order.serialNumber} engineerName="Administrateur" onFileChange={() => setNoteSent(true)} />
         </div>
       )}
 
       {tab === 'archive' && (
-        <div className="max-w-5xl mx-auto p-6 space-y-6">
+        <div className="max-w-5xl mx-auto p-3 md:p-6 space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -1005,7 +1005,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
 
       {/* ═══ TAB 6: Fiche Technique ═══ */}
       {tab === 'fiche' && (
-        <div className="p-6">
+        <div className="p-3 md:p-6">
           <FicheTechniqueView orderId={order.id} variant="inline" />
         </div>
       )}

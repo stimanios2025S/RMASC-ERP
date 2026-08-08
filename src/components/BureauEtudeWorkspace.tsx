@@ -234,15 +234,18 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
   return (
     <PageBackground className="h-full flex flex-col">
       {/* ═══ HEADER ═══ */}
-      <header className="flex-shrink-0 bg-slate-800/60 border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-4">
-          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white/80"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">📐</span></div>
-            <div><h1 className="text-lg font-extrabold text-white">Bureau d'Études</h1><p className="text-[11px] text-white/80 font-semibold">PLM — Portails Ingénieurs & Suivi</p></div>
+      <header className="flex-shrink-0 bg-slate-800/60 border-b border-white/10 px-3 md:px-6 py-3 flex items-center justify-between gap-2 shadow-sm">
+        <div className="flex items-center gap-3 min-w-0">
+          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white/80 flex-shrink-0"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-md flex-shrink-0"><span className="text-white text-lg">📐</span></div>
+            <div className="min-w-0">
+              <h1 className="text-base md:text-lg font-extrabold text-white truncate">Bureau d'Études</h1>
+              <p className="text-[11px] text-white/80 font-semibold hidden sm:block">PLM — Portails Ingénieurs & Suivi</p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="relative">
             <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 rounded-xl hover:bg-white/[0.06] text-white/80 relative">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
@@ -251,7 +254,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
             {showNotifications && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-                <div className="absolute right-0 top-full mt-2 z-50 w-96 bg-slate-800/60 rounded-2xl shadow-2xl border border-white/10 max-h-96 overflow-y-auto">
+                <div className="fixed left-3 right-3 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 z-50 sm:w-96 bg-slate-800/60 rounded-2xl shadow-2xl border border-white/10 max-h-96 overflow-y-auto">
                   <div className="sticky top-0 bg-slate-800/60 px-4 py-3 border-b border-white/5 flex items-center justify-between rounded-t-2xl">
                     <h3 className="text-xs font-bold text-white">Notifications</h3>
                     <span className="text-[10px] text-white">{notifications.length} alerte{notifications.length > 1 ? 's' : ''}</span>
@@ -269,13 +272,13 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
               </>
             )}
           </div>
-          {session && <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.06]"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-semibold text-white/80">{session.name}</span></div>}
-          <span className="text-xs text-white/80 font-semibold">{orders.length} commandes</span>
+          {session && <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.06]"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-semibold text-white/80">{session.name}</span></div>}
+          <span className="hidden sm:inline text-xs text-white/80 font-semibold">{orders.length} commandes</span>
         </div>
       </header>
 
       {/* ═══ TABS ═══ */}
-      <div className="flex-shrink-0 bg-slate-800/60 border-b border-white/10 px-6 flex gap-0 overflow-x-auto">
+      <div className="flex-shrink-0 bg-slate-800/60 border-b border-white/10 px-3 md:px-6 flex gap-0 overflow-x-auto">
         {engineerTabs.map(t => {
           const isActive = activeTab === t.id
           return (
@@ -301,7 +304,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
       {/* TAB: DASHBOARD */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {activeTab === 'dashboard' && !forcedTab && (
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* KPI Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
@@ -373,7 +376,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
       {/* TAB: ENGINEER PAGE */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {currentPage && (activeTab === 'ingenieur-1' || activeTab === 'ingenieur-2' || activeTab === 'verificateur' || activeTab === 'pret-prod') && (
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-extrabold text-white">{currentPage.icon} {currentPage.title}</h2>
@@ -446,7 +449,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
       {/* TAB: ARCHIVE — All orders with documents */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {activeTab === 'archive' && (
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6">
           <div className="max-w-6xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -560,7 +563,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
       {/* TAB: GESTION DOCUMENTS — Upload/Delete per order */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {activeTab === 'gestion-docs' && (
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6">
           <div className="max-w-6xl mx-auto space-y-6">
             <div>
               <h2 className="text-lg font-extrabold text-white">📁 Gestion des Documents</h2>

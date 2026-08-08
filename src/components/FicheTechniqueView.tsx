@@ -623,18 +623,18 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
       <div className="bg-slate-900/95 backdrop-blur-xl rounded-xl border border-white/10 overflow-y-auto shadow-lg" style={{ maxHeight: '90vh' }}>
         <style>{FICHE_STYLES}</style>
         {/* Inline toolbar — hidden on print */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03] no-print">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-white/5 bg-white/[0.03] no-print">
+          <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-bold text-white">Fiche Technique</span>
-            <span className="text-xs font-mono text-white/70 bg-white/[0.06] px-2 py-0.5 rounded">{data.serialNumber}</span>
+            <span className="text-xs font-mono text-white/70 bg-white/[0.06] px-2 py-0.5 rounded truncate">{data.serialNumber}</span>
           </div>
           <button onClick={handlePrint}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-lg shadow-amber-500/25 flex items-center gap-1.5 no-print">
-            PDF
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-lg shadow-amber-500/25 flex items-center gap-1.5 no-print flex-shrink-0">
+            🖨️ PDF
           </button>
         </div>
         {/* Document body */}
-        <div className="p-6" ref={docRef}>
+        <div className="p-3 md:p-6" ref={docRef}>
           <FicheDocument data={data} />
         </div>
       </div>
@@ -644,19 +644,19 @@ export default function FicheTechniqueView({ orderId, onBack, variant }: { order
   return (
     <div className="bg-slate-950 h-dvh flex flex-col overflow-hidden">
       <style>{FICHE_STYLES}</style>
-      <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between shadow-sm no-print flex-shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/5 px-3 md:px-6 py-3 flex items-center justify-between gap-2 shadow-sm no-print flex-shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/70 hover:text-white transition-all">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white/70 hover:text-white transition-all flex-shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
           )}
-          <h1 className="text-base font-extrabold text-white">Fiche Technique</h1>
-          <span className="text-xs font-mono text-white/70 bg-white/[0.06] px-2.5 py-1 rounded">{data.serialNumber}</span>
+          <h1 className="text-base font-extrabold text-white truncate">Fiche Technique</h1>
+          <span className="text-xs font-mono text-white/70 bg-white/[0.06] px-2.5 py-1 rounded hidden sm:inline-block">{data.serialNumber}</span>
         </div>
         <button onClick={handlePrint}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-sm font-bold transition-all shadow-lg shadow-amber-500/25 no-print">
-          Imprimer / PDF
+          className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs sm:text-sm font-bold transition-all shadow-lg shadow-amber-500/25 no-print flex-shrink-0">
+          <span className="sm:hidden">🖨️</span><span className="hidden sm:inline">Imprimer / PDF</span>
         </button>
       </div>
       <div className="flex-1 overflow-y-auto py-8 px-4 md:px-8 flex justify-center no-print">

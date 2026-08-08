@@ -80,7 +80,7 @@ export default function LifecyclePipeline({ onBack }: Props) {
         <button onClick={onBack}
           className="flex items-center gap-2 text-sm font-medium text-white hover:text-white transition-all flex-shrink-0">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Retour au Tableau de bord
+          <span className="hidden sm:inline">Retour au Tableau de bord</span>
         </button>
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-white truncate">Cycle de Vie — Pipeline</span>
@@ -112,7 +112,7 @@ export default function LifecyclePipeline({ onBack }: Props) {
 
           {/* Master audit log table */}
           <div className="bg-slate-800/70 rounded-2xl border border-white/5 overflow-hidden shadow-lg">
-            <div className="px-3 md:px-6 py-4 border-b border-white/5 flex items-center justify-between">
+            <div className="px-3 md:px-6 py-4 border-b border-white/5 flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-white">
                 {filterStage === 'all' ? 'Toutes les commandes' : PIPELINE_STAGES.find(s => s.key === filterStage)?.label || 'Commandes'}
               </h3>

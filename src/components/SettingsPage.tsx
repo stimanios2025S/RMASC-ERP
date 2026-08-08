@@ -125,7 +125,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="sticky top-0 z-10 bg-slate-800/70 border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 bg-slate-800/70 border-b border-white/10 px-3 md:px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           {onBack && (
             <button onClick={onBack} className="p-2 rounded-lg hover:bg-white/[0.06] text-white">
@@ -136,8 +136,8 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
         </div>
       </div>
 
-      {/* ── Settings Tabs ── */}
-      <div className="bg-slate-800/70 border-b border-white/5 px-6 flex gap-0">
+      {/* ── Settings Tabs (scrollable on mobile) ── */}
+      <div className="bg-slate-800/70 border-b border-white/5 px-3 md:px-6 flex gap-0 overflow-x-auto">
         <button onClick={() => setSettingsTab('team')}
           className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${
             settingsTab === 'team' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'
@@ -158,7 +158,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
         </button>
       </div>
 
-      <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <div className="p-3 md:p-6 max-w-4xl mx-auto space-y-6">
 
         {/* Feedback toast */}
         {feedback && (

@@ -190,40 +190,40 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
 
   // ── Render: Header ─────────────────────────────────────────────────────
   const renderHeader = () => (
-    <header className="flex-shrink-0 bg-slate-900/80 backdrop-blur-xl border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-4">
+    <header className="flex-shrink-0 bg-slate-900/80 backdrop-blur-xl border-b border-white/10 px-3 md:px-6 py-3 flex items-center justify-between gap-2 shadow-sm">
+      <div className="flex items-center gap-3 min-w-0">
         {onBack && (
-          <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/10 text-white/60 hover:text-white transition-all">
+          <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/10 text-white/60 hover:text-white transition-all flex-shrink-0">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
         )}
-        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center shadow-lg shadow-${config.color.split(' ')[0]}/20`}>
+        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center shadow-lg shadow-${config.color.split(' ')[0]}/20 flex-shrink-0`}>
           <span className="text-white text-lg">{config.icon}</span>
         </div>
-        <div>
-          <h1 className="text-lg font-extrabold text-white tracking-tight">{config.title}</h1>
-          <p className="text-[11px] text-white/60 font-medium mt-0.5">
+        <div className="min-w-0">
+          <h1 className="text-base md:text-lg font-extrabold text-white tracking-tight truncate">{config.title}</h1>
+          <p className="text-[11px] text-white/60 font-medium mt-0.5 hidden sm:block">
             {config.subtitle} · <span className="text-amber-400 font-bold">{myOrders.length}</span> commande{myOrders.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <button onClick={() => setShowAgent(p => !p)}
           className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${
             showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-amber-500/20' : 'bg-white/10 hover:bg-white/15 text-white/70 hover:text-white'
           }`} title="Assistant IA Salim (⌘I)">
           <span className="text-base">🤖</span>
         </button>
-        <span className="text-xs font-semibold text-white/80 bg-white/10 px-3 py-1.5 rounded-lg">{session.name}</span>
+        <span className="hidden sm:inline-block text-xs font-semibold text-white/80 bg-white/10 px-3 py-1.5 rounded-lg">{session.name}</span>
       </div>
     </header>
   )
 
   // ── Render: Tabs ───────────────────────────────────────────────────────
   const renderTabs = () => (
-    <div className="flex-shrink-0 bg-white/[0.03] border-b border-white/10 px-6 flex gap-0 overflow-x-auto">
+    <div className="flex-shrink-0 bg-white/[0.03] border-b border-white/10 px-3 md:px-6 flex gap-0 overflow-x-auto">
       {TAB_CONFIG.map(t => {
         if (t.id === 'pieces-solo' && role !== 'INGENIEUR_2') return null
         if (t.id === 'fichiers-laser' && role !== 'INGENIEUR_2') return null
@@ -344,7 +344,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
 
         {/* ═══ DASHBOARD TAB ═══ */}
         {tab === 'dashboard' && (
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3 md:p-6">
             <div className="max-w-4xl mx-auto space-y-3">
               {myOrders.length === 0 ? (
                 <div className="glass-card p-16 text-center">
@@ -363,7 +363,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
 
         {/* ═══ ARCHIVE TAB ═══ */}
         {tab === 'archive' && (
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3 md:p-6">
             <div className="max-w-5xl mx-auto">
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -429,7 +429,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
 
         {/* ═══ GESTION DOCUMENTS TAB ═══ */}
         {tab === 'gestion-docs' && (
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3 md:p-6">
             <div className="max-w-5xl mx-auto">
               <div className="mb-5">
                 <h2 className="text-lg font-extrabold text-white">📁 Gestion des Documents</h2>
@@ -499,7 +499,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
         )}
 
         {/* ═══ FOOTER ═══ */}
-        <footer className="flex-shrink-0 bg-slate-900/80 border-t border-white/10 px-6 py-2.5 flex items-center justify-between">
+        <footer className="flex-shrink-0 bg-slate-900/80 border-t border-white/10 px-3 md:px-6 py-2.5 flex items-center justify-between gap-2">
           <span className="text-[10px] text-white/50">RMASC — {config.title} v2.6.0</span>
           <div className="flex items-center gap-4">
             <InstallPWA variant="compact" />

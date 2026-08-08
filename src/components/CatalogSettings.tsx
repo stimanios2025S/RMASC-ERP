@@ -117,9 +117,9 @@ export default function CatalogSettings() {
         </p>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* Category selector */}
-        <div className="w-56 flex-shrink-0">
+        <div className="w-full md:w-56 flex-shrink-0">
           <p className="text-xs font-bold text-white uppercase tracking-wider mb-3">Catégories</p>
           <div className="space-y-1">
             {categories.map(cat => (

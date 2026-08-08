@@ -163,7 +163,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   if (tab === 'archives') {
     return (
       <PageBackground className="h-full flex flex-col">
-        <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 py-3.5 flex items-center justify-between">
+        <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-4">
             {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
             <div className="flex items-center gap-3">
@@ -175,10 +175,10 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
             <button onClick={() => setShowAgent(p => !p)}
               className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
               title="Assistant IA Salim (⌘I)"><span className="text-base">🤖</span></button>
-            {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
+            {session?.name && <span className="hidden sm:inline-block text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
           </div>
         </header>
-        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 flex gap-0 overflow-x-auto">
           <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🏭 Production</button>
           <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
           <button onClick={() => setTab('laser')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🖨️ Fichiers Laser{laserPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{laserPendingCount}</span>}</button>
@@ -195,7 +195,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   if (tab === 'pieces-solo') {
     return (
       <PageBackground className="h-full flex flex-col">
-        <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 py-3.5 flex items-center justify-between">
+        <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-4">
             {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
             <div className="flex items-center gap-3">
@@ -207,10 +207,10 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
             <button onClick={() => setShowAgent(p => !p)}
               className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
               title="Assistant IA Salim (⌘I)"><span className="text-base">🤖</span></button>
-            {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
+            {session?.name && <span className="hidden sm:inline-block text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
           </div>
         </header>
-        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 flex gap-0 overflow-x-auto">
           <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🏭 Production</button>
           <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white whitespace-nowrap">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
           <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">📦 Archives</button>
@@ -218,7 +218,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         <div className="flex-1 overflow-hidden">
           <PiecesSoloWorkspace onBack={() => setTab('production')} session={session} />
         </div>
-        <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] text-white/80">
+        <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-3 md:px-6 py-2 flex items-center justify-between gap-2 text-[10px] text-white/80">
           <span>RMASC Factory — Production & Atelier v2.6</span>
           <span>⌘K Recherche • ⌘I Agent</span>
         </footer>
@@ -233,7 +233,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   if (tab === 'laser') {
     return (
       <PageBackground className="h-full flex flex-col">
-        <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 py-3.5 flex items-center justify-between">
+        <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-4">
             {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
             <div className="flex items-center gap-3">
@@ -245,10 +245,10 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
             <button onClick={() => setShowAgent(p => !p)}
               className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
               title="Assistant IA Salim (⌘I)"><span className="text-base">🤖</span></button>
-            {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
+            {session?.name && <span className="hidden sm:inline-block text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
           </div>
         </header>
-        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 flex gap-0 overflow-x-auto">
           <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🏭 Production</button>
           <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
           <button onClick={() => setTab('laser')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white whitespace-nowrap">🖨️ Fichiers Laser{laserPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{laserPendingCount}</span>}</button>
@@ -257,7 +257,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         <div className="flex-1 overflow-hidden">
           <LaserFilesWorkspace onBack={() => setTab('production')} session={session} />
         </div>
-        <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] text-white/80">
+        <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-3 md:px-6 py-2 flex items-center justify-between gap-2 text-[10px] text-white/80">
           <span>RMASC Factory — Production & Atelier v2.6</span>
           <span>⌘K Recherche • ⌘I Agent</span>
         </footer>
@@ -271,19 +271,19 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   // ── Main Production view ────────────────────────────────────────────
   return (
     <PageBackground className="h-full flex flex-col">
-      <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🏭</span></div>
-            <div><h1 className="text-lg font-extrabold text-white">Production & Atelier</h1><p className="text-[11px] text-white font-semibold">{orders.length} commandes en production</p></div>
+      <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4 min-w-0">
+          {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white flex-shrink-0"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md flex-shrink-0"><span className="text-white text-lg">🏭</span></div>
+            <div className="min-w-0"><h1 className="text-base md:text-lg font-extrabold text-white truncate">Production & Atelier</h1><p className="text-[11px] text-white font-semibold truncate">{orders.length} commandes en production</p></div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <button onClick={() => setShowAgent(p => !p)}
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
             title="Assistant IA Salim (⌘I)"><span className="text-base">🤖</span></button>
-          {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
+          {session?.name && <span className="hidden sm:inline text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
           <button onClick={loadOrders} className="p-2 rounded-xl hover:bg-white/[0.06] text-white">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
           </button>
@@ -291,7 +291,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       </header>
 
       {/* Tabs — tab === 'production' garanti ici (les autres onglets early-return plus haut) */}
-      <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+      <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 flex gap-0 overflow-x-auto">
         <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white">🏭 Production</button>
         <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
         <button onClick={() => setTab('laser')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🖨️ Fichiers Laser{laserPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{laserPendingCount}</span>}</button>
@@ -325,7 +325,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       </div>
 
       {/* Orders grid */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6">
         {phaseOrders.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-white">
             <span className="text-5xl mb-4">📭</span>
@@ -391,7 +391,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         )}
       </div>
 
-      <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] text-white/80">
+      <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-3 md:px-6 py-2 flex items-center justify-between gap-2 text-[10px] text-white/80">
         <span>RMASC Factory — Production & Atelier v2.6</span>
         <span>{orders.length} commandes • ⌘K Recherche • ⌘I Agent</span>
       </footer>
