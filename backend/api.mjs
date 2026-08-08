@@ -40,6 +40,10 @@ import {
 import {
   createPart, listActiveParts, listAllParts, updatePartStatus, deletePart,
 } from './src/controllers/parts.js'
+import {
+  createLaserFile, listLaserFiles, getLaserFile, approveLaserFile,
+  replaceLaserFile, deleteLaserFile,
+} from './src/controllers/laserFiles.js'
 import { sendWhatsApp } from './src/controllers/notifications.js'
 import { subscribe, sendEvent, issueSSEToken } from './src/controllers/realtime.js'
 import { getAuditLogs, getAuditActions } from './src/controllers/audit.js'
@@ -199,6 +203,14 @@ app.get('/api/standalone-parts/active', authenticate, listActiveParts)
 app.get('/api/standalone-parts/all', authenticate, listAllParts)
 app.patch('/api/standalone-parts/:id/status', authenticate, updatePartStatus)
 app.delete('/api/standalone-parts/:id', authenticate, deletePart)
+
+// Laser Files — Technical File Management & Digital Stamping
+app.post('/api/laser-files/create', authenticate, upload.single('pdfFile'), createLaserFile)
+app.get('/api/laser-files', authenticate, listLaserFiles)
+app.get('/api/laser-files/:id', authenticate, getLaserFile)
+app.post('/api/laser-files/:id/approve', authenticate, approveLaserFile)
+app.post('/api/laser-files/:id/replace', authenticate, upload.single('pdfFile'), replaceLaserFile)
+app.delete('/api/laser-files/:id', authenticate, deleteLaserFile)
 
 // ═══ Serve uploaded files (for standalone parts CAD files) ═══════════════
 app.get('/api/uploads/:filename', authenticate, (req, res) => {

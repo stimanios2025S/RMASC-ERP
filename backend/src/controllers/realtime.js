@@ -179,3 +179,48 @@ export function notifyPartStatusChanged(part, updatedBy) {
     message: `Pièce solo ${part.partNumber} → ${part.status === 'TERMINE' ? 'TERMINÉE ✅' : part.status === 'EN_PRODUCTION' ? 'EN PRODUCTION 🔧' : part.status}`,
   })
 }
+
+// ─── Laser files real-time events (Technical File Management) ──────────────
+export function notifyLaserCreated(file) {
+  broadcast('laser:created', {
+    id: file._id?.toString(),
+    orderSerial: file.orderSerial,
+    projectName: file.projectName,
+    material: file.material,
+    thickness: file.thickness,
+    quantity: file.quantity,
+    status: file.status,
+    createdBy: file.createdBy,
+    message: `Nouveau fichier laser: ${file.projectName}${file.orderSerial ? ` — ${file.orderSerial}` : ''}`,
+  })
+}
+
+export function notifyLaserApproved(file) {
+  broadcast('laser:approved', {
+    id: file._id?.toString(),
+    orderSerial: file.orderSerial,
+    projectName: file.projectName,
+    approvedBy: file.approvedBy,
+    status: file.status,
+    message: `Fichier laser approuvé & tamponné: ${file.projectName} ✅`,
+  })
+}
+
+export function notifyLaserReplaced(file) {
+  broadcast('laser:replaced', {
+    id: file._id?.toString(),
+    orderSerial: file.orderSerial,
+    projectName: file.projectName,
+    status: file.status,
+    message: `Fichier laser remplacé: ${file.projectName} → En Attente (approbation invalidée)`,
+  })
+}
+
+export function notifyLaserDeleted(file) {
+  broadcast('laser:deleted', {
+    id: file._id?.toString(),
+    orderSerial: file.orderSerial,
+    projectName: file.projectName,
+    message: `Fichier laser supprimé: ${file.projectName}`,
+  })
+}

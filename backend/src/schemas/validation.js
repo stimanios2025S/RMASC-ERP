@@ -177,3 +177,14 @@ export const createPartSchema = z.object({
 export const updatePartStatusSchema = z.object({
   status: z.enum(['EN_ATTENTE', 'EN_PRODUCTION', 'TERMINE']),
 })
+
+// ═══ LASER FILES (Technical File Management & Digital Stamping) ═══════════
+export const createLaserFileSchema = z.object({
+  orderId: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
+  orderSerial: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
+  orderClient: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
+  projectName: z.string().min(1, 'Nom du projet requis'),
+  material: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
+  thickness: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
+  quantity: z.string().optional().default('1'),
+})

@@ -44,7 +44,7 @@ export function useSSE(onEvent?: EventHandler) {
         console.log('[SSE] Connecté au flux temps réel')
       })
 
-      const types = ['order:created', 'order:status', 'stock:movement', 'order:approval', 'order:file', 'order:deleted', 'force:sync', 'production:phase', 'part:created', 'part:status']
+      const types = ['order:created', 'order:status', 'stock:movement', 'order:approval', 'order:file', 'order:deleted', 'force:sync', 'production:phase', 'part:created', 'part:status', 'laser:created', 'laser:approved', 'laser:replaced', 'laser:deleted']
       for (const t of types) {
         source.addEventListener(t, (e: MessageEvent) => {
           try { onEventRef.current?.({ type: t, data: JSON.parse(e.data) }) } catch {}

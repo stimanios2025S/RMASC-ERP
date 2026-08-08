@@ -9,6 +9,7 @@ import AgentPanel from './agent/AgentPanel'
 import SmartSearch from './smart/SmartSearch'
 import ArchiveOrders from './ArchiveOrders'
 import PiecesSoloWorkspace from './PiecesSoloWorkspace'
+import LaserFilesWorkspace from './LaserFilesWorkspace'
 import { useSSE } from '../hooks/useSSE'
 
 interface OrderRow {
@@ -33,7 +34,7 @@ const PHASES = [
 ]
 
 export default function ProductionWorkspace({ onBack, session }: Props) {
-  const [tab, setTab] = useState<'production' | 'archives' | 'pieces-solo'>('production')
+  const [tab, setTab] = useState<'production' | 'archives' | 'pieces-solo' | 'laser'>('production')
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [activePhase, setActivePhase] = useState('decoupe')
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null)
@@ -42,6 +43,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   const [showAgent, setShowAgent] = useState(false)
   const [showSmartSearch, setShowSmartSearch] = useState(false)
   const [soloPendingCount, setSoloPendingCount] = useState(0)
+  const [laserPendingCount, setLaserPendingCount] = useState(0)
 
   // ⚡ Pièces Solo: pending count badge + real-time refresh
   const loadSoloPending = useCallback(async () => {
@@ -56,6 +58,20 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     const iv = setInterval(loadSoloPending, 30_000)
     return () => clearInterval(iv)
   }, [loadSoloPending])
+
+  // ⚡ Fichiers Laser: pending count badge + real-time refresh
+  const loadLaserPending = useCallback(async () => {
+    try {
+      const files: { status: string }[] = await apiFetch('/laser-files')
+      setLaserPendingCount(files.filter(f => f.status === 'EN_ATTENTE').length)
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => { loadLaserPending() }, [loadLaserPending])
+  useEffect(() => {
+    const iv = setInterval(loadLaserPending, 30_000)
+    return () => clearInterval(iv)
+  }, [loadLaserPending])
 
   // ── Keyboard shortcuts ──────────────────────────────────────────────
   useEffect(() => {
@@ -79,12 +95,17 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   sseLoadRef.current = { loadOrders }
   const soloRef = useRef({ loadSoloPending })
   soloRef.current = { loadSoloPending }
+  const laserRef = useRef({ loadLaserPending })
+  laserRef.current = { loadLaserPending }
   useSSE(useCallback((event: { type: string; data: any }) => {
     if (event.type === 'order:created' || event.type === 'order:deleted' || event.type === 'order:status' || event.type === 'force:sync') {
       sseLoadRef.current.loadOrders()
     }
     if (event.type === 'part:created' || event.type === 'part:status') {
       soloRef.current.loadSoloPending()
+    }
+    if (['laser:created', 'laser:approved', 'laser:replaced', 'laser:deleted'].includes(event.type)) {
+      laserRef.current.loadLaserPending()
     }
   }, []))
 
@@ -160,6 +181,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
           <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🏭 Production</button>
           <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
+          <button onClick={() => setTab('laser')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🖨️ Fichiers Laser{laserPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{laserPendingCount}</span>}</button>
           <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white whitespace-nowrap">📦 Archives</button>
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -207,6 +229,45 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     )
   }
 
+  // ── Fichiers Laser tab ──────────────────────────────────────────────
+  if (tab === 'laser') {
+    return (
+      <PageBackground className="h-full flex flex-col">
+        <header className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🖨️</span></div>
+              <div><h1 className="text-lg font-extrabold text-white">Approbation Laser</h1><p className="text-[11px] text-white font-semibold">Fichiers de découpe — Tamponnage numérique</p></div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setShowAgent(p => !p)}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${showAgent ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-white/[0.06] hover:bg-white/[0.1] text-white'}`}
+              title="Assistant IA Salim (⌘I)"><span className="text-base">🤖</span></button>
+            {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
+          </div>
+        </header>
+        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+          <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🏭 Production</button>
+          <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
+          <button onClick={() => setTab('laser')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white whitespace-nowrap">🖨️ Fichiers Laser{laserPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{laserPendingCount}</span>}</button>
+          <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">📦 Archives</button>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <LaserFilesWorkspace onBack={() => setTab('production')} session={session} />
+        </div>
+        <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] text-white/80">
+          <span>RMASC Factory — Production & Atelier v2.6</span>
+          <span>⌘K Recherche • ⌘I Agent</span>
+        </footer>
+        <InstallPWA variant="compact" />
+        {showAgent && <AgentPanel onClose={() => setShowAgent(false)} />}
+        {showSmartSearch && <SmartSearch onNavigate={() => setShowSmartSearch(false)} />}
+      </PageBackground>
+    )
+  }
+
   // ── Main Production view ────────────────────────────────────────────
   return (
     <PageBackground className="h-full flex flex-col">
@@ -233,6 +294,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
         <button onClick={() => setTab('production')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'production' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🏭 Production</button>
         <button onClick={() => setTab('pieces-solo')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'pieces-solo' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
+        <button onClick={() => setTab('laser')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'laser' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🖨️ Fichiers Laser{laserPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{laserPendingCount}</span>}</button>
         <button onClick={() => setTab('archives')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'archives' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>📦 Archives</button>
       </div>
 

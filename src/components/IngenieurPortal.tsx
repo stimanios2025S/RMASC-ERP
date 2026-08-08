@@ -17,6 +17,7 @@ import AgentPanel from './agent/AgentPanel'
 import SmartSearch from './smart/SmartSearch'
 import ArchiveOrders from './ArchiveOrders'
 import PiecesSoloWorkspace from './PiecesSoloWorkspace'
+import LaserFilesWorkspace from './LaserFilesWorkspace'
 import { useSSE } from '../hooks/useSSE'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -50,13 +51,14 @@ const ROLE_CONFIG: Record<string, { icon: string; title: string; subtitle: strin
   },
 }
 
-type IngenieurTab = 'dashboard' | 'archive' | 'gestion-docs' | 'archives' | 'pieces-solo'
+type IngenieurTab = 'dashboard' | 'archive' | 'gestion-docs' | 'archives' | 'pieces-solo' | 'fichiers-laser'
 const TAB_CONFIG: { id: IngenieurTab; icon: string; label: string }[] = [
   { id: 'dashboard', icon: '📊', label: 'Tableau de Bord' },
   { id: 'archive', icon: '📦', label: 'Archive' },
   { id: 'gestion-docs', icon: '📁', label: 'Gestion Docs' },
   { id: 'archives', icon: '📚', label: 'Archives' },
   { id: 'pieces-solo', icon: '🔧', label: 'Pièces Solo' },
+  { id: 'fichiers-laser', icon: '🖨️', label: 'Fichiers Laser' },
 ]
 
 // ─── Status Badge ─────────────────────────────────────────────────────────
@@ -224,6 +226,7 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
     <div className="flex-shrink-0 bg-white/[0.03] border-b border-white/10 px-6 flex gap-0 overflow-x-auto">
       {TAB_CONFIG.map(t => {
         if (t.id === 'pieces-solo' && role !== 'INGENIEUR_2') return null
+        if (t.id === 'fichiers-laser' && role !== 'INGENIEUR_2') return null
         const isActive = tab === t.id
         const badge = t.id === 'dashboard' ? myOrders.length : t.id === 'archive' ? ordersWithFiles : t.id === 'gestion-docs' ? ordersWithFiles : t.id === 'archives' ? archivedOrders : 0
         return (
@@ -485,6 +488,13 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
         {tab === 'pieces-solo' && (
           <div className="flex-1 overflow-hidden">
             <PiecesSoloWorkspace onBack={() => setTab('dashboard')} session={session} />
+          </div>
+        )}
+
+        {/* ═══ FICHIERS LASER TAB ═══ */}
+        {tab === 'fichiers-laser' && (
+          <div className="flex-1 overflow-hidden">
+            <LaserFilesWorkspace onBack={() => setTab('dashboard')} session={session} />
           </div>
         )}
 
