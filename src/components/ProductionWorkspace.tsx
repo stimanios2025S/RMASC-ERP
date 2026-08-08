@@ -290,12 +290,12 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         </div>
       </header>
 
-      {/* Tabs */}
+      {/* Tabs — tab === 'production' garanti ici (les autres onglets early-return plus haut) */}
       <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
-        <button onClick={() => setTab('production')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'production' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🏭 Production</button>
-        <button onClick={() => setTab('pieces-solo')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'pieces-solo' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
-        <button onClick={() => setTab('laser')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'laser' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🖨️ Fichiers Laser{laserPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{laserPendingCount}</span>}</button>
-        <button onClick={() => setTab('archives')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'archives' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>📦 Archives</button>
+        <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white">🏭 Production</button>
+        <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
+        <button onClick={() => setTab('laser')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🖨️ Fichiers Laser{laserPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{laserPendingCount}</span>}</button>
+        <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">📦 Archives</button>
       </div>
 
       {/* Phase tabs */}
