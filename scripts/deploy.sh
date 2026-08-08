@@ -31,8 +31,15 @@ echo "  📦 Installation dépendances frontend..."
 npm ci
 
 # ── 3. Install backend dependencies ──────────────────────────────────────
+# npm ci efface node_modules AVANT d'installer — s'il échoue au milieu
+# (réseau, interruption), il laisse node_modules à moitié vide et le
+# backend crashe avec ERR_MODULE_NOT_FOUND. Fallback : npm install
+# (tolérant, ne vide pas d'abord). Échec des deux → arrêt du déploiement.
 echo "  📦 Installation dépendances backend..."
-(cd backend && npm ci) || echo "  ⚠️  Erreur backend npm ci"
+if ! (cd backend && npm ci); then
+  echo "  ⚠️  npm ci backend a échoué — fallback npm install..."
+  (cd backend && npm install) || { echo "  ❌ ÉCHEC installation backend — déploiement annulé"; exit 1; }
+fi
 
 # ── 4. Build frontend ────────────────────────────────────────────────────
 echo "  🔨 Build frontend..."
