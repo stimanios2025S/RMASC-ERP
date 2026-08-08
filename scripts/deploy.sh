@@ -61,12 +61,16 @@ else
 fi
 pm2 save > /dev/null 2>&1 || true
 
-# ── 7. Wait and verify ───────────────────────────────────────────────────
+# ── 7. Wait and verify (poll up to 20s — PM2 restart + boot can exceed 4s) ──
 echo "  ⏳ Attente du démarrage..."
-sleep 4
+HEALTH=""
+for i in $(seq 1 20); do
+  HEALTH=$(curl -s http://localhost:4001/api/health 2>/dev/null || true)
+  if [ -n "$HEALTH" ]; then break; fi
+  sleep 1
+done
 echo ""
 echo "  ── Vérification ──"
-HEALTH=$(curl -s http://localhost:4001/api/health 2>/dev/null || echo '{"error":"curl failed"}')
 echo "$HEALTH" | python3 -m json.tool 2>/dev/null || echo "$HEALTH"
 
 # If uptime is >30s, the new process didn't start — force restart via PM2
