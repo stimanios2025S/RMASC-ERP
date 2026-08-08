@@ -13,10 +13,11 @@ export const rateLimitLogin = rateLimit({
   legacyHeaders: false,
 })
 
-// ─── API générale rate limiter: 200 requêtes par minute ─────────────────
+// ─── API générale rate limiter: 1000 requêtes par minute ────────────────
+// 1000/min avoids false blocks with multiple open tabs polling + SSE.
 export const rateLimitApi = rateLimit({
   windowMs: 60_000,
-  max: 200,
+  max: 1000,
   message: { error: 'Trop de requêtes. Réessayez dans 60 secondes.' },
   standardHeaders: true,
   legacyHeaders: false,

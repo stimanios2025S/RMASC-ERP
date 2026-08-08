@@ -63,25 +63,25 @@ export default function RoadmapPage({ orders, onBack }: Props) {
   return (
     <div className="flex-1 overflow-y-auto bg-white/[0.04]">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-white/[0.04] border-b border-white/10 px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-4">
+      <div className="sticky top-0 z-20 bg-white/[0.04] border-b border-white/10 px-3 md:px-6 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between shadow-sm">
+        <div className="flex items-center gap-3 min-w-0">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 text-white/60">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-slate-100 text-white/60 flex-shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
             </button>
           )}
-          <h1 className="text-lg font-extrabold text-white">🚀 Roadmap Production</h1>
-          <span className="text-xs text-white font-mono">{orders.length} commandes</span>
+          <h1 className="text-base md:text-lg font-extrabold text-white truncate">🚀 Roadmap Production</h1>
+          <span className="text-xs text-white font-mono flex-shrink-0">{orders.length} commandes</span>
         </div>
-        <div className="relative">
+        <div className="relative w-full md:w-auto">
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Rechercher par série ou client..."
-            className="w-60 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-sm text-white placeholder:text-white focus:outline-none focus:ring-2 focus:ring-primary-200" />
+            className="w-full md:w-60 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-sm text-white placeholder:text-white focus:outline-none focus:ring-2 focus:ring-primary-200" />
         </div>
       </div>
 
       {/* KPI cards — dark theme consistent */}
-      <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="px-3 md:px-6 py-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         {[
           { label: 'Total', value: total, color: 'text-white', bg: 'bg-slate-800/60 border border-white/10' },
           { label: 'En cours', value: enCours, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border border-cyan-500/20' },
@@ -96,7 +96,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
       </div>
 
       {/* Filter pills */}
-      <div className="px-6 pb-3 flex items-center gap-2 flex-wrap">
+      <div className="px-3 md:px-6 pb-3 flex items-center gap-2 flex-wrap">
         <button onClick={() => setFilterStatus('all')}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterStatus === 'all' ? 'bg-slate-800 text-white' : 'bg-white/[0.04] border border-white/10 text-white/60 hover:bg-white/[0.04]'}`}>
           Tous
@@ -113,7 +113,7 @@ export default function RoadmapPage({ orders, onBack }: Props) {
       </div>
 
       {/* Roadmap cards */}
-      <div className="px-6 pb-8 space-y-3">
+      <div className="px-3 md:px-6 pb-8 space-y-3">
         {filtered.length === 0 ? (
           <div className="text-center py-12 text-sm text-white">Aucune commande trouvée.</div>
         ) : (

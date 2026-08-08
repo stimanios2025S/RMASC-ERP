@@ -164,11 +164,11 @@ export default function InvoicingPage({ onBack }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-slate-950 p-6 print:p-0 print:bg-white">
-        <div className="max-w-7xl mx-auto flex gap-6 print:block print:max-w-none">
+      <div className="flex-1 overflow-y-auto bg-slate-950 p-3 md:p-6 print:p-0 print:bg-white">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 md:gap-6 print:block print:max-w-none">
 
           {/* ── LEFT PANEL ───────────────────────────────────────────────── */}
-          <div className="w-80 flex-shrink-0 space-y-5 print:hidden">
+          <div className="w-full lg:w-80 flex-shrink-0 space-y-5 print:hidden">
             {/* Order selector */}
             <div className="bg-slate-800/70 rounded-2xl p-5 border border-white/5 shadow-lg">
               <h3 className="text-xs font-bold uppercase tracking-wider text-white mb-3">Commande</h3>
@@ -244,7 +244,7 @@ export default function InvoicingPage({ onBack }: Props) {
               ) : (
                 <>
                   {/* HEADER */}
-                  <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-8 py-6 print:bg-slate-900">
+                  <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-4 md:px-8 py-6 print:bg-slate-900">
                     <div className="flex items-center justify-between">
                       <div>
                         <h2 className="text-xl font-extrabold text-white tracking-tight">
@@ -260,7 +260,7 @@ export default function InvoicingPage({ onBack }: Props) {
                   </div>
 
                   {/* METADATA */}
-                  <div className="px-8 py-4 border-b border-white/5 flex items-center justify-between text-xs">
+                  <div className="px-4 md:px-8 py-4 border-b border-white/5 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-xs">
                     <div className="space-y-1">
                       <p><span className="font-medium text-white/80">Client:</span> <span className="text-white">{selectedOrder.clientName}</span></p>
                       <p><span className="font-medium text-white/80">Ville:</span> <span className="text-white">{selectedOrder.clientCity}</span></p>
@@ -273,7 +273,7 @@ export default function InvoicingPage({ onBack }: Props) {
                   </div>
 
                   {/* TABLEAU DÉTAILLÉ — EDITABLE */}
-                  <div className="px-8 py-5">
+                  <div className="px-4 md:px-8 py-5">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-bold text-white">Articles & Équipements</h3>
                       <span className="text-[10px] text-white font-mono">{serialForDisplay}</span>
@@ -351,10 +351,10 @@ export default function InvoicingPage({ onBack }: Props) {
                   </div>
 
                   {/* TOTAL */}
-                  <div className="px-8 pb-5">
+                  <div className="px-4 md:px-8 pb-5">
                     <hr className="border-white/10 mb-3" />
                     <div className="flex justify-end">
-                      <div className="w-80 space-y-2">
+                      <div className="w-full sm:w-80 space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-semibold text-white">Total Production</span>
                           <span className="font-bold text-white font-mono">{fmt(totals.prodWithoutTransport)}</span>
@@ -387,8 +387,8 @@ export default function InvoicingPage({ onBack }: Props) {
                   </div>
 
                   {/* FOOTER */}
-                  <div className="px-8 py-5 border-t border-white/5 bg-white/[0.02] print:bg-gray-50/50">
-                    <div className="flex items-start justify-between">
+                  <div className="px-4 md:px-8 py-5 border-t border-white/5 bg-white/[0.02] print:bg-gray-50/50">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
                       <div className="space-y-1 text-[10px] text-white">
                         <p className="font-semibold text-white/80 text-xs">Notes & Conditions</p>
                         <p>• Prix modifiables par l'administrateur — calcul automatique</p>

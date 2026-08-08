@@ -143,7 +143,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-800/60">
+        <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-white/5 bg-slate-800/60">
           <button onClick={() => setPreviewFile(null)}
             className="flex items-center gap-2 text-sm font-medium text-white hover:text-white transition-all">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -155,8 +155,8 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
         </div>
 
         {/* Preview content */}
-        <div className="flex-1 overflow-y-auto bg-slate-950 p-6 flex items-center justify-center">
-          <div className="max-w-lg w-full bg-slate-800/70 rounded-2xl border border-white/5 shadow-lg p-8 space-y-6">
+        <div className="flex-1 overflow-y-auto bg-slate-950 p-3 md:p-6 flex items-center justify-center">
+          <div className="max-w-lg w-full bg-slate-800/70 rounded-2xl border border-white/5 shadow-lg p-4 md:p-8 space-y-6">
             {/* File icon */}
             <div className="flex justify-center">
               <div className="w-24 h-24 rounded-2xl bg-amber-500/10 flex items-center justify-center text-4xl">
@@ -219,15 +219,15 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-800/60">
+      <div className="flex items-center justify-between gap-2 px-3 md:px-6 py-3 border-b border-white/5 bg-slate-800/60">
         <button onClick={onBack}
-          className="flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition-all">
+          className="flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition-all flex-shrink-0">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Retour
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-white/80">Bureau d'Etude — File Vault</span>
-          {engineerName && <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-semibold">{engineerName}</span>}
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-white/80 truncate">Bureau d'Etude — File Vault</span>
+          {engineerName && <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-semibold flex-shrink-0">{engineerName}</span>}
         </div>
       </div>
 
@@ -239,7 +239,7 @@ Reference commande: ${getOrderInfo(file.orderId)?.serialNumber || 'N/A'}`
       )}
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 p-6">
+      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 p-3 md:p-6">
         <div className="max-w-6xl mx-auto space-y-6">
 
           {/* KPI Cards */}

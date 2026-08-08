@@ -109,5 +109,12 @@ orderSchema.virtual('cadSubmissions', {
 orderSchema.index({ status: 1, createdAt: -1 })   // Status filters + sort
 orderSchema.index({ createdAt: -1 })               // Recent orders
 orderSchema.index({ clientName: 1 })               // Search by client
+// ── Aggregation indexes (dashboard stats $group stages) ──────────────────
+orderSchema.index({ priority: 1 })                 // getDashboardStats priority breakdown
+orderSchema.index({ typeCabine: 1 })               // getDashboardStats cabin type breakdown
+orderSchema.index({ lifecycleStage: 1 })           // getDashboardStats lifecycle pipeline
+orderSchema.index({ completedAt: 1 })              // avg cycle time + trends
+orderSchema.index({ engineeredBy: 1 })             // getOrderMetrics per-engineer
+orderSchema.index({ status: 1 })                   // status-only filters (archives, counts)
 
 export default mongoose.model('Order', orderSchema)

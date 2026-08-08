@@ -293,17 +293,24 @@ export async function deleteFile(req, res) {
 }
 
 // GET /api/orders/archives
+// Escape regex metacharacters to prevent ReDoS from user input, and anchor
+// the serialNumber search as a prefix (uses the unique index) for speed.
+function escapeRegex(input) {
+  return String(input).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 export async function searchArchives(req, res) {
   try {
     const { search, status } = req.query
     const filter = { status: { $in: status ? [status] : ['LIVREE','VALIDEE','ANNULEE'] } }
     if (search) {
       const s = search.trim()
+      const safe = escapeRegex(s)
       filter.$or = [
-        { projectName: { $regex: s, $options: 'i' } },
-        { clientName: { $regex: s, $options: 'i' } },
-        { serialNumber: { $regex: s, $options: 'i' } },
-        { clientCity: { $regex: s, $options: 'i' } },
+        { serialNumber: { $regex: `^${safe}`, $options: 'i' } }, // anchored → uses unique index
+        { projectName: { $regex: safe, $options: 'i' } },
+        { clientName: { $regex: safe, $options: 'i' } },
+        { clientCity: { $regex: safe, $options: 'i' } },
       ]
     }
     const orders = await Order.find(filter).sort({ completedAt: -1, createdAt: -1 }).limit(200)
@@ -513,17 +520,24 @@ export async function deleteOrder(req, res) {
 // DELETE /api/orders/admin/cleanup-all — DELETE ALL orders (admin only, full cascade)
 export async function deleteAllOrders(req, res) {
   try {
-    const allOrders = await Order.find({}).select('serialNumber files').lean()
     let totalFiles = 0
 
-    // 1. Delete physical files from disk for every order
-    for (const order of allOrders) {
-      for (const file of (order.files || [])) {
-        if (file.path) {
-          const absPath = path.isAbsolute(file.path) ? file.path : path.join(UPLOADS_DIR, file.path)
-          if (fs.existsSync(absPath)) try { fs.unlinkSync(absPath); totalFiles++ } catch {}
+    // 1. Delete physical files from disk for every order — batched to avoid
+    //    loading the whole collection into memory at once.
+    const BATCH = 200
+    let skip = 0
+    let batch = await Order.find({}).select('serialNumber files').lean().skip(skip).limit(BATCH)
+    while (batch.length > 0) {
+      for (const order of batch) {
+        for (const file of (order.files || [])) {
+          if (file.path) {
+            const absPath = path.isAbsolute(file.path) ? file.path : path.join(UPLOADS_DIR, file.path)
+            if (fs.existsSync(absPath)) try { fs.unlinkSync(absPath); totalFiles++ } catch {}
+          }
         }
       }
+      skip += BATCH
+      batch = await Order.find({}).select('serialNumber files').lean().skip(skip).limit(BATCH)
     }
 
     // 2. Cascade delete ALL related data
@@ -556,7 +570,7 @@ export async function exportOrders(req, res) {
   try {
     const orders = await Order.find()
       .select('serialNumber clientName clientPhone clientCity typeMotorisation status priority createdAt totalCostDZD salePriceDZD')
-      .sort({ createdAt: -1 }).lean()
+      .sort({ createdAt: -1 }).limit(20000).lean()
     const head = ['Serie','Client','Telephone','Ville','Motorisation','Statut','Priorite','Cree le','Cout DZD','Prix DZD']
     const rows = orders.map(o => [o.serialNumber,`"${o.clientName||''}"`,o.clientPhone||'',o.clientCity,o.typeMotorisation,o.status,o.priority||'NORMAL',o.createdAt?new Date(o.createdAt).toISOString().split('T')[0]:'',o.totalCostDZD||0,o.salePriceDZD||0])
     const csv = '﻿' + [head.join(','),...rows.map(r=>r.join(','))].join('\n')

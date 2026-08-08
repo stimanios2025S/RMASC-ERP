@@ -1,15 +1,33 @@
-import { useState } from 'react'
-import Dashboard from './components/Dashboard'
-import IngenieurPortal from './components/IngenieurPortal'
-import ProductionWorkspace from './components/ProductionWorkspace'
-import StockWorkspace from './components/StockWorkspace'
+import { useState, lazy, Suspense } from 'react'
 import LoginScreen from './components/LoginScreen'
 import type { PortalSession } from './data/portalUsers'
 import { getSession, initPortalUsers, logout } from './data/portalUsers'
 import { ToastProvider } from './components/ui/Toast'
 
+// ═══ LAZY PORTALS — each role only downloads ITS portal chunk ════════════
+// Big win: an admin never downloads Stock/Ingénieur bundles, and vice-versa.
+const Dashboard = lazy(() => import('./components/Dashboard'))
+const IngenieurPortal = lazy(() => import('./components/IngenieurPortal'))
+const ProductionWorkspace = lazy(() => import('./components/ProductionWorkspace'))
+const StockWorkspace = lazy(() => import('./components/StockWorkspace'))
+
 // ═══ INIT ────────────────────────────────────────────────────────────────
 initPortalUsers()
+
+function PortalLoading() {
+  return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#020617' }}>
+      <div style={{ textAlign: 'center', color: '#e2e8f0', fontFamily: 'sans-serif' }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🏢</div>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>RMASC FACTORY</div>
+        <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid rgba(251,146,60,.3)', borderTopColor: '#f97316', animation: 'spin 1s linear infinite' }} />
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    </div>
+  )
+}
 
 export default function App() {
   const [session, setSession] = useState<PortalSession | null>(() => getSession())
@@ -45,5 +63,9 @@ export default function App() {
     portal = <LoginScreen onLogin={handleLogin} />
   }
 
-  return <ToastProvider>{portal}</ToastProvider>
+  return (
+    <ToastProvider>
+      <Suspense fallback={<PortalLoading />}>{portal}</Suspense>
+    </ToastProvider>
+  )
 }

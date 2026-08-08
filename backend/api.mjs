@@ -41,7 +41,7 @@ import {
   createPart, listActiveParts, listAllParts, updatePartStatus, deletePart,
 } from './src/controllers/parts.js'
 import { sendWhatsApp } from './src/controllers/notifications.js'
-import { subscribe, sendEvent } from './src/controllers/realtime.js'
+import { subscribe, sendEvent, issueSSEToken } from './src/controllers/realtime.js'
 import { getAuditLogs, getAuditActions } from './src/controllers/audit.js'
 import {
   getDashboardStats, getOrderMetrics, getStockKPIs, getInvoicingStats, getEngineerStats, getOrderTrends,
@@ -78,9 +78,9 @@ app.use('/api', (req, res, next) => {
   next()
 })
 
-// ─── Request timeout (30s) ──────────────────────────────────────────────
+// ─── Request timeout (20s) ──────────────────────────────────────────────
 app.use((req, res, next) => {
-  res.setTimeout(30000, () => {
+  res.setTimeout(20000, () => {
     console.warn(`  ⏰ Timeout: ${req.method} ${req.path}`)
     res.status(504).json({ error: 'La requête a expiré. Veuillez réessayer.' })
   })
@@ -206,6 +206,13 @@ app.get('/api/uploads/:filename', authenticate, (req, res) => {
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ error: 'Fichier introuvable.' })
   }
+  // ETag + 1h cache so repeat downloads don't re-transfer the whole file
+  const stat = fs.statSync(filePath)
+  const etag = `"${stat.mtimeMs}-${stat.size}"`
+  if (req.headers['if-none-match'] === etag) return res.status(304).end()
+  res.setHeader('ETag', etag)
+  res.setHeader('Cache-Control', 'public, max-age=3600')
+  res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`)
   res.sendFile(filePath)
 })
 app.post('/api/notifications/whatsapp', authenticate, sendWhatsApp)
@@ -213,6 +220,7 @@ app.post('/api/notifications/whatsapp', authenticate, sendWhatsApp)
 // Real-time SSE
 app.get('/api/realtime/subscribe', authenticate, subscribe)
 app.post('/api/realtime/broadcast', authenticate, requireAdmin, sendEvent)
+app.post('/api/realtime/token', authenticate, issueSSEToken) // short-lived SSE token (15 min)
 
 // Audit Logs (admin only)
 app.get('/api/admin/audit-logs', authenticate, requireAdmin, getAuditLogs)

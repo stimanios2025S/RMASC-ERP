@@ -76,20 +76,20 @@ export default function LifecyclePipeline({ onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
+      <div className="flex items-center justify-between gap-2 px-3 md:px-6 py-3 border-b border-white/5 bg-white/[0.03]">
         <button onClick={onBack}
-          className="flex items-center gap-2 text-sm font-medium text-white hover:text-white transition-all">
+          className="flex items-center gap-2 text-sm font-medium text-white hover:text-white transition-all flex-shrink-0">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           Retour au Tableau de bord
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-white">Cycle de Vie — Pipeline</span>
-          <span className="text-[10px] bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded-full font-semibold">{orders.length} commandes</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-white truncate">Cycle de Vie — Pipeline</span>
+          <span className="text-[10px] bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded-full font-semibold flex-shrink-0">{orders.length} commandes</span>
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto bg-slate-950 p-6">
+      <div className="flex-1 overflow-y-auto bg-slate-950 p-3 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
 
           {/* Pipeline Kanban-style stage cards */}
@@ -112,7 +112,7 @@ export default function LifecyclePipeline({ onBack }: Props) {
 
           {/* Master audit log table */}
           <div className="bg-slate-800/70 rounded-2xl border border-white/5 overflow-hidden shadow-lg">
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+            <div className="px-3 md:px-6 py-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">
                 {filterStage === 'all' ? 'Toutes les commandes' : PIPELINE_STAGES.find(s => s.key === filterStage)?.label || 'Commandes'}
               </h3>

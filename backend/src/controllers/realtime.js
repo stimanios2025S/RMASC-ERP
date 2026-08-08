@@ -2,9 +2,25 @@
 // Server-Sent Events pour notifications instantanées.
 // Plus léger que WebSocket, compatible Cloudflare Tunnel.
 
+import jwt from 'jsonwebtoken'
+
 // Stockage des clients SSE connectés
 const clients = new Map()
 let clientIdCounter = 0
+
+// ─── Issue a SHORT-LIVED SSE token (15 min) ─────────────────────────────
+// The full JWT is never exposed in the SSE URL — only this short token,
+// which carries the same identity claims for role-targeted broadcasts.
+export function issueSSEToken(req, res) {
+  try {
+    const token = jwt.sign(
+      { userId: req.user.userId, name: req.user.name, role: req.user.role, sse: true },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    )
+    res.json({ token, expiresIn: 900 })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+}
 
 // ─── GET /api/realtime/subscribe — Client SSE ───────────────────────────
 export function subscribe(req, res) {
@@ -135,5 +151,31 @@ export function notifyProductionPhaseChanged(orderId, serialNumber, productionPh
     productionPhase,
     updatedBy,
     message: `Phase production mise à jour: ${serialNumber} → ${productionPhase}`,
+  })
+}
+
+// ─── Standalone Parts real-time events ─────────────────────────────────────
+export function notifyPartCreated(part) {
+  broadcast('part:created', {
+    id: part._id?.toString(),
+    partNumber: part.partNumber,
+    projectName: part.projectName,
+    material: part.material,
+    thickness: part.thickness,
+    quantity: part.quantity,
+    status: part.status,
+    createdBy: part.createdBy,
+    message: `Nouvelle pièce solo: ${part.partNumber} — ${part.projectName}`,
+  })
+}
+
+export function notifyPartStatusChanged(part, updatedBy) {
+  broadcast('part:status', {
+    id: part._id?.toString(),
+    partNumber: part.partNumber,
+    projectName: part.projectName,
+    status: part.status,
+    updatedBy,
+    message: `Pièce solo ${part.partNumber} → ${part.status === 'TERMINE' ? 'TERMINÉE ✅' : part.status === 'EN_PRODUCTION' ? 'EN PRODUCTION 🔧' : part.status}`,
   })
 }

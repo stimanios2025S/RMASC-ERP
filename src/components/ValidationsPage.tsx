@@ -400,8 +400,8 @@ function CadReview({ order, onBack, onApprove, onReject, rejectReason, setReject
       </div>
 
       {showReject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 w-[420px] border border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 w-full max-w-[420px] border border-white/10 max-h-[90dvh] overflow-y-auto">
             <h3 className="text-base font-bold text-white mb-3">Motif du rejet</h3>
             <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
               placeholder="Décrivez la raison du rejet..." rows={3}

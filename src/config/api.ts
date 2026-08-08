@@ -4,9 +4,9 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 const API_PREFIX = '/api'
-const MAX_RETRIES = 2
+const MAX_RETRIES = 1
 const BASE_DELAY = 500
-const TIMEOUT_MS = 15000
+const TIMEOUT_MS = 10000
 
 export function resolveUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path

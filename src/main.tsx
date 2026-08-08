@@ -9,10 +9,9 @@ import * as Sentry from '@sentry/react'
 
 Sentry.init({
   dsn: 'https://1d656a08e00f5e785cf080aa537baebb@o4511808265977856.ingest.de.sentry.io/4511812636704848',
-  integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
-  tracesSampleRate: 0.3,
-  replaysSessionSampleRate: 0.05,
-  replaysOnErrorSampleRate: 0.5,
+  integrations: [Sentry.browserTracingIntegration()],
+  tracesSampleRate: 0.1,
+  // Replay disabled — it added ~500 KB to the bundle and hurt mobile load time.
   environment: 'production',
 })
 

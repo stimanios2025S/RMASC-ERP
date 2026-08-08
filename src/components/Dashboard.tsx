@@ -559,14 +559,21 @@ function RemindersCard({ orders }: { orders: OrderSummary[] }) {
   )
 }
 
-function ProjectList({ orders, onFiche }: { orders: OrderSummary[]; onFiche?: (id: string) => void }) {
+function ProjectList({ orders, onFiche, onViewAll }: { orders: OrderSummary[]; onFiche?: (id: string) => void; onViewAll?: () => void }) {
   const recent = orders.slice(0, 5)
   const iconColors = ['bg-amber-500/20 text-amber-400', 'bg-emerald-500/20 text-emerald-400', 'bg-blue-500/20 text-blue-400', 'bg-violet-500/20 text-violet-400', 'bg-rose-500/20 text-rose-400']
   return (
     <div className="bg-slate-800/70 rounded-2xl border border-white/10 p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-bold text-white">Commandes Récentes</h3>
-        <span className="text-xs text-white/60 bg-white/10 px-2.5 py-1 rounded-full">{orders.length} au total</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-white/60 bg-white/10 px-2.5 py-1 rounded-full">{orders.length} au total</span>
+          {orders.length > 5 && onViewAll && (
+            <button onClick={onViewAll} className="text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline transition-all">
+              Voir tout →
+            </button>
+          )}
+        </div>
       </div>
       <div className="space-y-1">
         {recent.length === 0 ? <p className="text-sm text-white/60 italic p-2.5">Aucune commande.</p> : recent.map((order, i) => (
@@ -894,7 +901,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     }
   }, [session.name])
 
-  useEffect(() => { const t = setTimeout(() => setShowAgent(true), 2000); requestNotificationPermission(); return () => clearTimeout(t) }, [])
+  useEffect(() => { requestNotificationPermission() }, [])
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setShowSmartSearch(p => !p) }
@@ -915,33 +922,22 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
   useEffect(() => {
     let cancelled = false
     async function loadLight() {
-      // Lightweight poll: only fetch stats (aggregation), NOT full orders list
+      // Lightweight poll: only fetch stats (aggregation), NOT full orders list.
+      // No /health ping — it does a real MongoDB ping() every call.
       // Orders list is loaded on demand to save bandwidth and DB CPU.
-      try {
-        const health: any = await apiFetch('/health')
-        if (cancelled) return
-        if (health?.status === 'ok' || health?.status === 'degraded') {
-          setApiOnline(true)
-          setApiError(null)
-        } else {
-          setApiOnline(false)
-          setApiError(health?.databaseError || 'Backend injoignable')
-          return
-        }
-      } catch {
-        if (cancelled) return
-        setApiOnline(false)
-        setApiError('Impossible de contacter le serveur.')
-        return
-      }
-
-      // ── Fetch stats only (fast aggregation, no full document load) ───
       try {
         const liveStats: DashboardStats = await apiFetch('/stats/dashboard')
         if (cancelled) return
         setStats(liveStats)
         setStatsLoading(false)
-      } catch { if (cancelled) return; setStatsLoading(false) }
+        setApiOnline(true)
+        setApiError(null)
+      } catch {
+        if (cancelled) return
+        setApiOnline(false)
+        setApiError('Impossible de contacter le serveur.')
+        setStatsLoading(false)
+      }
     }
 
     async function loadFull() {
@@ -972,8 +968,8 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
     // First load: full (orders + stats)
     loadFull()
 
-    // Ongoing: lightweight (stats only) every 15s
-    const iv = setInterval(loadLight, 15000)
+    // Ongoing: lightweight (stats only) every 30s — SSE covers real-time changes
+    const iv = setInterval(loadLight, 30000)
 
     // On focus: full reload
     const onFocus = () => { if (!cancelled) loadFull() }
@@ -1153,7 +1149,7 @@ export default function Dashboard({ onLogout, session, onSessionUpdate }: Props)
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 stagger-children">
             <AnalyticsChart orders={orders} />
             <RemindersCard orders={orders} />
-            <ProjectList orders={orders} onFiche={id => { setFicheOrderId(id); persistView('fiche') }} />
+            <ProjectList orders={orders} onFiche={id => { setFicheOrderId(id); persistView('fiche') }} onViewAll={() => persistView('commandes')} />
           </div>
 
           {/* Bottom Row — Analytics */}

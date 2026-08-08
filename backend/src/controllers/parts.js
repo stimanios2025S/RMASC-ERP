@@ -1,6 +1,11 @@
 // ─── RMASC FACTORY — Standalone Parts Controller ─────────────────────────
+import path from 'path'
+import fs from 'fs'
 import StandalonePart from '../models/StandalonePart.js'
 import { createPartSchema, updatePartStatusSchema } from '../schemas/validation.js'
+import { notifyPartCreated, notifyPartStatusChanged } from './realtime.js'
+
+const UPLOADS_DIR = path.resolve(process.argv[1] ? path.dirname(process.argv[1]) : '.', '..', 'uploads')
 
 async function generatePartSerial() {
   const now = new Date()
@@ -41,6 +46,8 @@ export async function createPart(req, res) {
       cadFileUrl: req.file ? `/api/uploads/${req.file.filename}` : undefined,
       fileMeta, status: 'EN_ATTENTE', createdBy: req.user.name || req.user.userId,
     })
+    // ⚡ Notify Production in real-time (SSE) — new solo part available
+    notifyPartCreated(part)
     res.status(201).json({
       message: 'Pièce solo créée.',
       part: { id: part._id, partNumber: part.partNumber, projectName: part.projectName, material: part.material, thickness: part.thickness, quantity: part.quantity, cadFileUrl: part.cadFileUrl, status: part.status, createdAt: part.createdAt },
@@ -71,6 +78,8 @@ export async function updatePartStatus(req, res) {
     const part = await StandalonePart.findByIdAndUpdate(req.params.id, { status: parsed.data.status }, { new: true })
       .select('partNumber projectName material thickness quantity cadFileUrl status createdAt')
     if (!part) return res.status(404).json({ error: 'Pièce introuvable.' })
+    // ⚡ Notify Ingénieur 2 in real-time (SSE) — part started / finished
+    notifyPartStatusChanged(part, req.user?.name || 'Production')
     res.json({ message: `Statut mis à jour → ${parsed.data.status}`, part })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }

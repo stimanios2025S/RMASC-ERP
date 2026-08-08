@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { apiFetch } from '../config/api'
 import type { PortalSession } from '../data/portalUsers'
+import { useSSE } from '../hooks/useSSE'
 
 interface StandalonePart {
   _id: string
@@ -116,6 +117,15 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
     const iv = setInterval(loadParts, 10_000)
     return () => clearInterval(iv)
   }, [loadParts])
+
+  // ⚡ Real-time: refresh instantly when Production starts / finishes a part
+  const loadPartsRef = useRef(loadParts)
+  loadPartsRef.current = loadParts
+  useSSE(useCallback((event: { type: string; data: any }) => {
+    if (event.type === 'part:status' || event.type === 'part:created') {
+      loadPartsRef.current()
+    }
+  }, []))
 
   const handleSubmit = async () => {
     if (!projectName.trim()) {
@@ -411,6 +421,15 @@ function ProductionView({ onBack }: { onBack?: () => void }) {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) loadParts() })
     return () => { clearInterval(iv); window.removeEventListener('focus', onFocus) }
   }, [loadParts])
+
+  // ⚡ Real-time: refresh instantly when Ingénieur 2 submits a new part
+  const loadPartsRef = useRef(loadParts)
+  loadPartsRef.current = loadParts
+  useSSE(useCallback((event: { type: string; data: any }) => {
+    if (event.type === 'part:created' || event.type === 'part:status') {
+      loadPartsRef.current()
+    }
+  }, []))
 
   const updateStatus = async (id: string, newStatus: 'EN_PRODUCTION' | 'TERMINE') => {
     setUpdatingId(id)

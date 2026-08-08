@@ -41,6 +41,21 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showAgent, setShowAgent] = useState(false)
   const [showSmartSearch, setShowSmartSearch] = useState(false)
+  const [soloPendingCount, setSoloPendingCount] = useState(0)
+
+  // ⚡ Pièces Solo: pending count badge + real-time refresh
+  const loadSoloPending = useCallback(async () => {
+    try {
+      const parts: { status: string }[] = await apiFetch('/standalone-parts/active')
+      setSoloPendingCount(parts.filter(p => p.status === 'EN_ATTENTE').length)
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => { loadSoloPending() }, [loadSoloPending])
+  useEffect(() => {
+    const iv = setInterval(loadSoloPending, 30_000)
+    return () => clearInterval(iv)
+  }, [loadSoloPending])
 
   // ── Keyboard shortcuts ──────────────────────────────────────────────
   useEffect(() => {
@@ -62,9 +77,14 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   // ─── SSE real-time listener: auto-refresh when Dashboard deletes/updates orders ───
   const sseLoadRef = useRef({ loadOrders })
   sseLoadRef.current = { loadOrders }
+  const soloRef = useRef({ loadSoloPending })
+  soloRef.current = { loadSoloPending }
   useSSE(useCallback((event: { type: string; data: any }) => {
     if (event.type === 'order:created' || event.type === 'order:deleted' || event.type === 'order:status' || event.type === 'force:sync') {
       sseLoadRef.current.loadOrders()
+    }
+    if (event.type === 'part:created' || event.type === 'part:status') {
+      soloRef.current.loadSoloPending()
     }
   }, []))
 
@@ -137,10 +157,10 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
             {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
           </div>
         </header>
-        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0">
-          <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🏭 Production</button>
-          <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🔧 Pièces Solo</button>
-          <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white">📦 Archives</button>
+        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+          <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🏭 Production</button>
+          <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
+          <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white whitespace-nowrap">📦 Archives</button>
         </div>
         <div className="flex-1 overflow-y-auto">
           <ArchiveOrders />
@@ -168,10 +188,10 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
             {session?.name && <span className="text-xs text-white/80 bg-white/[0.06] px-2.5 py-1 rounded">{session.name}</span>}
           </div>
         </header>
-        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0">
-          <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🏭 Production</button>
-          <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white">🔧 Pièces Solo</button>
-          <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">📦 Archives</button>
+        <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+          <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">🏭 Production</button>
+          <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white whitespace-nowrap">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
+          <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white whitespace-nowrap">📦 Archives</button>
         </div>
         <div className="flex-1 overflow-hidden">
           <PiecesSoloWorkspace onBack={() => setTab('production')} session={session} />
@@ -210,10 +230,10 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       </header>
 
       {/* Tabs */}
-      <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0">
-        <button onClick={() => setTab('production')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${tab === 'production' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🏭 Production</button>
-        <button onClick={() => setTab('pieces-solo')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${tab === 'pieces-solo' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🔧 Pièces Solo</button>
-        <button onClick={() => setTab('archives')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all ${tab === 'archives' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>📦 Archives</button>
+      <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-6 flex gap-0 overflow-x-auto">
+        <button onClick={() => setTab('production')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'production' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🏭 Production</button>
+        <button onClick={() => setTab('pieces-solo')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'pieces-solo' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
+        <button onClick={() => setTab('archives')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${tab === 'archives' ? 'border-amber-400 text-white' : 'border-transparent text-white/60 hover:text-white'}`}>📦 Archives</button>
       </div>
 
       {/* Phase tabs */}

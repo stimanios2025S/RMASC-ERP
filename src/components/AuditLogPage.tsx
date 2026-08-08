@@ -100,7 +100,7 @@ export default function AuditLogPage({ onBack }: { onBack?: () => void }) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-800/60">
+      <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-white/5 bg-slate-800/60">
         <div className="flex items-center gap-3">
           {onBack && (
             <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white">
@@ -113,15 +113,15 @@ export default function AuditLogPage({ onBack }: { onBack?: () => void }) {
       </div>
 
       {/* Filters */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-6 py-3 border-b border-white/5 bg-white/[0.02] flex-wrap">
+      <div className="flex-shrink-0 flex items-center gap-3 px-3 md:px-6 py-3 border-b border-white/5 bg-white/[0.02] flex-wrap">
         <select value={filterAction} onChange={e => { setFilterAction(e.target.value); setPage(1) }}
-          className="h-9 px-3 rounded-xl border border-white/10 bg-slate-800/60 text-xs text-white/80">
+          className="h-9 px-3 rounded-xl border border-white/10 bg-slate-800/60 text-xs text-white/80 max-w-[160px]">
           <option value="">Toutes actions</option>
           {actions.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
         <input type="text" value={filterUser} onChange={e => { setFilterUser(e.target.value); setPage(1) }}
           placeholder="🔍 Filtre utilisateur..."
-          className="h-9 px-3 rounded-xl border border-white/10 bg-slate-800/60 text-xs text-white/80 w-48" />
+          className="h-9 px-3 rounded-xl border border-white/10 bg-slate-800/60 text-xs text-white/80 w-full sm:w-48 min-w-[120px]" />
         <select value={filterDays} onChange={e => { setFilterDays(e.target.value); setPage(1) }}
           className="h-9 px-3 rounded-xl border border-white/10 bg-slate-800/60 text-xs text-white/80">
           <option value="1">24h</option>
@@ -185,7 +185,7 @@ export default function AuditLogPage({ onBack }: { onBack?: () => void }) {
       </div>
 
       {/* Pagination */}
-      <div className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-t border-white/5 bg-white/[0.02]">
+      <div className="flex-shrink-0 flex items-center justify-between px-3 md:px-6 py-3 border-t border-white/5 bg-white/[0.02]">
         <span className="text-xs text-white/60">Page {page} / {totalPages}</span>
         <div className="flex items-center gap-2">
           <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
