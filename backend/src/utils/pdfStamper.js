@@ -19,6 +19,44 @@ function resolveFilePath(filePath) {
   return path.isAbsolute(filePath) ? filePath : path.join(UPLOADS_DIR, filePath)
 }
 
+// ─── Cachets personnels des administrateurs ────────────────────────────────
+// Chaque admin a SON cachet PNG dans /public (racine projet).
+// Les fichiers réels portent une double extension (ex: salim.png.png).
+// Résolution : nom de l'admin (insensible à la casse) → fichier dédié,
+// sinon fallback sur le cachet générique cachet.png.png.
+const PUBLIC_DIR = path.resolve(__dirname, '../../..', 'public')
+
+const ADMIN_STAMPS = [
+  { keys: ['salim'],  file: 'salim' },     // Salim
+  { keys: ['ghani'],  file: 'elghani' },   // Chergui El Ghani / Ghani
+  { keys: ['nassim'], file: 'nassim' },    // Chergui Nassim
+  { keys: ['aziz'],   file: 'elazziz' },   // Chergui El Aziz / El Aziz
+]
+
+function findAdminStamp(adminName) {
+  const n = String(adminName || '').toLowerCase()
+  let chosen = null
+  for (const s of ADMIN_STAMPS) {
+    if (s.keys.some(k => n.includes(k))) { chosen = s; break }
+  }
+  const candidates = []
+  if (chosen) {
+    candidates.push(
+      path.join(PUBLIC_DIR, `${chosen.file}.png.png`),
+      path.join(PUBLIC_DIR, `${chosen.file}.png`),
+    )
+  }
+  // Fallback : cachet générique
+  candidates.push(
+    path.join(PUBLIC_DIR, 'cachet.png.png'),
+    path.join(PUBLIC_DIR, 'cachet.png'),
+  )
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c
+  }
+  return null
+}
+
 // ─── Stamp Layout Constants ────────────────────────────────────────────────
 // All measurements in PDF points (1 pt = 1/72 inch). A4 = 595 × 842 pts.
 
@@ -102,10 +140,49 @@ export async function stampPdf(filePath, metadata = {}) {
     const approvedBy = metadata.approvedBy || 'Administrateur RMASC'
     const serial     = metadata.serial || ''
 
+    // ── 3b. Cachet personnel de l'admin (image PNG) ───────────────────────
+    // Si le cachet image existe → il REMPLACE le cadre dessiné. Le nom de
+    // l'admin + la date restent tracés au-dessus du cachet.
+    let stampImage = null
+    const stampImagePath = findAdminStamp(approvedBy)
+    if (stampImagePath) {
+      try {
+        const stampBytes = fs.readFileSync(stampImagePath)
+        stampImage = await pdfDoc.embedPng(stampBytes).catch(() => pdfDoc.embedJpg(stampBytes))
+      } catch {
+        stampImage = null
+      }
+    }
+
     // ── 4. Draw stamp on every page ───────────────────────────────────────
     for (const page of pages) {
       const { width: pageW, height: pageH } = page.getSize()
 
+      // ── Cachet IMAGE (coin bas droit, comme les fichiers laser) ─────────
+      if (stampImage) {
+        const margin = 24
+        const targetWidth = 150
+        const aspect = stampImage.height / stampImage.width
+        const w = Math.min(targetWidth, pageW * 0.35)
+        const h = w * aspect
+        const x = pageW - w - margin
+        const y = margin
+        page.drawImage(stampImage, { x, y, width: w, height: h })
+
+        // Traçabilité au-dessus du cachet
+        const label = `APPROUVÉ — ${approvedBy} — ${dateStr}${serial ? ` — Réf: ${serial}` : ''}`
+        const labelWidth = fontBold.widthOfTextAtSize(label, 7)
+        page.drawText(label, {
+          x: x + w - labelWidth,
+          y: Math.min(y + h + 8, pageH - 10),
+          size: 7,
+          font: fontBold,
+          color: rgb(STAMP.colors.border.r, STAMP.colors.border.g, STAMP.colors.border.b),
+        })
+        continue
+      }
+
+      // ── Cachet DESSINÉ (fallback si aucune image trouvée) ───────────────
       // Adapt X position for different page widths
       const boxX = pageW - STAMP.box.width - 22  // 22pt ≈ 8mm right margin
 
