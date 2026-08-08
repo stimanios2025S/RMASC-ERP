@@ -16,7 +16,7 @@ import { useSSE } from '../hooks/useSSE'
 import FileViewer from './FileViewer'
 
 interface LaserFileRow {
-  _id: string
+  id: string
   orderId?: string | null
   orderSerial?: string | null
   orderClient?: string | null
@@ -188,7 +188,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
   const handleDelete = async (f: LaserFileRow) => {
     if (!window.confirm(`🗑️ Supprimer "${f.projectName}" ?\nLe fichier sera retiré pour vous ET pour la Production.`)) return
     try {
-      await apiFetch(`/laser-files/${f._id}`, { method: 'DELETE' })
+      await apiFetch(`/laser-files/${f.id}`, { method: 'DELETE' })
       setMessage({ type: 'success', text: `🗑️ ${f.projectName} supprimé.` })
       loadFiles()
     } catch (e: any) {
@@ -215,7 +215,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
       formData.append('pdfFile', newFile)
 
       const token = localStorage.getItem('rmasc_token')
-      const res = await fetch(`/api/laser-files/${replaceTarget._id}/replace`, {
+      const res = await fetch(`/api/laser-files/${replaceTarget.id}/replace`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
@@ -463,7 +463,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                         const badge = statusBadge(f.status)
                         const isApproved = f.status === 'APPROVED_LASER'
                         return (
-                          <tr key={f._id} className="hover:bg-white/[0.03] transition-colors">
+                          <tr key={f.id} className="hover:bg-white/[0.03] transition-colors">
                             <td className="px-5 py-3">
                               <button onClick={() => setPreview(f)} className="text-left group" title="Aperçu">
                                 <span className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">{f.projectName}</span>
@@ -598,10 +598,10 @@ function ProductionLaserView({ onBack }: { onBack?: () => void }) {
 
   const approve = async (f: LaserFileRow) => {
     if (!window.confirm(`🖨️ Approuver & Tamponner "${f.projectName}" ?\nLe cachet sera incrusté en bas à droite du PDF.`)) return
-    setApprovingId(f._id)
+    setApprovingId(f.id)
     setMessage(null)
     try {
-      const data = await apiFetch(`/laser-files/${f._id}/approve`, { method: 'POST' })
+      const data = await apiFetch(`/laser-files/${f.id}/approve`, { method: 'POST' })
       setMessage({ type: 'success', text: `✅ ${data.message}` })
       loadFiles()
     } catch (e: any) {
@@ -614,7 +614,7 @@ function ProductionLaserView({ onBack }: { onBack?: () => void }) {
   const handleDelete = async (f: LaserFileRow) => {
     if (!window.confirm(`🗑️ Supprimer "${f.projectName}" ?\nLe fichier sera retiré pour vous ET pour l'Ingénieur 2.`)) return
     try {
-      await apiFetch(`/laser-files/${f._id}`, { method: 'DELETE' })
+      await apiFetch(`/laser-files/${f.id}`, { method: 'DELETE' })
       setMessage({ type: 'success', text: `🗑️ ${f.projectName} supprimé.` })
       loadFiles()
     } catch (e: any) {
@@ -675,7 +675,7 @@ function ProductionLaserView({ onBack }: { onBack?: () => void }) {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {enAttente.map(f => (
-                  <div key={f._id} className="rounded-2xl p-5 shadow-lg border bg-amber-500/5 border-amber-500/20 flex flex-col">
+                  <div key={f.id} className="rounded-2xl p-5 shadow-lg border bg-amber-500/5 border-amber-500/20 flex flex-col">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-mono font-bold text-amber-400">{f.orderSerial || 'SANS COMMANDE'}</span>
                       <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/20">⏳ En Attente</span>
@@ -699,10 +699,10 @@ function ProductionLaserView({ onBack }: { onBack?: () => void }) {
                       </button>
                       <button
                         onClick={() => approve(f)}
-                        disabled={approvingId === f._id}
+                        disabled={approvingId === f.id}
                         className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-1.5"
                       >
-                        {approvingId === f._id ? (
+                        {approvingId === f.id ? (
                           <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Tamponnage en cours...</>
                         ) : (
                           <>🖨️ Approuver &amp; Tamponner</>
@@ -740,7 +740,7 @@ function ProductionLaserView({ onBack }: { onBack?: () => void }) {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {approuves.map(f => (
-                        <tr key={f._id} className="hover:bg-white/[0.03] transition-colors">
+                        <tr key={f.id} className="hover:bg-white/[0.03] transition-colors">
                           <td className="px-5 py-3">
                             <span className="text-sm font-bold text-white">{f.projectName}</span>
                             <p className="text-[10px] text-emerald-400">✅ {f.stampedFile?.originalname || 'PDF tamponné'}</p>
