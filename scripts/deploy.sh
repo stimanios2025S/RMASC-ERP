@@ -57,17 +57,18 @@ else
 fi
 sleep 2
 
-# ── 6. Relancer le backend via PM2 (SEUL patron — tue l'ancien proprement) ──
-# PM2 est le gestionnaire unique (comme OnSite) : plus de doublons nohup/systemd.
-# ── 6. Relancer le backend via PM2 (SEUL patron) ─────────────────────────
-# ecosystem.config.cjs contient PORT=4001 en dur → startOrRestart applique
-# le bon port à chaque fois, sans --update-env ni préfixe shell.
-# (.cjs requis : package.json est en "type": "module")
-echo "  ▶️  Démarrage du nouveau backend (PM2)..."
-pm2 startOrRestart /home/sarlrmasc/rmasc-erp/ecosystem.config.cjs
-pm2 save > /dev/null 2>&1 || true
+# ── 6. Relancer le backend via systemd (SEUL patron — survit au reboot) ──
+# Le service rmasc-erp.service lance `node api.mjs` avec PORT=4001 +
+# MONGODB_URI (les variables qui marchent, prouvé en production).
+# systemctl restart tue l'ancien et relance proprement, Restart=always.
+echo "  ▶️  Démarrage du nouveau backend (systemd)..."
+sudo systemctl restart rmasc-erp || {
+  echo "  ⚠️  systemctl restart a échoué — tentative daemon-reload + restart..."
+  sudo systemctl daemon-reload
+  sudo systemctl restart rmasc-erp
+}
 
-# ── 7. Wait and verify (poll up to 40s — PM2 restart + index build + boot) ──
+# ── 7. Wait and verify (poll up to 40s — boot + index build) ──────────────
 echo "  ⏳ Attente du démarrage (polling 40s max)..."
 HEALTH=""
 for i in $(seq 1 40); do
@@ -80,12 +81,12 @@ echo ""
 echo "  ── Vérification ──"
 echo "$HEALTH" | python3 -m json.tool 2>/dev/null || echo "$HEALTH"
 
-# If uptime is >30s, the new process didn't start — force restart via PM2
+# If uptime is >30s, the new process didn't start — force restart via systemd
 UPTIME=$(echo "$HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin).get('uptimeSeconds',''))" 2>/dev/null)
 if [ -n "$UPTIME" ] && [ "$UPTIME" -gt 30 ] 2>/dev/null; then
   echo ""
-  echo "  ⚠️  Ancien serveur encore actif (uptime=${UPTIME}s). Redémarrage forcé via PM2..."
-  pm2 startOrRestart /home/sarlrmasc/rmasc-erp/ecosystem.config.cjs
+  echo "  ⚠️  Ancien serveur encore actif (uptime=${UPTIME}s). Redémarrage forcé..."
+  sudo systemctl restart rmasc-erp
   sleep 4
   echo ""
   echo "  ── Vérification après force ──"
