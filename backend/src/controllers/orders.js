@@ -258,18 +258,20 @@ export async function downloadFile(req, res) {
 
     const stat = fs.statSync(absPath)
 
-    // ── Cache: Cloudflare edge + browser cache for 24h ─────────────────
-    //    This makes PDFs load instantly on repeat views via any domain.
+    // ── Cache: revalidation ONLY (no-cache + ETag) ─────────────────────
+    //    Le PDF est MODIFIÉ en place lors du tamponnage → un cache de 24h
+    //    (navigateur + Cloudflare) servirait l'ancienne version NON tamponnée.
+    //    no-cache = on stocke mais on REVALIDE à chaque requête : 304 si
+    //    inchangé (rapide), fichier frais dès qu'il est tamponné.
     const etag = `"${stat.mtimeMs}-${stat.size}"`
     if (req.headers['if-none-match'] === etag) return res.status(304).end()
 
     res.setHeader('Content-Disposition', `inline; filename="${file.originalname}"`)
     res.setHeader('Content-Type', file.mimetype || 'application/octet-stream')
     res.setHeader('Content-Length', stat.size)
-    // Cache-Control: public so Cloudflare edge caches it, s-maxage for CF, max-age for browser
-    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400')
-    res.setHeader('CDN-Cache-Control', 'public, max-age=86400')
-    res.setHeader('Cloudflare-CDN-Cache-Control', 'public, max-age=86400')
+    res.setHeader('Cache-Control', 'public, no-cache')
+    res.setHeader('CDN-Cache-Control', 'no-cache')
+    res.setHeader('Cloudflare-CDN-Cache-Control', 'no-cache')
     res.setHeader('ETag', etag)
     res.setHeader('Accept-Ranges', 'bytes')
 
@@ -368,25 +370,31 @@ export async function approvePlan(req, res) {
     order.approvedAt = now
     await order.save()
 
-    // ── Async stamping: respond IMMEDIATELY, stamp in background ──────
-    // This prevents 5-10 second delays while PDFs are being stamped.
-    stampOrderFiles(order, { approvedBy: adminName, approvedAt: now, serial: order.serialNumber })
-      .then(stampResult => {
-        Order.findByIdAndUpdate(order._id, {
-          isStamped: stampResult.stamped > 0,
-          stampedAt: now,
-          stampedBy: adminName,
-          stampResults: stampResult.results,
-        }).catch(() => {})
-        console.log(`  ✅ Stampé: ${stampResult.stamped}/${stampResult.total} fichiers`)
-      })
-      .catch(err => console.error('  ❌ Stamp échoué:', err.message))
+    // ── Stamp SYNCHRONOUSLY (comme les fichiers laser) ───────────────────
+    // Quand la réponse arrive, le PDF est DÉJÀ tamponné → l'admin voit son
+    // cachet personnel immédiatement. Pas de course entre la réponse et le
+    // tamponnage en arrière-plan.
+    let stampResult = { total: 0, stamped: 0, failed: 0, results: [] }
+    try {
+      stampResult = await stampOrderFiles(order, { approvedBy: adminName, approvedAt: now, serial: order.serialNumber })
+      console.log(`  ✅ Stampé: ${stampResult.stamped}/${stampResult.total} fichiers`)
+    } catch (err) {
+      console.error('  ❌ Stamp échoué:', err.message)
+    }
+
+    order.isStamped = stampResult.stamped > 0
+    order.stampedAt = now
+    order.stampedBy = adminName
+    order.stampResults = stampResult.results
+    await order.save().catch(() => {})
 
     res.json({
-      message: 'Plan approuvé.',
+      message: stampResult.stamped > 0
+        ? 'Plan approuvé & cachet appliqué.'
+        : 'Plan approuvé (aucun PDF à tamponner).',
       approvedBy: order.approvedBy,
       approvedAt: order.approvedAt,
-      isStampingInBackground: true,
+      stamp: { isStamped: order.isStamped, filesStamped: stampResult.stamped, filesTotal: stampResult.total },
     })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }

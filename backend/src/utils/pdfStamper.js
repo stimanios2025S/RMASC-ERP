@@ -13,7 +13,10 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // Resolve file paths stored in the DB (may be relative to the uploads directory)
-const UPLOADS_DIR = path.resolve(__dirname, '../../uploads')
+// ⚠️ Le dossier d'upload réel est à la RACINE du projet (/uploads), comme le
+// définissent api.mjs, orders.js et laserFiles.js. Ne PAS utiliser
+// backend/uploads (les fichiers relatifs ne seraient jamais trouvés).
+const UPLOADS_DIR = path.resolve(__dirname, '../../..', 'uploads')
 function resolveFilePath(filePath) {
   if (!filePath) return filePath
   return path.isAbsolute(filePath) ? filePath : path.join(UPLOADS_DIR, filePath)
