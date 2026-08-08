@@ -61,12 +61,13 @@ else
 fi
 pm2 save > /dev/null 2>&1 || true
 
-# ── 7. Wait and verify (poll up to 20s — PM2 restart + boot can exceed 4s) ──
-echo "  ⏳ Attente du démarrage..."
+# ── 7. Wait and verify (poll up to 40s — PM2 restart + index build + boot) ──
+echo "  ⏳ Attente du démarrage (polling 40s max)..."
 HEALTH=""
-for i in $(seq 1 20); do
+for i in $(seq 1 40); do
   HEALTH=$(curl -s http://localhost:4001/api/health 2>/dev/null || true)
   if [ -n "$HEALTH" ]; then break; fi
+  printf "."
   sleep 1
 done
 echo ""
