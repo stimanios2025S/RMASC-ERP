@@ -99,6 +99,27 @@
     max-height: var(--app-height, 100dvh);
   }
 
+  /* ── GARDE-FOU iOS UNIQUEMENT (iPhone/iPad WebKit) ───────────────────
+     Bug iOS 17 PWA "écran d'accueil" : les unités vh (et parfois dvh)
+     se calculent TROP GRANDES — elles incluent les zones cachées sous
+     l'encoche + la barre du bas → modales/panneaux coupés en bas.
+     Solution : sur iOS, chaque hauteur vh est plafonnée par la hauteur
+     EXACTE mesurée par JS (--app-height, voir index.html).
+     Desktop / Android : aucune de ces règles ne s'applique → AUCUN
+     changement visuel hors iPhone. ─────────────────────────────────── */
+  @supports (-webkit-touch-callout: none) {
+    .h-\[85vh\]        { height: calc(var(--app-height, 100dvh) * 0.85) !important; }
+    .h-\[90vh\]        { height: calc(var(--app-height, 100dvh) * 0.90) !important; }
+    .max-h-\[70vh\]    { max-height: calc(var(--app-height, 100dvh) * 0.70) !important; }
+    .max-h-\[80vh\]    { max-height: calc(var(--app-height, 100dvh) * 0.80) !important; }
+    .max-h-\[85dvh\]   { max-height: calc(var(--app-height, 100dvh) * 0.85) !important; }
+    .max-h-\[90vh\]    { max-height: calc(var(--app-height, 100dvh) * 0.90) !important; }
+    .min-h-\[40vh\]    { min-height: calc(var(--app-height, 100dvh) * 0.40) !important; }
+    .min-h-\[60vh\]    { min-height: calc(var(--app-height, 100dvh) * 0.60) !important; }
+    /* Styles inline "100vh" (splash, PDF plein écran, écrans d'erreur) */
+    [style*="100vh"]   { height: var(--app-height, 100dvh) !important; }
+  }
+
   /* ── Responsive table wrapper ──────────────────────────────────────── */
   .table-responsive {
     overflow-x: auto;

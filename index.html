@@ -4,19 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
 
-    <!-- iOS 17 PWA fix: hauteur pilotée par JS (window.innerHeight) — les unités
-         vh/dvh sont cassées en mode "écran d'accueil" sur iOS 17 (contenu coupé
-         en bas). Cette variable CSS garantit la hauteur EXACTE de l'écran. -->
+    <!-- iOS 17 PWA fix: hauteur pilotée par JS — les unités vh/dvh sont cassées
+         en mode "écran d'accueil" sur iOS 17 (contenu coupé en bas). Cette
+         variable CSS (--app-height) garantit la hauteur EXACTE de l'écran,
+         utilisée par .h-dvh et par le garde-fou iOS (index.css). -->
     <script>
       (function () {
-        function setAppHeight() {
-          var h = window.innerHeight
-          document.documentElement.style.setProperty('--app-height', h + 'px')
+        function measure() {
+          // visualViewport = hauteur réellement visible (encoche + barre du bas
+          // incluses dans le calcul quand viewport-fit=cover). innerHeight = repli.
+          var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight
+          document.documentElement.style.setProperty('--app-height', Math.round(h) + 'px')
         }
+        function setAppHeight() { measure() }
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeight)
         window.addEventListener('resize', setAppHeight)
         window.addEventListener('orientationchange', setAppHeight)
         window.addEventListener('load', setAppHeight)
         setAppHeight()
+        // iOS recalcule la hauteur APRÈS le load (barre Safari, clavier…) :
+        // re-mesure différée pour être sûr d'avoir la valeur finale.
+        setTimeout(setAppHeight, 150)
+        setTimeout(setAppHeight, 600)
       })()
     </script>
 
