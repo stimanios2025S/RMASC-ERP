@@ -38,21 +38,33 @@ export function subscribe(req, res) {
 
   console.log(`[SSE] Client ${clientId} connecté — ${req.user?.userId || 'anon'}`)
 
-  // Envoyer un événement de bienvenue
-  res.write(`event: connected\ndata: ${JSON.stringify({ clientId, message: 'Connecté au flux temps réel' })}\n\n`)
-
-  // Heartbeat toutes les 30s pour garder la connexion ouverte
-  const heartbeat = setInterval(() => {
-    try { res.write(`event: heartbeat\ndata: ${JSON.stringify({ time: new Date().toISOString() })}\n\n`) }
-    catch { clearInterval(heartbeat); clients.delete(clientId) }
-  }, 30_000)
-
-  // Nettoyage à la déconnexion
-  req.on('close', () => {
-    clearInterval(heartbeat)
+  // Nettoyage garanti UNE SEULE FOIS (close OU erreur — jamais les deux en double)
+  let cleaned = false
+  let heartbeat = null
+  const cleanup = () => {
+    if (cleaned) return
+    cleaned = true
+    if (heartbeat) clearInterval(heartbeat)
     clients.delete(clientId)
     console.log(`[SSE] Client ${clientId} déconnecté`)
-  })
+  }
+
+  // Envoyer un événement de bienvenue (si le write échoue → nettoyage immédiat)
+  try {
+    res.write(`event: connected\ndata: ${JSON.stringify({ clientId, message: 'Connecté au flux temps réel' })}\n\n`)
+  } catch { cleanup() }
+
+  // Heartbeat toutes les 30s pour garder la connexion ouverte
+  heartbeat = setInterval(() => {
+    if (res.writableEnded || res.destroyed) return cleanup()
+    try { res.write(`event: heartbeat\ndata: ${JSON.stringify({ time: new Date().toISOString() })}\n\n`) }
+    catch { cleanup() }
+  }, 30_000)
+
+  // Nettoyage à la déconnexion ET sur erreur socket (réseau coupé, timeout nginx, etc.)
+  req.on('close', cleanup)
+  res.on('error', cleanup)
+  req.socket?.on('error', cleanup)
 }
 
 // ─── Fonction utilitaire pour envoyer un événement à tous les clients ────

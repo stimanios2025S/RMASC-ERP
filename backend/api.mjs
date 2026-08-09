@@ -82,10 +82,16 @@ app.use('/api', (req, res, next) => {
   next()
 })
 
-// ─── Request timeout (20s) ──────────────────────────────────────────────
+// ─── Request timeout (20s) — SSE EXCLUDED (long-lived stream) ────────────
+// Les connexions SSE (/api/realtime/subscribe) restent ouvertes indéfiniment
+// (temps réel). Un timeout ici tenterait d'écrire une réponse APRÈS les headers
+// SSE déjà envoyés → ERR_HTTP_HEADERS_SENT en boucle → étouffe le backend
+// → Cloudflare Tunnel ne reçoit plus de réponse → 502 Bad Gateway.
 app.use((req, res, next) => {
+  if (req.path === '/api/realtime/subscribe' || req.headers.accept === 'text/event-stream') return next()
   res.setTimeout(20000, () => {
     console.warn(`  ⏰ Timeout: ${req.method} ${req.path}`)
+    if (res.headersSent) return res.end() // sécurité: ne jamais réécrire après envoi
     res.status(504).json({ error: 'La requête a expiré. Veuillez réessayer.' })
   })
   next()
@@ -343,6 +349,7 @@ function reportToSentry(error, req = {}) {
 app.use((err, _req, res, _next) => {
   console.error(`[API ERROR] ${err.message || 'Erreur interne'}`)
   reportToSentry(err, _req)
+  if (res.headersSent) return res.end() // réponse déjà partie (ex: SSE) → fermer proprement, pas de 2e envoi
   res.status(err.statusCode || 500).json({ error: err.message || 'Erreur interne.' })
 })
 
