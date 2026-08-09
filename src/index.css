@@ -52,8 +52,16 @@
     overflow-y: auto;
     height: 100vh;
     height: 100dvh;
+    height: var(--app-height, 100dvh);
+    min-height: -webkit-fill-available; /* fallback iOS PWA */
     text-rendering: geometricPrecision;
     background: #0F172A;
+  }
+
+  /* iOS 17 PWA: sans -apple-system-footer, la barre du bas (home indicator)
+     recouvre le contenu en bas. On laisse de la place en dessous de l'app. */
+  @supports (-webkit-touch-callout: none) {
+    .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px); }
   }
 
   #root {
@@ -72,17 +80,23 @@
   }
 
   /* ── Dynamic viewport height — works on all browsers ──────────────── */
+  /* --app-height est piloté par JS (index.html) = hauteur EXACTE de l'écran.
+     iOS 17 (PWA "écran d'accueil") : vh/dvh remontent mal avec l'encoche +
+     la barre du bas → contenu coupé. La variable JS corrige ça partout. */
   .h-dvh {
     height: 100vh;
     height: 100dvh;
+    height: var(--app-height, 100dvh);
   }
   .min-h-dvh {
     min-height: 100vh;
     min-height: 100dvh;
+    min-height: var(--app-height, 100dvh);
   }
   .max-h-dvh {
     max-height: 100vh;
     max-height: 100dvh;
+    max-height: var(--app-height, 100dvh);
   }
 
   /* ── Responsive table wrapper ──────────────────────────────────────── */

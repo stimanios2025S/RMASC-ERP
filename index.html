@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
 
+    <!-- iOS 17 PWA fix: hauteur pilotée par JS (window.innerHeight) — les unités
+         vh/dvh sont cassées en mode "écran d'accueil" sur iOS 17 (contenu coupé
+         en bas). Cette variable CSS garantit la hauteur EXACTE de l'écran. -->
+    <script>
+      (function () {
+        function setAppHeight() {
+          var h = window.innerHeight
+          document.documentElement.style.setProperty('--app-height', h + 'px')
+        }
+        window.addEventListener('resize', setAppHeight)
+        window.addEventListener('orientationchange', setAppHeight)
+        window.addEventListener('load', setAppHeight)
+        setAppHeight()
+      })()
+    </script>
+
     <!-- ─── SEO / Domain ──────────────────────────────────────────────── -->
     <title>RMASC FACTORY — ERP Ascenseur | Progiciel de Gestion Intégré</title>
     <meta name="description" content="Système de gestion intégré pour la fabrication d'ascenseurs. Bureau d'Études, Production, Stocks & Logistique — RMASC FACTORY ERP." />
@@ -30,7 +46,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="RMASC ERP" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/images/icon-192.svg" />
+    <!-- iOS exige un PNG pour l'icône d'écran d'accueil (SVG ignoré → icône vide) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/images/icon-512.png" />
     <link rel="icon" type="image/svg+xml" href="/images/icon-192.svg" />
     <link rel="mask-icon" href="/images/icon-192.svg" color="#f97316" />
 

@@ -41,6 +41,13 @@ if ! (cd backend && npm ci); then
   (cd backend && npm install) || { echo "  ❌ ÉCHEC installation backend — déploiement annulé"; exit 1; }
 fi
 
+# ── 3bis. Générer les icônes PNG (iOS exige PNG — le SVG est IGNORÉ par
+# l'écran d'accueil iPhone → icône vide). Généré à CHAQUE déploiement pour
+# ne jamais manquer. Non bloquant : si ça échoue, les PNG commités dans
+# public/images/ servent de secours. ──────────────────────────────────────
+echo "  🖼️  Génération des icônes PNG (iOS / écran d'accueil)..."
+node scripts/gen-icons-embedded.mjs || echo "  ⚠️  Échec génération icônes — PNG commités utilisés (non bloquant)"
+
 # ── 4. Build frontend ────────────────────────────────────────────────────
 echo "  🔨 Build frontend..."
 npm run build

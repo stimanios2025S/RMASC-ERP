@@ -1,10 +1,10 @@
-// ─── RMASC FACTORY — Service Worker v2.6.2 (CACHE BUSTER) ──────────────────
+// ─── RMASC FACTORY — Service Worker v2.7.1 (CACHE BUSTER) ──────────────────
 // CRITICAL: Every deploy changes SW_VERSION. On activate, ALL old caches
 // are DELETED. This forces all devices to fetch fresh files immediately.
 // No cache-first strategy — always network-first to prevent stale apps.
 // ──────────────────────────────────────────────────────────────────────────
 
-const SW_VERSION = 'v2.6.2'
+const SW_VERSION = 'v2.7.1'
 
 // ─── INSTALL: Skip waiting so new SW activates immediately ────────────────
 self.addEventListener('install', (event) => {
