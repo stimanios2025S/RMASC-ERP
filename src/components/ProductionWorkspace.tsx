@@ -36,6 +36,7 @@ const PHASES = [
 export default function ProductionWorkspace({ onBack, session }: Props) {
   const [tab, setTab] = useState<'production' | 'archives' | 'pieces-solo' | 'laser'>('production')
   const [orders, setOrders] = useState<OrderRow[]>([])
+  const [incomingCount, setIncomingCount] = useState(0) // commandes approuvées, en route vers la production
   const [activePhase, setActivePhase] = useState('decoupe')
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null)
   const [showFiche, setShowFiche] = useState(false)
@@ -91,7 +92,11 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       // Anti-course: si une requête plus récente est partie, on ignore cette réponse
       // (évite qu'une réponse lente écrase des données fraîches → synchro toujours correcte)
       if (seq !== loadSeqRef.current) return
-      setOrders(data.filter(o => ['PRET_POUR_PRODUCTION', 'VALIDEE'].includes(o.status)))
+      const all = Array.isArray(data) ? data : []
+      setOrders(all.filter(o => ['PRET_POUR_PRODUCTION', 'VALIDEE'].includes(o.status)))
+      // "À venir" = commandes approuvées, en cours d'ingénierie (Dessin 2D / Vérification)
+      // → elles arriveront en production. Visibilité claire pour le patron.
+      setIncomingCount(all.filter(o => ['ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION'].includes(o.status)).length)
     } catch { /* silent */ }
   }, [])
 
@@ -289,7 +294,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white flex-shrink-0"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md flex-shrink-0"><span className="text-white text-lg">🏭</span></div>
-            <div className="min-w-0"><h1 className="text-base md:text-lg font-extrabold text-white truncate">Production & Atelier</h1><p className="text-[11px] text-white font-semibold truncate">{orders.length} commandes en production</p></div>
+            <div className="min-w-0"><h1 className="text-base md:text-lg font-extrabold text-white truncate">Production & Atelier</h1><p className="text-[11px] text-white font-semibold truncate">{orders.length} en production{incomingCount > 0 && <span className="text-cyan-400"> · {incomingCount} à venir</span>}</p></div>
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
