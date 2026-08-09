@@ -55,7 +55,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
 
   useEffect(() => { loadSoloPending() }, [loadSoloPending])
   useEffect(() => {
-    const iv = setInterval(loadSoloPending, 30_000)
+    const iv = setInterval(loadSoloPending, 15_000) // fallback — le temps réel passe par SSE
     return () => clearInterval(iv)
   }, [loadSoloPending])
 
@@ -69,7 +69,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
 
   useEffect(() => { loadLaserPending() }, [loadLaserPending])
   useEffect(() => {
-    const iv = setInterval(loadLaserPending, 30_000)
+    const iv = setInterval(loadLaserPending, 15_000) // fallback — le temps réel passe par SSE
     return () => clearInterval(iv)
   }, [loadLaserPending])
 
@@ -83,23 +83,36 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
+  const loadSeqRef = useRef(0)
   const loadOrders = useCallback(async () => {
+    const seq = ++loadSeqRef.current
     try {
       const data: OrderRow[] = await apiFetch('/orders')
+      // Anti-course: si une requête plus récente est partie, on ignore cette réponse
+      // (évite qu'une réponse lente écrase des données fraîches → synchro toujours correcte)
+      if (seq !== loadSeqRef.current) return
       setOrders(data.filter(o => ['PRET_POUR_PRODUCTION', 'VALIDEE'].includes(o.status)))
     } catch { /* silent */ }
   }, [])
 
   // ─── SSE real-time listener: auto-refresh when Dashboard deletes/updates orders ───
-  const sseLoadRef = useRef({ loadOrders })
-  sseLoadRef.current = { loadOrders }
+  // Debounce: plusieurs événements SSE d'un coup (ex: approbation = 2 events) → 1 seul fetch
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const refreshOrders = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => loadOrders(), 300)
+  }, [loadOrders])
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current) }, [])
+
+  const sseLoadRef = useRef({ refreshOrders })
+  sseLoadRef.current = { refreshOrders }
   const soloRef = useRef({ loadSoloPending })
   soloRef.current = { loadSoloPending }
   const laserRef = useRef({ loadLaserPending })
   laserRef.current = { loadLaserPending }
   useSSE(useCallback((event: { type: string; data: any }) => {
-    if (event.type === 'order:created' || event.type === 'order:deleted' || event.type === 'order:status' || event.type === 'force:sync') {
-      sseLoadRef.current.loadOrders()
+    if (['order:created', 'order:deleted', 'order:status', 'order:approval', 'production:phase', 'force:sync'].includes(event.type)) {
+      sseLoadRef.current.refreshOrders()
     }
     if (event.type === 'part:created' || event.type === 'part:status') {
       soloRef.current.loadSoloPending()

@@ -167,6 +167,7 @@ export async function createOrder(req, res) {
     })
     order.status = 'ATTENTE_DESSIN_TECH'
     await order.save()
+    notifyOrderCreated(order) // temps réel: tous les portails voient la nouvelle commande
     res.status(201).json({
       message: 'Commande créée.',
       order: { id: order._id, serialNumber: order.serialNumber, status: order.status, createdAt: order.createdAt },
@@ -183,6 +184,7 @@ export async function updateOrderStatus(req, res) {
     // req.order is pre-loaded + validated by loadOrder & validateStatusTransition middleware
     const order = req.order
     if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+    const oldStatus = order.status
     order.status = parsed.data.status
     order.lifecycleStage = mapStatusToLifecycle(parsed.data.status)
     order.statusChangedAt = new Date()
@@ -191,6 +193,7 @@ export async function updateOrderStatus(req, res) {
       order.productionStartedAt = new Date()
     }
     await order.save()
+    notifyOrderStatusChanged(order._id.toString(), order.serialNumber, oldStatus, order.status) // temps réel
     res.json({
       message: `✅ Statut mis à jour: ${order.status}`,
       order: { id: order._id, serialNumber: order.serialNumber, status: order.status, lifecycleStage: order.lifecycleStage },
@@ -226,6 +229,7 @@ export async function uploadFile(req, res) {
     }
     order.files.push(fileMeta)
     await order.save()
+    notifyFileUploaded(order.serialNumber, req.file.originalname, req.user?.name || 'Utilisateur') // temps réel
     res.status(201).json({
       message: 'Fichier uploadé.',
       file: { ...fileMeta, path: undefined, destination: undefined },
@@ -388,6 +392,10 @@ export async function approvePlan(req, res) {
     order.stampResults = stampResult.results
     await order.save().catch(() => {})
 
+    // Temps réel: Production voit le plan approuvé + tous les portails voient le statut
+    notifyOrderApproval(order.serialNumber, adminName)
+    notifyOrderStatusChanged(order._id.toString(), order.serialNumber, 'ATTENTE_APPROBATION_ADMIN', order.status)
+
     res.json({
       message: stampResult.stamped > 0
         ? 'Plan approuvé & cachet appliqué.'
@@ -428,6 +436,7 @@ export async function rejectPlan(req, res) {
     order.rejectedBy = req.user?.name || 'Administrateur'
     order.rejectedAt = new Date()
     await order.save()
+    notifyOrderStatusChanged(order._id.toString(), order.serialNumber, 'ATTENTE_APPROBATION_ADMIN', order.status) // temps réel
     res.json({ message: 'Plan rejeté.', rejectionReason: order.rejectionReason, rejectedBy: order.rejectedBy })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
@@ -441,6 +450,7 @@ export async function markDelivery(req, res) {
     order.status = 'EN_LIVRAISON'
     order.statusChangedAt = new Date()
     await order.save()
+    notifyOrderStatusChanged(order._id.toString(), order.serialNumber, 'PRET_POUR_PRODUCTION', order.status) // temps réel
     res.json({ message: '✅ Commande marquée prête pour livraison.', order })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
@@ -456,6 +466,7 @@ export async function confirmDelivery(req, res) {
     order.lifecycleStage = 'delivered'
     order.completedAt = new Date()
     await order.save()
+    notifyOrderStatusChanged(order._id.toString(), order.serialNumber, 'EN_LIVRAISON', order.status) // temps réel
     res.json({ message: '✅ Livraison confirmée. Commande terminée.', order })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
