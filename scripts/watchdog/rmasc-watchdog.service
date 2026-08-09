@@ -1,0 +1,22 @@
+[Unit]
+Description=RMASC ERP Watchdog — auto-heal + alertes Telegram
+After=network-online.target rmasc-erp.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sarlrmasc
+WorkingDirectory=/home/sarlrmasc/rmasc-erp
+# Le tiret devant le chemin = fichier optionnel (pas d'échec s'il n'existe pas)
+EnvironmentFile=-/etc/rmasc-watchdog.env
+ExecStart=/usr/bin/node /home/sarlrmasc/rmasc-erp/scripts/watchdog/watchdog.mjs
+Restart=always
+RestartSec=10
+# Sécurité : le watchdog ne doit JAMAIS pouvoir écrire dans le repo
+ProtectSystem=strict
+ReadWritePaths=/tmp
+NoNewPrivileges=false
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
