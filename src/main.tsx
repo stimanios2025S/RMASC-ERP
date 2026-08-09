@@ -16,7 +16,7 @@ Sentry.init({
 })
 
 // ═══ VERSION CONTROL — forces cache reset on all devices when deployed ═════
-const APP_VERSION = 'v2.7.2-ios'
+const APP_VERSION = 'v2.7.3'
 
 ;(() => {
   try {
@@ -63,14 +63,53 @@ window.onerror = (_msg, _source, _line, _col, error) => {
 ;(async () => {
   if ('serviceWorker' in navigator) {
     try {
+      // ═══ FIX iOS 17 — les téléphones restaient sur l'ANCIENNE VERSION ═══
+      // iOS Safari en mode "écran d'accueil" ne re-vérifie PAS le service
+      // worker au lancement : URL fixe /sw.js → ancien SW gardé pour toujours
+      // → l'app servait l'ancien HTML/cache. SOLUTION : URL d'enregistrement
+      // VERSIONNÉE (/sw.js?v=<version>) — une URL différente à chaque
+      // déploiement force iOS à re-télécharger le nouveau SW.
+      // updateViaCache:'none' interdit au navigateur de servir le SW depuis
+      // son cache HTTP. Quand le nouveau SW prend le contrôle (controllerchange)
+      // on recharge la page UNE fois automatiquement — aucune action manuelle.
+      const SW_URL = `/sw.js?v=${APP_VERSION}`
+      const hadController = !!navigator.serviceWorker.controller
+
       const oldRegistrations = await navigator.serviceWorker.getRegistrations()
       for (const reg of oldRegistrations) {
-        if (reg.active?.scriptURL && !reg.active.scriptURL.includes('sw.js')) {
+        const url = reg.active?.scriptURL || reg.installing?.scriptURL || ''
+        if (!url.includes('/sw.js')) {
           await reg.unregister()
         }
       }
 
-      const registration = await navigator.serviceWorker.register('/sw.js')
+      const registration = await navigator.serviceWorker.register(SW_URL, {
+        updateViaCache: 'none',
+      })
+
+      // ── Auto-reload UNE fois quand la nouvelle version prend le contrôle ──
+      // (skipWaiting + clients.claim activent le nouveau SW immédiatement)
+      let reloaded = false
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController || reloaded) return // 1er install = page déjà fraîche
+        reloaded = true
+        // Si l'utilisateur tape dans un champ, on attend la fin de saisie (max 30s)
+        const busy = () => {
+          const el = document.activeElement as HTMLElement | null
+          return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
+        }
+        if (busy()) {
+          const t0 = Date.now()
+          const iv = window.setInterval(() => {
+            if (!busy() || Date.now() - t0 > 30000) {
+              window.clearInterval(iv)
+              window.location.reload()
+            }
+          }, 300)
+        } else {
+          window.setTimeout(() => window.location.reload(), 800)
+        }
+      })
 
       // If a new SW is waiting, activate it silently (no page reload)
       if (registration.waiting) {
