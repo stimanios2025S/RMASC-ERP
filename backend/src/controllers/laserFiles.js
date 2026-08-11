@@ -5,7 +5,7 @@
 //   Production   →  aperçu navigateur + "Approuver & Tamponner" :
 //                   incruste public/cachet.png.png à l'emplacement EXACT de
 //                   la signature du bordereau standard (bas-droit, zone
-//                   62%×1.5% / 36%×16% de la page, cachet TOUJOURS HORIZONTAL
+//                   60%×1.5% / 38%×19% de la page, cachet TOUJOURS HORIZONTAL
 //                   — rotation -90° vers la DROITE si l'image source est
 //                   verticale) sur CHAQUE page (copie aplatie, original
 //                   intact) → APPROVED_LASER
@@ -59,17 +59,17 @@ function findStamp() {
 // ZONE SIGNATURE (bordereau standard — analyse du modèle fourni) :
 //   A4 portrait — signature en bas-droit (sous "Reçu le .......", au-dessus
 //   de la ligne "Signature", hors de la cellule OBSERVATION) :
-//   • bord gauche de la zone : 62% de la largeur de page (≈130mm)
-//   • bord bas de la zone     :  1.5% de la hauteur (≈4mm — poussé au max
-//     vers le bas, centre du cachet ≈20mm plus bas qu'avant)
-//   • largeur de la zone      : 36% de la largeur (≈76mm)
-//   • hauteur de la zone      : 16% de la hauteur (≈48mm — cachet HORIZONTAL)
+//   • bord gauche de la zone : 60% de la largeur de page (≈126mm)
+//   • bord bas de la zone     :  1.5% de la hauteur (≈4mm — collé au bas,
+//     sur la ligne Signature)
+//   • largeur de la zone      : 38% de la largeur (≈80mm)
+//   • hauteur de la zone      : 19% de la hauteur (≈56mm — cachet HORIZONTAL)
 // Exprimé en % de la page → s'adapte à tout format (A4/A3, portrait/paysage).
 const STAMP_ZONE = {
-  leftPct:   0.62,  // bord gauche de la zone signature (% largeur page)
+  leftPct:   0.60,  // bord gauche de la zone signature (% largeur page)
   bottomPct: 0.015, // bord bas de la zone signature (% hauteur page)
-  widthPct:  0.36,  // largeur de la zone (% largeur page)
-  heightPct: 0.16,  // hauteur de la zone (% hauteur page)
+  widthPct:  0.38,  // largeur de la zone (% largeur page)
+  heightPct: 0.19,  // hauteur de la zone (% hauteur page)
 }
 
 async function stampPdf(originalPath, stampPath, outputPath, approvedBy) {
