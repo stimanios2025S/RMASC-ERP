@@ -20,6 +20,7 @@ import { healthCheck, versionCheck } from './src/controllers/health.js'
 import {
   login, seedUsers, fixPasswords, resetAndReseed, seedAdmins,
   listUsers, updateUserName, changeAdminCredentials, changeUserPassword,
+  ensureProduction2, ensureProduction2User,
 } from './src/controllers/users.js'
 import {
   listOrders, getOrder, getOrderDatasheet, createOrder, updateOrderStatus,
@@ -139,6 +140,7 @@ app.post('/api/users/seed', authenticate, requireAdmin, seedUsers)
 app.post('/api/users/fix-passwords', authenticate, requireAdmin, fixPasswords)
 app.post('/api/users/reset-and-reseed', authenticate, requireAdmin, resetAndReseed)
 app.post('/api/users/seed-admins', authenticate, requireAdmin, seedAdmins)
+app.post('/api/users/ensure-production2', authenticate, requireAdmin, ensureProduction2)
 app.get('/api/users', authenticate, listUsers)
 app.patch('/api/users/:id/name', authenticate, updateUserName)
 app.put('/api/users/admin', authenticate, requireAdmin, changeAdminCredentials)
@@ -362,6 +364,11 @@ async function start() {
     const { connectDB } = await import('./src/lib/mongoose.js')
     await connectDB()
     console.log(`  ✅ MongoDB connectée`)
+    // Compte Atelier 2 (PRODUCTION_2) créé automatiquement s'il manque
+    try {
+      const { created } = await ensureProduction2User()
+      console.log(created ? `  ✅ Compte Atelier 2 créé (production2 / production2)` : `  ℹ️  Compte Atelier 2 déjà présent`)
+    } catch (e) { console.warn(`  ⚠️  Compte Atelier 2: ${e.message}`) }
   } catch (err) {
     console.warn(`  ⚠️  MongoDB: ${err.message}`)
   }

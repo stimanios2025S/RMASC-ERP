@@ -29,8 +29,25 @@ const __dirname = path.dirname(__filename)
 // Même dossier uploads que api.mjs (racine projet /uploads)
 const UPLOADS_DIR = path.resolve(process.argv[1] ? path.dirname(process.argv[1]) : '.', '..', 'uploads')
 
-const ALLOWED_ROLES = ['INGENIEUR_2', 'PRODUCTION', 'ADMIN']
-const APPROVAL_ROLES = ['PRODUCTION', 'ADMIN']
+const ALLOWED_ROLES = ['INGENIEUR_2', 'PRODUCTION', 'PRODUCTION_2', 'ADMIN']
+const APPROVAL_ROLES = ['PRODUCTION', 'PRODUCTION_2', 'ADMIN']
+
+// ─── Garde-fou atelier : chaque atelier ne voit/touche que SES fichiers ──
+// PRODUCTION (Atelier 1) gère les fichiers ATELIER_1 + legacy (champ absent),
+// PRODUCTION_2 (Atelier 2) ne gère que les fichiers ATELIER_2.
+function canManageFile(user, file) {
+  if (user?.role === 'ADMIN' || user?.role === 'INGENIEUR_2') return true
+  if (user?.role === 'PRODUCTION')   return file.atelier !== 'ATELIER_2'
+  if (user?.role === 'PRODUCTION_2') return file.atelier === 'ATELIER_2'
+  return false
+}
+
+// Filtre Mongo par rôle (null = champ absent → legacy = Atelier 1)
+function atelierFilter(role) {
+  if (role === 'PRODUCTION')   return { atelier: { $in: ['ATELIER_1', null] } }
+  if (role === 'PRODUCTION_2') return { atelier: 'ATELIER_2' }
+  return {}
+}
 
 // ─── Localisation du cachet (robuste : double extension réelle du fichier) ──
 function findStamp() {
@@ -157,6 +174,7 @@ function toJson(l) {
     thickness: l.thickness || null,
     quantity: l.quantity,
     status: l.status,
+    atelier: l.atelier || 'ATELIER_1',
     originalFile: l.originalFile ? {
       originalname: l.originalFile.originalname,
       mimetype: l.originalFile.mimetype,
@@ -211,6 +229,7 @@ export async function createLaserFile(req, res) {
         size: req.file.size,
       },
       status: 'EN_ATTENTE',
+      atelier: parsed.data.atelier || 'ATELIER_1', // atelier choisi par l'Ingénieur 2
       createdBy: req.user.name || req.user.userId,
     })
 
@@ -220,13 +239,14 @@ export async function createLaserFile(req, res) {
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
 
-// ─── GET /api/laser-files — liste complète (les deux rôles) ─────────────
+// ─── GET /api/laser-files — liste filtrée par atelier ───────────────────
 export async function listLaserFiles(_req, res) {
   try {
     if (!ALLOWED_ROLES.includes(_req.user.role)) {
       return res.status(403).json({ error: 'Accès refusé.' })
     }
-    const files = await LaserFile.find().sort({ createdAt: -1 }).lean()
+    const filter = atelierFilter(_req.user.role) // Production 1 → ses fichiers, Production 2 → les siens
+    const files = await LaserFile.find(filter).sort({ createdAt: -1 }).lean()
     res.json(files.map(toJson))
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
@@ -239,6 +259,9 @@ export async function getLaserFile(req, res) {
     }
     const laser = await LaserFile.findById(req.params.id).lean()
     if (!laser) return res.status(404).json({ error: 'Fichier laser introuvable.' })
+    if (!canManageFile(req.user, laser)) {
+      return res.status(403).json({ error: 'Accès refusé. Ce fichier est destiné à l\'autre atelier.' })
+    }
     res.json(toJson(laser))
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
@@ -251,6 +274,9 @@ export async function approveLaserFile(req, res) {
     }
     const laser = await LaserFile.findById(req.params.id)
     if (!laser) return res.status(404).json({ error: 'Fichier laser introuvable.' })
+    if (!canManageFile(req.user, laser)) {
+      return res.status(403).json({ error: 'Accès refusé. Ce fichier est destiné à l\'autre atelier.' })
+    }
     if (laser.status === 'APPROVED_LASER') {
       return res.status(400).json({ error: 'Ce fichier est déjà approuvé et tamponné.' })
     }
@@ -297,6 +323,11 @@ export async function replaceLaserFile(req, res) {
     }
     const laser = await LaserFile.findById(req.params.id)
     if (!laser) return res.status(404).json({ error: 'Fichier laser introuvable.' })
+    if (!canManageFile(req.user, laser)) {
+      // Nettoie le fichier reçu pour ne pas polluer le disque
+      try { if (req.file) fs.unlinkSync(req.file.path) } catch {}
+      return res.status(403).json({ error: 'Accès refusé. Ce fichier est destiné à l\'autre atelier.' })
+    }
     if (!req.file) return res.status(400).json({ error: 'Fichier PDF requis.' })
     if (req.file.mimetype !== 'application/pdf') {
       try { fs.unlinkSync(req.file.path) } catch {}
@@ -349,6 +380,9 @@ export async function deleteLaserFile(req, res) {
     }
     const laser = await LaserFile.findById(req.params.id)
     if (!laser) return res.status(404).json({ error: 'Fichier laser introuvable.' })
+    if (!canManageFile(req.user, laser)) {
+      return res.status(403).json({ error: 'Accès refusé. Ce fichier est destiné à l\'autre atelier.' })
+    }
 
     // Purge des fichiers disque
     try { if (laser.originalFile?.path && fs.existsSync(laser.originalFile.path)) fs.unlinkSync(laser.originalFile.path) } catch {}

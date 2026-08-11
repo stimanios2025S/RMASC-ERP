@@ -17,6 +17,7 @@ const DEFAULT_USERS = [
   { loginId: 'ingenieur2', password: 'ingenieur2', name: 'Yasmine Hamidi', role: 'INGENIEUR_2', canChangePassword: false },
   { loginId: 'verificateur', password: 'verificateur', name: 'Rachid Imane', role: 'VERIFICATEUR', canChangePassword: false },
   { loginId: 'production', password: 'production', name: 'Said Mansouri', role: 'PRODUCTION', canChangePassword: false },
+  { loginId: 'production2', password: 'production2', name: 'Chef Atelier 2', role: 'PRODUCTION_2', canChangePassword: false },
   { loginId: 'magasinier', password: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER', canChangePassword: false },
 ]
 
@@ -98,6 +99,32 @@ export async function seedAdmins(_req, res) {
       }
     }
     res.json({ message: `${created} administrateur(s) créé(s).`, count: created })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+}
+
+// ─── Création auto du compte Atelier 2 (idempotent) ─────────────────────
+// Appelé au démarrage du serveur + via POST /api/users/ensure-production2.
+// Sans étape manuelle : après déploiement, le compte existe déjà.
+export async function ensureProduction2User() {
+  const exists = await PortalUser.findOne({ loginId: 'production2' }).select('_id').lean()
+  if (exists) return { created: false }
+  await PortalUser.create({
+    loginId: 'production2',
+    password: await bcrypt.hash('production2', BCRYPT_ROUNDS),
+    name: 'Chef Atelier 2',
+    role: 'PRODUCTION_2',
+    canChangePassword: false,
+  })
+  return { created: true }
+}
+
+// POST /api/users/ensure-production2 (route admin — fallback manuel)
+export async function ensureProduction2(_req, res) {
+  try {
+    const result = await ensureProduction2User()
+    res.json(result.created
+      ? { message: '✅ Compte Atelier 2 créé (login: production2 / mot de passe: production2).', created: true }
+      : { message: 'Compte Atelier 2 déjà présent.', created: false })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
 

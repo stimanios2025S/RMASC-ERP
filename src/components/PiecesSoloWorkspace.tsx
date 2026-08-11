@@ -18,6 +18,7 @@ interface StandalonePart {
   quantity: number
   cadFileUrl?: string | null
   status: 'EN_ATTENTE' | 'EN_PRODUCTION' | 'TERMINE'
+  atelier?: string
   createdAt: string
   createdBy?: string | null
   fileMeta?: {
@@ -42,6 +43,19 @@ function statusBadge(status: string) {
     case 'TERMINE':       return { label: 'Terminé',      cls: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' }
     default:              return { label: status,          cls: 'bg-white/10 text-white/80' }
   }
+}
+
+// ─── Badge atelier de destination (Production 1 / 2) ──────────────────────
+function AtelierBadge({ atelier, size = 'sm' }: { atelier?: string; size?: 'sm' | 'xs' }) {
+  const is2 = atelier === 'ATELIER_2'
+  const cls = size === 'xs' ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5'
+  return (
+    <span className={`inline-flex items-center gap-1 font-bold rounded-full border ${cls} ${
+      is2 ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+    }`}>
+      🏭 {is2 ? 'Atelier 2' : 'Atelier 1'}
+    </span>
+  )
 }
 
 function fmtDate(iso: string) {
@@ -88,6 +102,7 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
   const [material, setMaterial] = useState('')
   const [thickness, setThickness] = useState('')
   const [quantity, setQuantity] = useState(1)
+  const [atelier, setAtelier] = useState<'ATELIER_1' | 'ATELIER_2'>('ATELIER_1') // atelier cible (choisi par l'Ingénieur 2)
   const [file, setFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -141,6 +156,7 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
       formData.append('material', material.trim())
       formData.append('thickness', thickness.trim())
       formData.append('quantity', String(quantity))
+      formData.append('atelier', atelier) // Production 1 ou Production 2
       if (file) formData.append('cadFile', file)
 
       const token = localStorage.getItem('rmasc_token')
@@ -161,6 +177,7 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
       setMaterial('')
       setThickness('')
       setQuantity(1)
+      setAtelier('ATELIER_1')
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       loadParts()
@@ -248,6 +265,33 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                   onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all"
                 />
+              </div>
+
+              {/* Atelier de destination (Production 1 ou 2) */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Destination — Atelier de Production *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setAtelier('ATELIER_1')}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                      atelier === 'ATELIER_1'
+                        ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
+                        : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white/90'
+                    }`}>
+                    <span className="text-base">🏭</span>
+                    <span className="text-left leading-tight">Production 1<br /><span className="text-[9px] font-medium opacity-70">Atelier 1</span></span>
+                    {atelier === 'ATELIER_1' && <span className="ml-auto text-emerald-400">✓</span>}
+                  </button>
+                  <button type="button" onClick={() => setAtelier('ATELIER_2')}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                      atelier === 'ATELIER_2'
+                        ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-300'
+                        : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white/90'
+                    }`}>
+                    <span className="text-base">🏭</span>
+                    <span className="text-left leading-tight">Production 2<br /><span className="text-[9px] font-medium opacity-70">Atelier 2</span></span>
+                    {atelier === 'ATELIER_2' && <span className="ml-auto text-cyan-400">✓</span>}
+                  </button>
+                </div>
               </div>
 
               {/* File upload zone */}
@@ -351,7 +395,10 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                               <span className="text-sm font-mono font-bold text-amber-400">{part.partNumber}</span>
                             </td>
                             <td className="px-5 py-3">
-                              <span className="text-sm font-medium text-white">{part.projectName}</span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-sm font-medium text-white">{part.projectName}</span>
+                                <AtelierBadge atelier={part.atelier} size="xs" />
+                              </div>
                               {part.createdBy && (
                                 <p className="text-[10px] text-white/50">{part.createdBy}</p>
                               )}
@@ -607,8 +654,8 @@ function PartCard({ part, updating, onStart, onComplete }: {
           : 'bg-white/[0.04] border-white/5'
     }`}>
       {/* Part header */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-mono font-bold text-amber-400">{part.partNumber}</span>
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <span className="text-sm font-mono font-bold text-amber-400 flex items-center gap-1.5">{part.partNumber} <AtelierBadge atelier={part.atelier} size="xs" /></span>
         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${badge.cls}`}>{badge.label}</span>
       </div>
 
@@ -681,7 +728,7 @@ export default function PiecesSoloWorkspace({ onBack, session }: Props) {
     return <IngenieurView onBack={onBack} />
   }
 
-  if (role === 'PRODUCTION') {
+  if (role === 'PRODUCTION' || role === 'PRODUCTION_2') {
     return <ProductionView onBack={onBack} />
   }
 

@@ -1,3 +1,13 @@
+// ═══════════════════════════════════════════════════════════════════════════
+//  RMASC FACTORY — PRODUCTION 2 (Atelier 2)
+//  Deuxième portail de production, identique à Production 1 (mêmes pages,
+//  mêmes phases, même système) mais isolé sur SON atelier :
+//    • Commandes : uniquement celles assignées à l'Atelier 2 (assignedAtelier)
+//    • Pièces Solo / Fichiers Laser : uniquement celles envoyées à l'Atelier 2
+//    • Archives : uniquement celles de l'Atelier 2
+//  Rôle backend : PRODUCTION_2 — connexion : production2 / production2
+// ═══════════════════════════════════════════════════════════════════════════
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import FicheTechniqueView from './FicheTechniqueView'
 import type { PortalSession } from '../data/portalUsers'
@@ -24,6 +34,9 @@ interface OrderRow {
 
 interface Props { onBack?: () => void; session?: PortalSession }
 
+// ─── Atelier de ce portail ────────────────────────────────────────────────
+const ATELIER = 'ATELIER_2'
+
 const PHASES = [
   { id: 'decoupe', icon: '✂️', label: 'Découpe', desc: 'Découpe des tôles et profilés selon les plans techniques', color: 'from-sky-500 to-blue-600', bgColor: 'bg-sky-500/10', borderColor: 'border-sky-500/20', textColor: 'text-sky-400' },
   { id: 'pliage', icon: '🔧', label: 'Pliage', desc: 'Pliage et formage des éléments de structure', color: 'from-indigo-500 to-indigo-600', bgColor: 'bg-indigo-500/10', borderColor: 'border-indigo-500/20', textColor: 'text-indigo-400' },
@@ -34,10 +47,10 @@ const PHASES = [
   { id: 'livraison', icon: '🚛', label: 'Livraison', desc: 'Transport, installation sur site client et confirmation de réception', color: 'from-cyan-500 to-cyan-600', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/20', textColor: 'text-cyan-400' },
 ]
 
-export default function ProductionWorkspace({ onBack, session }: Props) {
+export default function ProductionWorkspace2({ onBack, session }: Props) {
   const [tab, setTab] = useState<'production' | 'archives' | 'pieces-solo' | 'laser'>('production')
   const [orders, setOrders] = useState<OrderRow[]>([])
-  const [incomingCount, setIncomingCount] = useState(0) // commandes approuvées, en route vers la production
+  const [incomingCount, setIncomingCount] = useState(0) // non affiché pour l'Atelier 2 (choix fait à la soumission)
   const [activePhase, setActivePhase] = useState('decoupe')
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null)
   const [showFiche, setShowFiche] = useState(false)
@@ -47,7 +60,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
   const [soloPendingCount, setSoloPendingCount] = useState(0)
   const [laserPendingCount, setLaserPendingCount] = useState(0)
 
-  // ⚡ Pièces Solo: pending count badge + real-time refresh
+  // ⚡ Pièces Solo: pending count badge + real-time refresh (filtre serveur par atelier)
   const loadSoloPending = useCallback(async () => {
     try {
       const parts: { status: string }[] = await apiFetch('/standalone-parts/active')
@@ -61,7 +74,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     return () => clearInterval(iv)
   }, [loadSoloPending])
 
-  // ⚡ Fichiers Laser: pending count badge + real-time refresh
+  // ⚡ Fichiers Laser: pending count badge + real-time refresh (filtre serveur par atelier)
   const loadLaserPending = useCallback(async () => {
     try {
       const files: { status: string }[] = await apiFetch('/laser-files')
@@ -91,21 +104,14 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     try {
       const data: OrderRow[] = await apiFetch('/orders')
       // Anti-course: si une requête plus récente est partie, on ignore cette réponse
-      // (évite qu'une réponse lente écrase des données fraîches → synchro toujours correcte)
       if (seq !== loadSeqRef.current) return
       const all = Array.isArray(data) ? data : []
-      // ⛳ Atelier 1 UNIQUEMENT — les commandes assignées à l'Atelier 2
-      // (assignedAtelier === 'ATELIER_2') n'apparaissent PAS ici. Les commandes
-      // legacy (champ absent) restent visibles (Atelier 1 par défaut).
-      setOrders(all.filter(o => ['PRET_POUR_PRODUCTION', 'VALIDEE'].includes(o.status) && o.assignedAtelier !== 'ATELIER_2'))
-      // "À venir" = commandes approuvées, en cours d'ingénierie (Dessin 2D / Vérification)
-      // → elles arriveront en production. Visibilité claire pour le patron.
-      setIncomingCount(all.filter(o => ['ATTENTE_DESSIN_2D', 'ATTENTE_VERIFICATION'].includes(o.status)).length)
+      // ⛳ Atelier 2 UNIQUEMENT — commandes prêtes assignées à cet atelier
+      setOrders(all.filter(o => ['PRET_POUR_PRODUCTION', 'VALIDEE'].includes(o.status) && o.assignedAtelier === ATELIER))
     } catch { /* silent */ }
   }, [])
 
   // ─── SSE real-time listener: auto-refresh when Dashboard deletes/updates orders ───
-  // Debounce: plusieurs événements SSE d'un coup (ex: approbation = 2 events) → 1 seul fetch
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const refreshOrders = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -163,13 +169,11 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
     const idx = PHASES.findIndex(p => p.id === current)
     if (idx < PHASES.length - 1) {
       const nextPhase = PHASES[idx + 1].id
-      // Update DB immediately
       try {
         await apiFetch(`/orders/${orderId}/production-phase`, {
           method: 'PATCH',
           body: JSON.stringify({ productionPhase: nextPhase }),
         })
-        // Refresh orders
         loadOrders()
         setExpandedId(null)
         // When moving to livraison, mark order ready for delivery
@@ -189,8 +193,8 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           <div className="flex items-center gap-4">
             {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🏭</span></div>
-              <div><h1 className="text-lg font-extrabold text-white">Production & Atelier</h1><p className="text-[11px] text-white font-semibold">{orders.length} commandes actives</p></div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🏭</span></div>
+              <div><h1 className="text-lg font-extrabold text-white">Production 2 — Atelier 2</h1><p className="text-[11px] text-white font-semibold">{orders.length} commandes actives</p></div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -207,7 +211,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           <button onClick={() => setTab('archives')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white whitespace-nowrap">📦 Archives</button>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <ArchiveOrders atelier="ATELIER_1" />
+          <ArchiveOrders atelier="ATELIER_2" />
         </div>
       </PageBackground>
     )
@@ -221,8 +225,8 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           <div className="flex items-center gap-4">
             {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🔧</span></div>
-              <div><h1 className="text-lg font-extrabold text-white">Pièces Solo</h1><p className="text-[11px] text-white font-semibold">Fabrication unitaire — Atelier</p></div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🔧</span></div>
+              <div><h1 className="text-lg font-extrabold text-white">Pièces Solo — Atelier 2</h1><p className="text-[11px] text-white font-semibold">Fabrication unitaire — Atelier 2</p></div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -241,7 +245,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           <PiecesSoloWorkspace onBack={() => setTab('production')} session={session} />
         </div>
         <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-3 md:px-6 py-2 flex items-center justify-between gap-2 text-[10px] text-white/80">
-          <span>RMASC Factory — Production & Atelier v2.6</span>
+          <span>RMASC Factory — Production 2 · Atelier 2</span>
           <span>⌘K Recherche • ⌘I Agent</span>
         </footer>
         <InstallPWA variant="compact" />
@@ -259,8 +263,8 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           <div className="flex items-center gap-4">
             {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🖨️</span></div>
-              <div><h1 className="text-lg font-extrabold text-white">Approbation Laser</h1><p className="text-[11px] text-white font-semibold">Fichiers de découpe — Tamponnage numérique</p></div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md"><span className="text-white text-lg">🖨️</span></div>
+              <div><h1 className="text-lg font-extrabold text-white">Approbation Laser — Atelier 2</h1><p className="text-[11px] text-white font-semibold">Fichiers de découpe — Tamponnage numérique</p></div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -280,7 +284,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           <LaserFilesWorkspace onBack={() => setTab('production')} session={session} />
         </div>
         <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-3 md:px-6 py-2 flex items-center justify-between gap-2 text-[10px] text-white/80">
-          <span>RMASC Factory — Production & Atelier v2.6</span>
+          <span>RMASC Factory — Production 2 · Atelier 2</span>
           <span>⌘K Recherche • ⌘I Agent</span>
         </footer>
         <InstallPWA variant="compact" />
@@ -297,8 +301,8 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         <div className="flex items-center gap-4 min-w-0">
           {onBack && <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/[0.06] text-white flex-shrink-0"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>}
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md flex-shrink-0"><span className="text-white text-lg">🏭</span></div>
-            <div className="min-w-0"><h1 className="text-base md:text-lg font-extrabold text-white truncate">Production & Atelier</h1><p className="text-[11px] text-white font-semibold truncate">{orders.length} en production{incomingCount > 0 && <span className="text-cyan-400"> · {incomingCount} à venir</span>}</p></div>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md flex-shrink-0"><span className="text-white text-lg">🏭</span></div>
+            <div className="min-w-0"><h1 className="text-base md:text-lg font-extrabold text-white truncate">Production 2 — Atelier 2</h1><p className="text-[11px] text-white font-semibold truncate">{orders.length} en production</p></div>
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -312,7 +316,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
         </div>
       </header>
 
-      {/* Tabs — tab === 'production' garanti ici (les autres onglets early-return plus haut) */}
+      {/* Tabs */}
       <div className="flex-shrink-0 bg-white/[0.04] border-b border-white/5 px-3 md:px-6 flex gap-0 overflow-x-auto">
         <button onClick={() => setTab('production')} className="px-5 py-3 text-sm font-bold border-b-2 border-amber-400 text-white">🏭 Production</button>
         <button onClick={() => setTab('pieces-solo')} className="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 hover:text-white">🔧 Pièces Solo{soloPendingCount > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{soloPendingCount}</span>}</button>
@@ -352,7 +356,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
           <div className="h-full flex flex-col items-center justify-center text-white">
             <span className="text-5xl mb-4">📭</span>
             <p className="text-sm font-medium">Aucune commande dans cette phase</p>
-            <p className="text-xs mt-1">Les commandes prêtes pour la production apparaîtront ici.</p>
+            <p className="text-xs mt-1">Les commandes assignées à l'Atelier 2 apparaîtront ici.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -392,7 +396,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
                     </button>
                     {isExpanded && (
                       <div className="mt-2 pt-2 border-t border-white/5 space-y-2">
-                        <FileManager orderId={order.id} engineerName={session?.name || 'Production'} compact />
+                        <FileManager orderId={order.id} engineerName={session?.name || 'Production 2'} compact />
                         {isInThisPhase && phaseIdx < PHASES.length - 1 && (
                           <button onClick={() => advancePhase(order.id, order)}
                             className="w-full py-2 rounded-lg text-xs font-bold bg-amber-500 text-white hover:bg-amber-400 shadow-md transition-all">
@@ -414,7 +418,7 @@ export default function ProductionWorkspace({ onBack, session }: Props) {
       </div>
 
       <footer className="flex-shrink-0 bg-white/[0.04] border-t border-white/5 px-3 md:px-6 py-2 flex items-center justify-between gap-2 text-[10px] text-white/80">
-        <span>RMASC Factory — Production & Atelier v2.6</span>
+        <span>RMASC Factory — Production 2 · Atelier 2</span>
         <span>{orders.length} commandes • ⌘K Recherche • ⌘I Agent</span>
       </footer>
       <InstallPWA variant="compact" />

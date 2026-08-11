@@ -189,15 +189,17 @@ export async function updateOrderStatus(req, res) {
     order.status = parsed.data.status
     order.lifecycleStage = mapStatusToLifecycle(parsed.data.status)
     order.statusChangedAt = new Date()
-    // If moving to production, set the timestamp
+    // If moving to production: set the timestamp + assign the atelier chosen
+    // by the Vérificateur (Production 1 = ATELIER_1 / Production 2 = ATELIER_2)
     if (parsed.data.status === 'PRET_POUR_PRODUCTION') {
       order.productionStartedAt = new Date()
+      if (parsed.data.assignedAtelier) order.assignedAtelier = parsed.data.assignedAtelier
     }
     await order.save()
     notifyOrderStatusChanged(order._id.toString(), order.serialNumber, oldStatus, order.status) // temps réel
     res.json({
       message: `✅ Statut mis à jour: ${order.status}`,
-      order: { id: order._id, serialNumber: order.serialNumber, status: order.status, lifecycleStage: order.lifecycleStage },
+      order: { id: order._id, serialNumber: order.serialNumber, status: order.status, lifecycleStage: order.lifecycleStage, assignedAtelier: order.assignedAtelier },
     })
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
@@ -530,7 +532,7 @@ export async function updateOrder(req, res) {
       'typeSuspensionGuidage','systemeSurcharge','typeParachute','posteBoutons','projectName','priority','notes',
       'lifecycleStage','engineeredBy','totalCostDZD','salePriceDZD','marginPct',
       'optPanoramique','optSecours','optAnnoncesVocales','optCctv','optPortesCoupeFeu',
-      'optPanneauTactile','optVentilation','optBarreaudage','optAlarme','status']
+      'optPanneauTactile','optVentilation','optBarreaudage','optAlarme','status','assignedAtelier']
     const update = {}
     for (const key of allowed) {
       if (req.body[key] !== undefined) update[key] = req.body[key]

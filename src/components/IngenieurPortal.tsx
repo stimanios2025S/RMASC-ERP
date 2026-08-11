@@ -105,6 +105,8 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
   const [showRefuse, setShowRefuse] = useState(false)
   const [refuseReason, setRefuseReason] = useState('')
   const [refusing, setRefusing] = useState(false)
+  // ── Choix de l'atelier (Vérificateur → Production 1 ou 2) ──
+  const [showAtelierChoice, setShowAtelierChoice] = useState(false)
 
   // ── Open a vault file in the FileViewer modal ──
   const openVaultFile = async (f: VaultFile) => {
@@ -170,14 +172,24 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
     return () => { clearInterval(iv); window.removeEventListener('focus', onFocus) }
   }, [loadOrders, loadVault])
 
-  const advanceStatus = async (orderId: string, status: string, msg: string) => {
+  const advanceStatus = async (orderId: string, status: string, msg: string, assignedAtelier?: string) => {
     try {
       setUploading(true)
-      await apiFetch(`/orders/${orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) })
+      await apiFetch(`/orders/${orderId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify(assignedAtelier ? { status, assignedAtelier } : { status }),
+      })
       flash(true, msg)
       loadOrders()
     } catch (err: any) { flash(false, err.message) }
     finally { setUploading(false) }
+  }
+
+  // ── Vérificateur : soumettre à la production vers UN atelier ──────────
+  const submitToProduction = async (orderId: string, atelier: 'ATELIER_1' | 'ATELIER_2') => {
+    setShowAtelierChoice(false)
+    const atelierName = atelier === 'ATELIER_1' ? 'Production 1 — Atelier 1' : 'Production 2 — Atelier 2'
+    await advanceStatus(orderId, 'PRET_POUR_PRODUCTION', `✅ Commande soumise à ${atelierName}`, atelier)
   }
 
   // ── Vérificateur : REFUSER le plan (retour à l'Ingénieur 2 avec motif) ──
@@ -304,7 +316,15 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
         {isExpanded && (
           <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-3">
             <FileManager orderId={order.id} engineerName={session?.name || config.title} compact />
-            <button onClick={() => advanceStatus(order.id, config.nextStatus, '✅ ' + config.nextLabel.replace(/^[^\s]+\s/, ''))}
+            <button onClick={() => {
+              // Vérificateur : choisit l'atelier (Production 1 ou 2) avant d'envoyer
+              if (role === 'VERIFICATEUR' && config.nextStatus === 'PRET_POUR_PRODUCTION') {
+                setSelectedOrder(order)
+                setShowAtelierChoice(true)
+              } else {
+                advanceStatus(order.id, config.nextStatus, '✅ ' + config.nextLabel.replace(/^[^\s]+\s/, ''))
+              }
+            }}
               disabled={uploading}
               className="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-amber-500/90 to-orange-600/90 hover:from-amber-400 hover:to-orange-500 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]">
               {uploading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block mr-2" /> Envoi...</> : config.nextLabel}
@@ -554,6 +574,43 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
       {showSmartSearch && <SmartSearch onNavigate={() => setShowSmartSearch(false)} />}
 
       {/* ── Modale : REFUSER le plan (Vérificateur) ── */}
+      {/* ── Modale : choisir l'atelier de production (Vérificateur) ── */}
+      {showAtelierChoice && selectedOrder && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-slate-800 border border-amber-500/30 shadow-2xl shadow-amber-900/30 overflow-hidden">
+            <div className="px-5 py-4 bg-gradient-to-r from-amber-600/90 to-orange-700/90 border-b border-amber-400/30 flex items-center gap-3">
+              <span className="text-2xl">🏭</span>
+              <div>
+                <h3 className="text-base font-extrabold text-white">Envoyer à la Production</h3>
+                <p className="text-xs text-amber-100/90 font-medium">Commande {selectedOrder.serialNumber} — choisissez l'atelier de fabrication</p>
+              </div>
+            </div>
+            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button onClick={() => submitToProduction(selectedOrder.id, 'ATELIER_1')} disabled={uploading}
+                className="group rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.07] hover:bg-emerald-500/15 hover:border-emerald-400/50 p-4 text-left transition-all disabled:opacity-50 active:scale-[0.98]">
+                <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xl shadow-md mb-3">🏭</span>
+                <p className="text-sm font-extrabold text-white">Production 1</p>
+                <p className="text-[11px] text-emerald-300/80 mt-0.5 font-medium">Atelier 1</p>
+                <p className="text-[10px] text-white/50 mt-2 leading-relaxed">Découpe, pliage, soudure, peinture, assemblage, emballage, livraison</p>
+              </button>
+              <button onClick={() => submitToProduction(selectedOrder.id, 'ATELIER_2')} disabled={uploading}
+                className="group rounded-2xl border border-cyan-500/30 bg-cyan-500/[0.07] hover:bg-cyan-500/15 hover:border-cyan-400/50 p-4 text-left transition-all disabled:opacity-50 active:scale-[0.98]">
+                <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl shadow-md mb-3">🏭</span>
+                <p className="text-sm font-extrabold text-white">Production 2</p>
+                <p className="text-[11px] text-cyan-300/80 mt-0.5 font-medium">Atelier 2</p>
+                <p className="text-[10px] text-white/50 mt-2 leading-relaxed">Deuxième atelier — mêmes étapes de fabrication complètes</p>
+              </button>
+            </div>
+            <div className="px-5 py-4 bg-slate-900/40 border-t border-slate-700/60 flex justify-end">
+              <button onClick={() => setShowAtelierChoice(false)} disabled={uploading}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-300 bg-slate-700/60 hover:bg-slate-600/60 disabled:opacity-50 transition-all">
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showRefuse && selectedOrder && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-2xl bg-slate-800 border border-red-500/30 shadow-2xl shadow-red-900/30 overflow-hidden">

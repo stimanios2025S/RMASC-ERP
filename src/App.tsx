@@ -9,6 +9,7 @@ import { ToastProvider } from './components/ui/Toast'
 const Dashboard = lazy(() => import('./components/Dashboard'))
 const IngenieurPortal = lazy(() => import('./components/IngenieurPortal'))
 const ProductionWorkspace = lazy(() => import('./components/ProductionWorkspace'))
+const ProductionWorkspace2 = lazy(() => import('./components/ProductionWorkspace2'))
 const StockWorkspace = lazy(() => import('./components/StockWorkspace'))
 
 // ═══ INIT ────────────────────────────────────────────────────────────────
@@ -57,6 +58,8 @@ export default function App() {
     portal = <IngenieurPortal onBack={handleLogout} session={session} role="VERIFICATEUR" />
   } else if (role === 'PRODUCTION') {
     portal = <ProductionWorkspace onBack={handleLogout} session={session} />
+  } else if (role === 'PRODUCTION_2') {
+    portal = <ProductionWorkspace2 onBack={handleLogout} session={session} />
   } else if (role === 'MAGASINIER') {
     portal = <StockWorkspace onBack={handleLogout} session={session} />
   } else {

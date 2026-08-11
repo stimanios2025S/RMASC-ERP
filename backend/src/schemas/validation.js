@@ -93,6 +93,8 @@ export const updateOrderSchema = z.object({
 
 export const updateStatusSchema = z.object({
   status: statusEnum,
+  // Atelier de production choisi par le Vérificateur (requis pour PRET_POUR_PRODUCTION)
+  assignedAtelier: z.enum(['ATELIER_1', 'ATELIER_2']).optional(),
 })
 
 export const updateProductionPhaseSchema = z.object({
@@ -174,6 +176,8 @@ export const createPartSchema = z.object({
   material: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   thickness: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   quantity: z.string().optional().default('1'),
+  // Atelier cible choisi par l'Ingénieur 2 (form-data → '' si absent)
+  atelier: z.enum(['ATELIER_1', 'ATELIER_2']).or(z.literal('')).default('ATELIER_1'),
 })
 
 export const updatePartStatusSchema = z.object({
@@ -189,4 +193,6 @@ export const createLaserFileSchema = z.object({
   material: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   thickness: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   quantity: z.string().optional().default('1'),
+  // Atelier cible choisi par l'Ingénieur 2 (form-data → '' si absent)
+  atelier: z.enum(['ATELIER_1', 'ATELIER_2']).or(z.literal('')).default('ATELIER_1'),
 })

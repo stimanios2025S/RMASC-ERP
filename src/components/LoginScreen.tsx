@@ -22,7 +22,8 @@ const PORTAL_CARDS = [
   { role: 'INGENIEUR_1', icon: '📐', title: "BUREAU D'ÉTUDES 1" },
   { role: 'INGENIEUR_2', icon: '✏️', title: "BUREAU D'ÉTUDES 2" },
   { role: 'VERIFICATEUR', icon: '🔍', title: 'VÉRIFICATEUR' },
-  { role: 'PRODUCTION', icon: '🏭', title: 'PRODUCTION' },
+  { role: 'PRODUCTION', icon: '🏭', title: 'PRODUCTION 1' },
+  { role: 'PRODUCTION_2', icon: '🏭', title: 'PRODUCTION 2' },
   { role: 'MAGASINIER', icon: '📦', title: 'STOCKS' },
 ]
 

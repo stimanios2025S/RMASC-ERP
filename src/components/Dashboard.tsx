@@ -123,7 +123,7 @@ function Sidebar({ onNavigate, onLogout, userRole }: { onNavigate?: (view: ViewT
               <span className="text-sm opacity-70">➕</span>
               <span>Nouvel ascenseur</span>
             </button>
-            {(userRole === 'INGENIEUR_2' || userRole === 'PRODUCTION') && (
+            {(userRole === 'INGENIEUR_2' || userRole === 'PRODUCTION' || userRole === 'PRODUCTION_2') && (
               <button onClick={() => onNavigate?.('pieces-solo')}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-left group transition-all ${
                   activeView === 'pieces-solo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' : 'text-white/60 hover:bg-white/5 hover:text-white'

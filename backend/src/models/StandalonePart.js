@@ -18,6 +18,14 @@ const standalonePartSchema = new mongoose.Schema({
     enum: ['EN_ATTENTE', 'EN_PRODUCTION', 'TERMINE'],
   },
 
+  // ── Atelier de production cible (choisi par l'Ingénieur 2) ────────────
+  // ATELIER_1 = Production 1 (legacy par défaut), ATELIER_2 = Production 2.
+  atelier: {
+    type: String,
+    default: 'ATELIER_1',
+    enum: ['ATELIER_1', 'ATELIER_2'],
+  },
+
   // ── File metadata (mirroring the Order file pattern) ──────────────────
   fileMeta: {
     originalname: String,

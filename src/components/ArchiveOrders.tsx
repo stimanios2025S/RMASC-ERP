@@ -73,6 +73,7 @@ interface ArchiveOrder {
   createdAt: string
   completedAt?: string | null
   priority?: string
+  assignedAtelier?: string
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -306,7 +307,7 @@ function ArchiveDetail({ data, onBack }: { data: ArchiveData; onBack: () => void
 // ═══════════════════════════════════════════════════════════════════════════
 //  MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
-export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: string) => void }) {
+export default function ArchiveOrders({ onSelectOrder, atelier }: { onSelectOrder?: (id: string) => void; atelier?: string }) {
   const [orders, setOrders] = useState<ArchiveOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -320,10 +321,11 @@ export default function ArchiveOrders({ onSelectOrder }: { onSelectOrder?: (id: 
       if (statusFilter) params.set('status', statusFilter)
       const query = params.toString()
       const data: ArchiveOrder[] = await apiFetch(`/orders/archives${query ? '?' + query : ''}`)
-      setOrders(data)
+      // Filtre par atelier (Production 2 ne voit que SES archives)
+      setOrders(atelier ? data.filter(o => (o.assignedAtelier || 'ATELIER_1') === atelier) : data)
     } catch { /* silent */ }
     finally { setLoading(false) }
-  }, [statusFilter])
+  }, [statusFilter, atelier])
 
   useEffect(() => { loadArchives() }, [loadArchives])
 

@@ -15,11 +15,12 @@ const ROLE_LABELS: Record<string, string> = {
   INGENIEUR_1: '📐 Ingénieur Dessinateur 1',
   INGENIEUR_2: '✏️ Ingénieur Dessinateur 2',
   VERIFICATEUR: '🔍 Vérificateur en Chef',
-  PRODUCTION: '🏭 Chef de Production',
+  PRODUCTION: '🏭 Chef de Production 1',
+  PRODUCTION_2: '🏭 Chef de Production 2',
   MAGASINIER: '📦 Magasinier / Stocks',
 }
 
-const ROLE_ORDER = ['ADMIN', 'INGENIEUR_1', 'INGENIEUR_2', 'VERIFICATEUR', 'PRODUCTION', 'MAGASINIER']
+const ROLE_ORDER = ['ADMIN', 'INGENIEUR_1', 'INGENIEUR_2', 'VERIFICATEUR', 'PRODUCTION', 'PRODUCTION_2', 'MAGASINIER']
 
 export default function SettingsPage({ onBack, session, onSessionUpdate }: Props) {
   const [users, setUsers] = useState<PortalUser[]>([])
@@ -208,6 +209,7 @@ export default function SettingsPage({ onBack, session, onSessionUpdate }: Props
                     u.role === 'INGENIEUR_2' ? 'bg-violet-500' :
                     u.role === 'VERIFICATEUR' ? 'bg-rose-500' :
                     u.role === 'PRODUCTION' ? 'bg-emerald-500' :
+                    u.role === 'PRODUCTION_2' ? 'bg-teal-500' :
                     'bg-cyan-500'
                   }`}>
                     {u.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -404,7 +406,7 @@ function PasswordRow({ user, roleLabels, showFeedback }: {
   const [pw, setPw] = useState('')
   const [savingPw, setSavingPw] = useState(false)
 
-  const roleColor = user.role === 'ADMIN' ? 'bg-amber-500' : user.role === 'INGENIEUR_1' ? 'bg-sky-500' : user.role === 'INGENIEUR_2' ? 'bg-violet-500' : user.role === 'VERIFICATEUR' ? 'bg-rose-500' : user.role === 'PRODUCTION' ? 'bg-emerald-500' : 'bg-cyan-500'
+  const roleColor = user.role === 'ADMIN' ? 'bg-amber-500' : user.role === 'INGENIEUR_1' ? 'bg-sky-500' : user.role === 'INGENIEUR_2' ? 'bg-violet-500' : user.role === 'VERIFICATEUR' ? 'bg-rose-500' : user.role === 'PRODUCTION' ? 'bg-emerald-500' : user.role === 'PRODUCTION_2' ? 'bg-teal-500' : 'bg-cyan-500'
   const initials = user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 
   const handleSave = async () => {

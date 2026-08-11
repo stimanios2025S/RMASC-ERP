@@ -25,6 +25,7 @@ interface LaserFileRow {
   thickness?: string | null
   quantity: number
   status: 'EN_ATTENTE' | 'APPROVED_LASER'
+  atelier?: string
   fileUrl?: string | null
   stampedFileUrl?: string | null
   originalFile?: { originalname: string; size: number } | null
@@ -59,6 +60,19 @@ function statusBadge(status: string) {
   return status === 'APPROVED_LASER'
     ? { label: '✅ Approuvé & Tamponné', cls: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' }
     : { label: '⏳ En Attente', cls: 'bg-amber-500/20 text-amber-400 border border-amber-500/20' }
+}
+
+// ─── Badge atelier de destination (Production 1 / 2) ──────────────────────
+function AtelierBadge({ atelier, size = 'sm' }: { atelier?: string; size?: 'sm' | 'xs' }) {
+  const is2 = atelier === 'ATELIER_2'
+  const cls = size === 'xs' ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5'
+  return (
+    <span className={`inline-flex items-center gap-1 font-bold rounded-full border ${cls} ${
+      is2 ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+    }`}>
+      🏭 {is2 ? 'Atelier 2' : 'Atelier 1'}
+    </span>
+  )
 }
 
 // ─── Téléchargement authentifié (blob) ───────────────────────────────────
@@ -97,6 +111,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
   const [material, setMaterial] = useState('')
   const [thickness, setThickness] = useState('')
   const [quantity, setQuantity] = useState(1)
+  const [atelier, setAtelier] = useState<'ATELIER_1' | 'ATELIER_2'>('ATELIER_1') // atelier cible (choisi par l'Ingénieur 2)
   const [file, setFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -159,6 +174,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
       formData.append('material', material.trim())
       formData.append('thickness', thickness.trim())
       formData.append('quantity', String(quantity))
+      formData.append('atelier', atelier) // Production 1 ou Production 2
       formData.append('pdfFile', file)
 
       const token = localStorage.getItem('rmasc_token')
@@ -174,7 +190,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
       const data = await res.json()
       setMessage({ type: 'success', text: `✅ ${data.message}` })
       setProjectName(''); setMaterial(''); setThickness(''); setQuantity(1)
-      setOrderId(''); setFile(null)
+      setOrderId(''); setAtelier('ATELIER_1'); setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       setTab('attente')
       loadFiles()
@@ -341,6 +357,33 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                 />
               </div>
 
+              {/* Atelier de destination (Production 1 ou 2) */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Destination — Atelier de Production *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setAtelier('ATELIER_1')}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                      atelier === 'ATELIER_1'
+                        ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
+                        : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white/90'
+                    }`}>
+                    <span className="text-base">🏭</span>
+                    <span className="text-left leading-tight">Production 1<br /><span className="text-[9px] font-medium opacity-70">Atelier 1</span></span>
+                    {atelier === 'ATELIER_1' && <span className="ml-auto text-emerald-400">✓</span>}
+                  </button>
+                  <button type="button" onClick={() => setAtelier('ATELIER_2')}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                      atelier === 'ATELIER_2'
+                        ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-300'
+                        : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white/90'
+                    }`}>
+                    <span className="text-base">🏭</span>
+                    <span className="text-left leading-tight">Production 2<br /><span className="text-[9px] font-medium opacity-70">Atelier 2</span></span>
+                    {atelier === 'ATELIER_2' && <span className="ml-auto text-cyan-400">✓</span>}
+                  </button>
+                </div>
+              </div>
+
               {/* File upload zone */}
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Fichier de Découpe (PDF) *</label>
@@ -466,7 +509,8 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                           <tr key={f.id} className="hover:bg-white/[0.03] transition-colors">
                             <td className="px-5 py-3">
                               <button onClick={() => setPreview(f)} className="text-left group" title="Aperçu">
-                                <span className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">{f.projectName}</span>
+                                <span className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">{f.projectName}</span>{' '}
+                                <AtelierBadge atelier={f.atelier} size="xs" />
                                 <p className="text-[10px] text-white/50">
                                   📄 {f.stampedFile?.originalname || f.originalFile?.originalname || 'fichier.pdf'}
                                   {isApproved && f.approvedBy && <span className="text-emerald-400"> · par {f.approvedBy}</span>}
@@ -678,7 +722,10 @@ function ProductionLaserView({ onBack }: { onBack?: () => void }) {
                   <div key={f.id} className="rounded-2xl p-5 shadow-lg border bg-amber-500/5 border-amber-500/20 flex flex-col">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-mono font-bold text-amber-400">{f.orderSerial || 'SANS COMMANDE'}</span>
-                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/20">⏳ En Attente</span>
+                      <span className="flex items-center gap-1.5">
+                        <AtelierBadge atelier={f.atelier} size="xs" />
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/20">⏳ En Attente</span>
+                      </span>
                     </div>
                     <p className="text-sm font-bold text-white">{f.projectName}</p>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-white/80 mt-1.5">
@@ -826,7 +873,7 @@ export default function LaserFilesWorkspace({ onBack, session }: Props) {
   if (role === 'INGENIEUR_2') {
     return <IngenieurLaserView onBack={onBack} />
   }
-  if (role === 'PRODUCTION') {
+  if (role === 'PRODUCTION' || role === 'PRODUCTION_2') {
     return <ProductionLaserView onBack={onBack} />
   }
 

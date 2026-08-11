@@ -85,6 +85,11 @@ const orderSchema = new mongoose.Schema({
   // ── Production tracking (persisted to DB, syncs across all browsers) ───
   productionPhase:    { type: String, default: 'decoupe', enum: ['decoupe','pliage','soudeur','peinture','assemblage','emballage','livraison'] },
 
+  // ── Atelier de production assigné (choisi par le Vérificateur) ─────────
+  // ATELIER_1 = Production 1 (legacy: les commandes existantes sans champ
+  // sont traitées comme Atelier 1), ATELIER_2 = Production 2.
+  assignedAtelier:    { type: String, default: 'ATELIER_1', enum: ['ATELIER_1', 'ATELIER_2'] },
+
   // ── Server-disk file storage ──────────────────────────────────────────
   files: [{
     fieldname:   String,

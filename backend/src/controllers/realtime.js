@@ -132,11 +132,13 @@ export function notifyStockMovement(movement) {
 }
 
 export function notifyOrderApproval(serialNumber, approvedBy) {
-  broadcastToRole('order:approval', {
+  // Broadcast global : les DEUX ateliers (Production 1 & 2) rafraîchissent
+  // et filtrent chacun sur leur atelier assigné.
+  broadcast('order:approval', {
     serialNumber,
     approvedBy,
     message: `Plan approuvé: ${serialNumber} par ${approvedBy}`,
-  }, 'PRODUCTION')
+  })
 }
 
 export function notifyFileUploaded(serialNumber, fileName, uploadedBy) {

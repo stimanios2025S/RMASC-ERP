@@ -12,11 +12,11 @@ export default defineConfig({
         let content = fs.readFileSync(swPath, 'utf-8')
         const buildStamp = Date.now().toString(36)
         content = content.replace(
-          "const SW_VERSION = 'v2.7.6'",
-          `const SW_VERSION = 'v2.7.6-${buildStamp}'`
+          "const SW_VERSION = 'v2.7.7'",
+          `const SW_VERSION = 'v2.7.7-${buildStamp}'`
         )
         fs.writeFileSync(swPath, content)
-        console.log(`  🏷️  SW_VERSION injecté: v2.7.6-${buildStamp}`)
+        console.log(`  🏷️  SW_VERSION injecté: v2.7.7-${buildStamp}`)
       }
     }
   }],

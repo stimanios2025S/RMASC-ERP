@@ -8,7 +8,7 @@
 // in MongoDB, NOT localStorage. This ensures cross-device sync.
 // For offline fallback, we only keep user credentials (read-only).
 
-const SEED_KEY = 'rmasc_local_seeded_v3'
+const SEED_KEY = 'rmasc_local_seeded_v4'
 const SESSION_KEY = 'rmasc_portal_session'
 
 interface LocalUser {
@@ -41,7 +41,8 @@ function seedOnce() {
     { id: 'u106', loginId: 'ingenieur2', password: 'ingenieur2', name: 'Yasmine Hamidi', role: 'INGENIEUR_2' },
     { id: 'u107', loginId: 'verificateur', password: 'verificateur', name: 'Rachid Imane', role: 'VERIFICATEUR' },
     { id: 'u108', loginId: 'production', password: 'production', name: 'Said Mansouri', role: 'PRODUCTION' },
-    { id: 'u109', loginId: 'magasinier', password: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER' },
+    { id: 'u109', loginId: 'production2', password: 'production2', name: 'Chef Atelier 2', role: 'PRODUCTION_2' },
+    { id: 'u110', loginId: 'magasinier', password: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER' },
   ]
   localStorage.setItem('rmasc_local_users', JSON.stringify(users))
 
