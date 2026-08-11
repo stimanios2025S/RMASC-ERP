@@ -5,7 +5,7 @@
 //   Production   →  aperçu navigateur + "Approuver & Tamponner" :
 //                   incruste public/cachet.png.png à l'emplacement EXACT de
 //                   la signature du bordereau standard (bas-droit, zone
-//                   65%×6% / 30%×14% de la page) sur CHAQUE page
+//                   64%×6% / 34%×18% de la page) sur CHAQUE page
 //                   (copie aplatie, original intact) → APPROVED_LASER
 // Modifier un PDF approuvé → retour EN_ATTENTE (approbation invalidée).
 // Supprimer → purge des fichiers disque + base (visible pour les deux rôles).
@@ -57,16 +57,16 @@ function findStamp() {
 // ZONE SIGNATURE (bordereau standard — analyse du modèle fourni) :
 //   A4 portrait — signature en bas-droit (sous "Reçu le .......", au-dessus
 //   de la ligne "Signature", hors de la cellule OBSERVATION) :
-//   • bord gauche de la zone : 65% de la largeur de page (≈136mm)
+//   • bord gauche de la zone : 64% de la largeur de page (≈134mm)
 //   • bord bas de la zone     :  6% de la hauteur de page (dans 5-8%)
-//   • largeur de la zone      : 30% de la largeur (≈63mm)
-//   • hauteur de la zone      : 14% de la hauteur (≈41mm, dans 12-15%)
+//   • largeur de la zone      : 34% de la largeur (≈71mm)
+//   • hauteur de la zone      : 18% de la hauteur (≈53mm)
 // Exprimé en % de la page → s'adapte à tout format (A4/A3, portrait/paysage).
 const STAMP_ZONE = {
-  leftPct:   0.65, // bord gauche de la zone signature (% largeur page)
+  leftPct:   0.64, // bord gauche de la zone signature (% largeur page)
   bottomPct: 0.06, // bord bas de la zone signature (% hauteur page)
-  widthPct:  0.30, // largeur de la zone (% largeur page)
-  heightPct: 0.14, // hauteur de la zone (% hauteur page)
+  widthPct:  0.34, // largeur de la zone (% largeur page)
+  heightPct: 0.18, // hauteur de la zone (% hauteur page)
 }
 
 async function stampPdf(originalPath, stampPath, outputPath, approvedBy) {
