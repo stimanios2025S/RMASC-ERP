@@ -60,6 +60,8 @@ export const createOrderSchema = z.object({
   hauteurUtileCabineMm: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   typeSuspensionGuidage: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   systemeSurcharge: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
+  typeParachute: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
+  posteBoutons: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   lifecycleStage: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   engineeredBy: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
   totalCostDZD: z.number().optional().or(z.literal(undefined)),

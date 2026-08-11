@@ -57,7 +57,7 @@ const HELP_SECTIONS: HelpSection[] = [
     steps: [
       { label: 'Lancer le wizard', desc: 'Dans le Tableau de bord, cliquez sur "Ajouter un ascenseur" pour ouvrir l\'assistant de configuration en 6 étapes.', jump: 'add-elevator' },
       { label: 'Étape 1 — Client', desc: 'Renseignez le nom du client, l\'email (optionnel), le téléphone et la ville.' },
-      { label: 'Étape 2 — Motorisation', desc: 'Sélectionnez le type (ÉLECTRIQUE ou HYDRAULIQUE), le sous-type, la vitesse (m/s) et le nombre d\'étages.' },
+      { label: 'Étape 2 — Motorisation', desc: 'Sélectionnez le type d\'ascenseur (ÉLECTRIQUE ou HYDRAULIQUE), le type de moteur, la vitesse (m/s) et le nombre d\'arrêts.' },
       { label: 'Étape 3 — Dimensions', desc: 'Saisissez la largeur, la profondeur et la hauteur de la gaine technique en millimètres.' },
       { label: 'Étape 4 — Matériaux', desc: 'Choisissez les matériaux pour la cabine, les portes, les parois et le sol parmi les catalogues RMASC.' },
       { label: 'Étape 5 — Options', desc: 'Activez les options : panoramique, secours, annonces vocales, CCTV, portes coupe-feu, panneau tactile.' },

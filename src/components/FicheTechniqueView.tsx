@@ -22,6 +22,7 @@ interface OrderFull {
   finitionInterieurCabine: string | null; revetementSol: string | null
   largeurPassageLibreMm: string | null; hauteurUtileCabineMm: string | null
   typeSuspensionGuidage: string | null; systemeSurcharge: string | null
+  typeParachute: string | null; posteBoutons: string | null
   optPanoramique: boolean; optSecours: boolean; optAnnoncesVocales: boolean
   optCctv: boolean; optPortesCoupeFeu: boolean; optPanneauTactile: boolean
   createdAt: string; approvedBy?: string | null; approvedAt?: string | null
@@ -333,11 +334,11 @@ function FicheDocument({ data }: { data: OrderFull }) {
       <div className="fiche-section">2. MOTORISATION</div>
       <div className="fiche-grid">
         <div className="fiche-cell">
-          <div className="fiche-cell-label">Type</div>
+          <div className="fiche-cell-label">Type d'ascenseur</div>
           <div className="fiche-cell-value">{data.typeMotorisation}</div>
         </div>
         <div className="fiche-cell">
-          <div className="fiche-cell-label">Sous-type</div>
+          <div className="fiche-cell-label">Type de moteur</div>
           <div className="fiche-cell-value">{data.sousTypeElectrique || '—'}</div>
         </div>
         <div className="fiche-cell">
@@ -345,7 +346,7 @@ function FicheDocument({ data }: { data: OrderFull }) {
           <div className="fiche-cell-value">{vitesse > 0 ? `${vitesse} m/s` : '—'}</div>
         </div>
         <div className="fiche-cell">
-          <div className="fiche-cell-label">Etages</div>
+          <div className="fiche-cell-label">Nombre d'arrêts</div>
           <div className="fiche-cell-value">{nbreEtages}</div>
         </div>
       </div>
@@ -364,6 +365,18 @@ function FicheDocument({ data }: { data: OrderFull }) {
         <div className="fiche-cell">
           <div className="fiche-cell-label">Hauteur gaine</div>
           <div className="fiche-cell-value">{data.hauteurGaineMm} mm</div>
+        </div>
+        <div className="fiche-cell">
+          <div className="fiche-cell-label">Dernier niveau</div>
+          <div className="fiche-cell-value">{data.hauteurDernierEtageMm ? `${data.hauteurDernierEtageMm} mm` : '—'}</div>
+        </div>
+        <div className="fiche-cell">
+          <div className="fiche-cell-label">À la cuve</div>
+          <div className="fiche-cell-value">{data.profondeurCuvetteMm ? `${data.profondeurCuvetteMm} mm` : '—'}</div>
+        </div>
+        <div className="fiche-cell">
+          <div className="fiche-cell-label">Type de parachute</div>
+          <div className="fiche-cell-value">{data.typeParachute || '—'}</div>
         </div>
       </div>
 
@@ -397,6 +410,10 @@ function FicheDocument({ data }: { data: OrderFull }) {
         <div className="fiche-cell">
           <div className="fiche-cell-label">Materiau sol</div>
           <div className="fiche-cell-value">{data.materiauSol || '—'}</div>
+        </div>
+        <div className="fiche-cell">
+          <div className="fiche-cell-label">Poste à boutons</div>
+          <div className="fiche-cell-value">{data.posteBoutons || '—'}</div>
         </div>
       </div>
 
@@ -459,7 +476,7 @@ function FicheDocument({ data }: { data: OrderFull }) {
           <div className="fiche-remark-title">Non-Conformites NF EN 81-20</div>
           {d.profondeurCuvetteMm && parseInt(d.profondeurCuvetteMm) < 1400 && (
             <div className="fiche-remark-item">
-              Profondeur cuvette insuffisante ({d.profondeurCuvetteMm} mm) &mdash; Minimum requis : 1400 mm
+              Profondeur de cuve insuffisante ({d.profondeurCuvetteMm} mm) &mdash; Minimum requis : 1400 mm
             </div>
           )}
           {d.hauteurDernierEtageMm && parseInt(d.hauteurDernierEtageMm) < 3800 && (

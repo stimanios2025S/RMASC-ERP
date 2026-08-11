@@ -21,6 +21,7 @@ interface FormData {
   matCabin: string; matDoors: string; matWalls: string; matSol: string
   typeCabine: string; typePorte: string; finitionPorteCabine: string
   typeChassisArcade: string; finitionInterieurCabine: string; revetementSol: string
+  typeParachute: string; posteBoutons: string
   optPanoramic: boolean; optBackupPower: boolean; optVoiceAnnounce: boolean
   optCctv: boolean; optFireDoors: boolean; optTouchPanel: boolean
   optVentilation: boolean; optBarreaudage: boolean; optAlarme: boolean
@@ -30,6 +31,7 @@ interface FormData {
   customMatSol: string; customTypeCabine: string; customTypePorte: string
   customFinitionPorte: string; customChassis: string; customFinitionInterieur: string
   customRevetementSol: string; customSuspension: string; customSurcharge: string
+  customPosteBoutons: string
 }
 
 interface StepInfo { key: StepKey; label: string; icon: string }
@@ -61,6 +63,7 @@ const INITIAL_FORM: FormData = {
   matCabin: '', matDoors: '', matWalls: '', matSol: '',
   typeCabine: '', typePorte: '', finitionPorteCabine: '',
   typeChassisArcade: '', finitionInterieurCabine: '', revetementSol: '',
+  typeParachute: '', posteBoutons: '',
   optPanoramic: false, optBackupPower: false, optVoiceAnnounce: false,
   optCctv: false, optFireDoors: false, optTouchPanel: false,
   optVentilation: false, optBarreaudage: false, optAlarme: false,
@@ -69,6 +72,7 @@ const INITIAL_FORM: FormData = {
   customMatSol: '', customTypeCabine: '', customTypePorte: '',
   customFinitionPorte: '', customChassis: '', customFinitionInterieur: '',
   customRevetementSol: '', customSuspension: '', customSurcharge: '',
+  customPosteBoutons: '',
 }
 
 // ─── Catalog Options ──────────────────────────────────────────────────────
@@ -107,6 +111,10 @@ const FINITION_INTERIEUR_CABINE_OPTIONS = [
   { value: 'INOX MIROIR', label: 'INOX MIROIR', desc: 'Finition inox miroir' },
   { value: 'INOX MIROIR ET SATINÉ', label: 'INOX MIROIR ET SATINÉ', desc: 'Finition mixte miroir et satiné' },
   { value: 'INOX DÉCORÉ', label: 'INOX DÉCORÉ', desc: 'Finition inox avec motifs décoratifs' },
+]
+const POSTE_BOUTONS_OPTIONS = [
+  { value: 'ENCASTRÉ', label: 'Encastré', desc: 'Poste à boutons encastré dans la paroi' },
+  { value: 'APPARENT', label: 'Apparent', desc: 'Poste à boutons apparent (en saillie)' },
 ]
 const REVETEMENT_SOL_OPTIONS = [
   { value: 'GRANIT NATUREL', label: 'GRANIT NATUREL', desc: 'Granit naturel haut de gamme' },
@@ -366,9 +374,9 @@ function StepMotorisation({ data, setData }: any) {
   return <div className="space-y-5">
     <p className="text-sm text-white mb-1">Configurez le système de motorisation.</p>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <FormSelect label="Type de motorisation" value={data.motorType} onChange={(v: string) => setData({ ...data, motorType: v })} options={['ÉLECTRIQUE', 'HYDRAULIQUE']} />
+      <FormSelect label="Type d'ascenseur" value={data.motorType} onChange={(v: string) => setData({ ...data, motorType: v })} options={['ÉLECTRIQUE', 'HYDRAULIQUE']} />
       <FormInput label="Vitesse (m/s)" value={data.motorSpeed} onChange={s('motorSpeed')} placeholder="Ex: 1.5" type="number" />
-      <FormInput label="Nombre d'étages" value={data.motorFloors} onChange={s('motorFloors')} placeholder="Ex: 6" type="number" />
+      <FormInput label="Nombre d'arrêts" value={data.motorFloors} onChange={s('motorFloors')} placeholder="Ex: 6" type="number" />
     </div>
     {/* Spécifications Structurelles — déplacé de Dimensions vers Motorisation */}
     <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-4 space-y-3">
@@ -461,15 +469,19 @@ function StepDimensions({ data, setData }: any) {
     {/* Pit & Headroom */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="flex flex-col gap-1.5">
-        <FormInput label="Profondeur cuvette (mm)" value={data.pitDepth} onChange={s('pitDepth')} placeholder="Ex: 1500" type="number" />
+        <FormInput label="À la cuve (mm)" value={data.pitDepth} onChange={s('pitDepth')} placeholder="Ex: 1500" type="number" />
         {pW && <div className="flex items-start gap-1.5 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl"><span className="text-red-400 text-xs mt-0.5">⚠️</span><p className="text-[11px] text-red-300 leading-tight">Cuvette non conforme NF EN 81-20 (≥ 500 mm)</p></div>}
         {data.pitDepth !== '' && !isNaN(pN) && pN < 1400 && <div className="flex items-start gap-1.5 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl"><span className="text-amber-400 text-xs mt-0.5">📋</span><div><p className="text-[11px] font-semibold text-amber-300">Cuvette non conforme (Standard ≥ 1400 mm)</p><p className="text-[10px] text-amber-400">Une remarque sera inscrite dans la Fiche Technique.</p></div></div>}
       </div>
       <div className="flex flex-col gap-1.5">
-        <FormInput label="Hauteur dernier étage (mm)" value={data.topFloorHeight} onChange={s('topFloorHeight')} placeholder="Ex: 4200" type="number" />
+        <FormInput label="Dernier niveau (mm)" value={data.topFloorHeight} onChange={s('topFloorHeight')} placeholder="Ex: 4200" type="number" />
         {tW && <div className="flex items-start gap-1.5 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl"><span className="text-red-400 text-xs mt-0.5">⚠️</span><p className="text-[11px] text-red-300 leading-tight">Hauteur sous dalle insuffisante</p></div>}
         {data.topFloorHeight !== '' && !isNaN(tN) && tN < 3800 && <div className="flex items-start gap-1.5 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl"><span className="text-amber-400 text-xs mt-0.5">📋</span><div><p className="text-[11px] font-semibold text-amber-300">Hauteur sous dalle non conforme (Standard ≥ 3800 mm)</p><p className="text-[10px] text-amber-400">Une remarque sera inscrite dans la Fiche Technique.</p></div></div>}
       </div>
+    </div>
+    {/* Type de parachute — champ libre (l'admin tape ce qu'il veut) */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormInput label="Type de parachute (optionnel)" value={data.typeParachute} onChange={s('typeParachute')} placeholder="Ex: Parachute à action progressive..." />
     </div>
   </div>
 }
@@ -486,6 +498,7 @@ function StepMateriaux({ data, setData }: any) {
       <FormSelectRichWithAutre label="Finition portes cabine" value={data.finitionPorteCabine} onChange={s('finitionPorteCabine')} options={FINITION_PORTE_CABINE_OPTIONS} customValue={data.customFinitionPorte} onCustomChange={s('customFinitionPorte')} placeholder="Ex: Laque noir mat..." />
       <FormSelectRichWithAutre label="Finition interieur cabine" value={data.finitionInterieurCabine} onChange={s('finitionInterieurCabine')} options={FINITION_INTERIEUR_CABINE_OPTIONS} customValue={data.customFinitionInterieur} onCustomChange={s('customFinitionInterieur')} placeholder="Ex: Cuir vegetal sur mesure..." />
       <FormSelectRichWithAutre label="Revetement de sol" value={data.revetementSol} onChange={s('revetementSol')} options={REVETEMENT_SOL_OPTIONS} customValue={data.customRevetementSol} onCustomChange={s('customRevetementSol')} placeholder="Ex: Carrelage artisanal..." />
+      <FormSelectRichWithAutre label="Poste à boutons (optionnel)" value={data.posteBoutons} onChange={s('posteBoutons')} options={POSTE_BOUTONS_OPTIONS} customValue={data.customPosteBoutons} onCustomChange={s('customPosteBoutons')} placeholder="Ex: Poste inox encastré sur mesure..." />
     </div>
     <hr className="border-slate-600/30" />
     <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-slate-600 flex items-center justify-center text-white text-[10px] font-bold">M</div><p className="text-sm font-semibold text-white">Materiaux (sur mesure)</p></div>
@@ -530,10 +543,10 @@ function StepFinalisation({ data, setData }: any) {
       ...(data.clientCity ? [{ label: 'Ville', value: data.clientCity }] : []),
     ]},
     { title: 'Motorisation', rows: [
-      { label: 'Type', value: data.motorType },
-      ...(data.motorSubtype ? [{ label: 'Sous-type', value: data.motorSubtype }] : []),
+      { label: "Type d'ascenseur", value: data.motorType },
+      ...(data.motorSubtype ? [{ label: 'Type de moteur', value: data.motorSubtype }] : []),
       ...(data.motorSpeed ? [{ label: 'Vitesse', value: `${data.motorSpeed} m/s` }] : []),
-      ...(data.motorFloors ? [{ label: 'Étages', value: data.motorFloors }] : []),
+      ...(data.motorFloors ? [{ label: "Nombre d'arrêts", value: data.motorFloors }] : []),
     ]},
     { title: 'Dimensions', rows: [
       ...(data.dimWidth ? [{ label: 'Largeur gaine', value: `${data.dimWidth} mm` }] : []),
@@ -543,8 +556,9 @@ function StepFinalisation({ data, setData }: any) {
       ...(isActive && deductionLabel ? [{ label: 'Algorithme', value: deductionLabel }] : []),
       ...(isActive && estimatedCabinWidth ? [{ label: 'Largeur cabine (SH AI)', value: estimatedCabinWidth }] : []),
       ...(isActive && estimatedCabinDepth ? [{ label: 'Profondeur cabine (SH AI)', value: estimatedCabinDepth }] : []),
-      ...(data.pitDepth ? [{ label: 'Profondeur cuvette', value: `${data.pitDepth} mm` }] : []),
-      ...(data.topFloorHeight ? [{ label: 'Hauteur dernier étage', value: `${data.topFloorHeight} mm` }] : []),
+      ...(data.pitDepth ? [{ label: 'À la cuve', value: `${data.pitDepth} mm` }] : []),
+      ...(data.topFloorHeight ? [{ label: 'Dernier niveau', value: `${data.topFloorHeight} mm` }] : []),
+      ...(data.typeParachute ? [{ label: 'Type de parachute', value: data.typeParachute }] : []),
       ...(data.largeurPassageLibre ? [{ label: 'Passage libre (PL)', value: `${data.largeurPassageLibre} mm` }] : []),
       ...(data.hauteurUtileCabine ? [{ label: 'Hauteur utile', value: `${data.hauteurUtileCabine} mm` }] : []),
     ]},
@@ -560,6 +574,7 @@ function StepFinalisation({ data, setData }: any) {
       ...(data.matCabin ? [{ label: 'Cabine', value: data.matCabin }] : []),
       ...(data.matDoors ? [{ label: 'Portes', value: data.matDoors }] : []),
       ...(data.matWalls ? [{ label: 'Parois', value: data.matWalls }] : []),
+      ...(data.posteBoutons ? [{ label: 'Poste à boutons', value: data.posteBoutons === 'AUTRE' ? (data.customPosteBoutons || 'AUTRE') : data.posteBoutons }] : []),
     ]},
     { title: 'Options', rows: [
       ...(data.optPanoramic ? [{ label: 'Ascenseur panoramique', value: 'Oui' }] : []),
@@ -638,6 +653,11 @@ export default function AddElevator({ onBack, editOrder }: Props) {
         typeChassisArcade: editOrder.typeChassisArcade || '',
         finitionInterieurCabine: editOrder.finitionInterieurCabine || '',
         revetementSol: editOrder.revetementSol || '',
+        typeParachute: editOrder.typeParachute || '',
+        // Poste à boutons : si la valeur stockée est un choix standard → sélecteur,
+        // sinon (texte libre) → option "Autre" pré-remplie
+        posteBoutons: ['ENCASTRÉ', 'APPARENT'].includes(editOrder.posteBoutons || '') ? editOrder.posteBoutons : (editOrder.posteBoutons ? 'AUTRE' : ''),
+        customPosteBoutons: !['ENCASTRÉ', 'APPARENT'].includes(editOrder.posteBoutons || '') ? (editOrder.posteBoutons || '') : '',
         optPanoramic: !!editOrder.optPanoramique, optBackupPower: !!editOrder.optSecours,
         optVoiceAnnounce: !!editOrder.optAnnoncesVocales, optCctv: !!editOrder.optCctv,
         optFireDoors: !!editOrder.optPortesCoupeFeu, optTouchPanel: !!editOrder.optPanneauTactile,
@@ -713,6 +733,8 @@ export default function AddElevator({ onBack, editOrder }: Props) {
       largeurPassageLibreMm: data.largeurPassageLibre || undefined, hauteurUtileCabineMm: data.hauteurUtileCabine || undefined,
       typeSuspensionGuidage: or(data.typeSuspensionGuidage, data.customSuspension) || undefined,
       systemeSurcharge: or(data.systemeSurcharge, data.customSurcharge) || undefined,
+      typeParachute: data.typeParachute || undefined,
+      posteBoutons: or(data.posteBoutons, data.customPosteBoutons) || undefined,
       optPanoramique: data.optPanoramic, optSecours: data.optBackupPower, optAnnoncesVocales: data.optVoiceAnnounce,
       optCctv: data.optCctv, optPortesCoupeFeu: data.optFireDoors, optPanneauTactile: data.optTouchPanel,
       optVentilation: data.optVentilation, optBarreaudage: data.optBarreaudage, optAlarme: data.optAlarme,

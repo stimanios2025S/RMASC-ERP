@@ -593,7 +593,7 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
               <p className="text-sm font-bold text-white">{order.typeMotorisation}</p>
               <p className="text-xs text-white/60">{order.sousTypeElectrique || '—'}</p>
               <p className="text-xs text-white/50">{order.vitesseMs ? `${order.vitesseMs} m/s` : '—'}</p>
-              <p className="text-xs text-white/50">{order.nombreEtages ? `${order.nombreEtages} étages` : '—'}</p>
+              <p className="text-xs text-white/50">{order.nombreEtages ? `${order.nombreEtages} arrêts` : '—'}</p>
             </div>
           </div>
           <div className="bg-slate-800/70 rounded-xl p-4 border border-white/5">

@@ -115,9 +115,10 @@ export function orderToHTML(order: any): string {
       </div>
       <div class="section">
         <h2>⚡ Motorisation</h2>
-        <div><span class="label">Type :</span> <span class="value">${order.typeMotorisation || '—'}</span></div>
+        <div><span class="label">Type d'ascenseur :</span> <span class="value">${order.typeMotorisation || '—'}</span></div>
+        ${order.sousTypeElectrique ? `<div><span class="label">Type de moteur :</span> <span class="value">${order.sousTypeElectrique}</span></div>` : ''}
         ${order.vitesseMs ? `<div><span class="label">Vitesse :</span> <span class="value">${order.vitesseMs} m/s</span></div>` : ''}
-        ${order.nombreEtages ? `<div><span class="label">Étages :</span> <span class="value">${order.nombreEtages}</span></div>` : ''}
+        ${order.nombreEtages ? `<div><span class="label">Nombre d'arrêts :</span> <span class="value">${order.nombreEtages}</span></div>` : ''}
       </div>
     </div>
 
@@ -127,8 +128,9 @@ export function orderToHTML(order: any): string {
       <tr><td>Largeur gaine</td><td>${order.largeurGaineMm || '—'}</td></tr>
       <tr><td>Profondeur gaine</td><td>${order.profondeurGaineMm || '—'}</td></tr>
       <tr><td>Hauteur gaine</td><td>${order.hauteurGaineMm || '—'}</td></tr>
-      ${order.profondeurCuvetteMm ? `<tr><td>Profondeur cuvette</td><td>${order.profondeurCuvetteMm}</td></tr>` : ''}
-      ${order.hauteurDernierEtageMm ? `<tr><td>Hauteur dernier étage</td><td>${order.hauteurDernierEtageMm}</td></tr>` : ''}
+      ${order.profondeurCuvetteMm ? `<tr><td>À la cuve</td><td>${order.profondeurCuvetteMm}</td></tr>` : ''}
+      ${order.hauteurDernierEtageMm ? `<tr><td>Dernier niveau</td><td>${order.hauteurDernierEtageMm}</td></tr>` : ''}
+      ${order.typeParachute ? `<tr><td>Type de parachute</td><td>${order.typeParachute}</td></tr>` : ''}
       ${order.largeurCabineCalculeeMm ? `<tr><td>Largeur cabine calculée</td><td>${order.largeurCabineCalculeeMm}</td></tr>` : ''}
       ${order.profondeurCabineCalculeeMm ? `<tr><td>Profondeur cabine calculée</td><td>${order.profondeurCabineCalculeeMm}</td></tr>` : ''}
     </table>
@@ -139,6 +141,7 @@ export function orderToHTML(order: any): string {
         <div><span class="label">Cabine :</span> <span class="value">${order.materiauCabine || '—'}</span></div>
         <div><span class="label">Portes :</span> <span class="value">${order.materiauPortes || '—'}</span></div>
         <div><span class="label">Parois :</span> <span class="value">${order.materiauParois || '—'}</span></div>
+        ${order.posteBoutons ? `<div><span class="label">Poste à boutons :</span> <span class="value">${order.posteBoutons}</span></div>` : ''}
       </div>
       <div class="section">
         <h2>📦 Options</h2>

@@ -30,6 +30,8 @@ const orderSchema = new mongoose.Schema({
   typeChassisArcade:    String,
   finitionInterieurCabine: String,
   revetementSol:        String,
+  typeParachute:        String,   // libre (l'admin tape le type de parachute)
+  posteBoutons:         String,   // ENCASTRÉ | APPARENT | texte libre
 
   profondeurCuvetteMm:     String,
   hauteurDernierEtageMm:   String,

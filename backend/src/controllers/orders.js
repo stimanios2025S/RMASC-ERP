@@ -161,6 +161,7 @@ export async function createOrder(req, res) {
       finitionInterieurCabine: d.finitionInterieurCabine || undefined, revetementSol: d.revetementSol || undefined,
       largeurPassageLibreMm: d.largeurPassageLibreMm || undefined, hauteurUtileCabineMm: d.hauteurUtileCabineMm || undefined,
       typeSuspensionGuidage: d.typeSuspensionGuidage || undefined, systemeSurcharge: d.systemeSurcharge || undefined,
+      typeParachute: d.typeParachute || undefined, posteBoutons: d.posteBoutons || undefined,
       optPanoramique: !!d.optPanoramique, optSecours: !!d.optSecours, optAnnoncesVocales: !!d.optAnnoncesVocales,
       optCctv: !!d.optCctv, optPortesCoupeFeu: !!d.optPortesCoupeFeu, optPanneauTactile: !!d.optPanneauTactile,
       optVentilation: !!d.optVentilation, optBarreaudage: !!d.optBarreaudage, optAlarme: !!d.optAlarme,
@@ -483,7 +484,7 @@ export async function updateOrder(req, res) {
       'materiauCabine','materiauPortes','materiauParois','materiauSol',
       'typeCabine','typePorte','finitionPorteCabine','typeChassisArcade',
       'finitionInterieurCabine','revetementSol','largeurPassageLibreMm','hauteurUtileCabineMm',
-      'typeSuspensionGuidage','systemeSurcharge','projectName','priority','notes',
+      'typeSuspensionGuidage','systemeSurcharge','typeParachute','posteBoutons','projectName','priority','notes',
       'lifecycleStage','engineeredBy','totalCostDZD','salePriceDZD','marginPct',
       'optPanoramique','optSecours','optAnnoncesVocales','optCctv','optPortesCoupeFeu',
       'optPanneauTactile','optVentilation','optBarreaudage','optAlarme','status']
