@@ -8,7 +8,7 @@ const inputPdf = process.argv[2]
 const stampPng = process.argv[3] || 'public/cachet.png.png'
 const outputPdf = process.argv[4] || 'scripts/test-stamped.pdf'
 
-const STAMP_ZONE = { leftPct: 0.61, bottomPct: 0.06, widthPct: 0.32, heightPct: 0.13 }
+const STAMP_ZONE = { leftPct: 0.58, bottomPct: 0.06, widthPct: 0.37, heightPct: 0.17 }
 
 const pdfBytes = fs.readFileSync(inputPdf)
 const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true })
