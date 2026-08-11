@@ -5,15 +5,16 @@
 //   Production   →  aperçu navigateur + "Approuver & Tamponner" :
 //                   incruste public/cachet.png.png à l'emplacement EXACT de
 //                   la signature du bordereau standard (bas-droit, zone
-//                   64%×6% / 34%×18% de la page) sur CHAQUE page
-//                   (copie aplatie, original intact) → APPROVED_LASER
+//                   64%×1.5% / 34%×13% de la page, cachet TOUJOURS HORIZONTAL
+//                   — rotation 90° si l'image source est verticale) sur
+//                   CHAQUE page (copie aplatie, original intact) → APPROVED_LASER
 // Modifier un PDF approuvé → retour EN_ATTENTE (approbation invalidée).
 // Supprimer → purge des fichiers disque + base (visible pour les deux rôles).
 
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib'
 import LaserFile from '../models/LaserFile.js'
 import { createLaserFileSchema } from '../schemas/validation.js'
 import {
@@ -58,15 +59,16 @@ function findStamp() {
 //   A4 portrait — signature en bas-droit (sous "Reçu le .......", au-dessus
 //   de la ligne "Signature", hors de la cellule OBSERVATION) :
 //   • bord gauche de la zone : 64% de la largeur de page (≈134mm)
-//   • bord bas de la zone     :  6% de la hauteur de page (dans 5-8%)
+//   • bord bas de la zone     :  1.5% de la hauteur (≈4mm — poussé au max
+//     vers le bas, centre du cachet ≈20mm plus bas qu'avant)
 //   • largeur de la zone      : 34% de la largeur (≈71mm)
-//   • hauteur de la zone      : 18% de la hauteur (≈53mm)
+//   • hauteur de la zone      : 13% de la hauteur (≈39mm — cachet HORIZONTAL)
 // Exprimé en % de la page → s'adapte à tout format (A4/A3, portrait/paysage).
 const STAMP_ZONE = {
-  leftPct:   0.64, // bord gauche de la zone signature (% largeur page)
-  bottomPct: 0.06, // bord bas de la zone signature (% hauteur page)
-  widthPct:  0.34, // largeur de la zone (% largeur page)
-  heightPct: 0.18, // hauteur de la zone (% hauteur page)
+  leftPct:   0.64,  // bord gauche de la zone signature (% largeur page)
+  bottomPct: 0.015, // bord bas de la zone signature (% hauteur page)
+  widthPct:  0.34,  // largeur de la zone (% largeur page)
+  heightPct: 0.13,  // hauteur de la zone (% hauteur page)
 }
 
 async function stampPdf(originalPath, stampPath, outputPath, approvedBy) {
@@ -93,21 +95,42 @@ async function stampPdf(originalPath, stampPath, outputPath, approvedBy) {
     const zoneW = STAMP_ZONE.widthPct  * width
     const zoneH = STAMP_ZONE.heightPct * height
 
-    // ── Cachet : s'adapte à la zone, proportions conservées, centré ──────
-    const aspect = stampImage.height / stampImage.width
-    const w = Math.min(zoneW, zoneH / aspect)
-    const h = w * aspect
-    const x = zoneX + (zoneW - w) / 2
-    const y = zoneY + (zoneH - h) / 2
+    // ── Cachet TOUJOURS HORIZONTAL (paysage) ─────────────────────────────
+    // Si l'image source est verticale (portrait) → rotation 90° : la hauteur
+    // source devient la largeur visuelle → cachet à l'italienne, pro.
+    const rawW = stampImage.width
+    const rawH = stampImage.height
+    const isPortrait = rawH > rawW
+    const scale = isPortrait
+      ? Math.min(zoneW / rawH, zoneH / rawW)   // dimensionne le cachet TOURNÉ
+      : Math.min(zoneW / rawW, zoneH / rawH)
 
-    page.drawImage(stampImage, { x, y, width: w, height: h })
+    const pw = rawW * scale   // largeur de dessin (espace image)
+    const ph = rawH * scale   // hauteur de dessin (espace image)
+    const visW = isPortrait ? ph : pw   // largeur VISUELLE après rotation
+    const visH = isPortrait ? pw : ph   // hauteur VISUELLE après rotation
 
-    // ── Traçabilité au-dessus du cachet (alignée droite de la zone) ───────
+    let x, y, visRight
+    if (isPortrait) {
+      // pdf-lib tourne autour du point d'ancrage (x,y) →
+      // boîte visuelle : [x - visW, x] × [y, y + visH]
+      x = zoneX + (zoneW + visW) / 2
+      y = zoneY + (zoneH - visH) / 2
+      visRight = x
+      page.drawImage(stampImage, { x, y, width: pw, height: ph, rotate: degrees(90) })
+    } else {
+      x = zoneX + (zoneW - visW) / 2
+      y = zoneY + (zoneH - visH) / 2
+      visRight = x + visW
+      page.drawImage(stampImage, { x, y, width: pw, height: ph })
+    }
+
+    // ── Traçabilité au-dessus du cachet (alignée droite du cachet) ────────
     const label = `APPROUVÉ — ${approvedBy} — ${new Date().toLocaleDateString('fr-FR')}`
     const labelWidth = font.widthOfTextAtSize(label, 7)
     page.drawText(label, {
-      x: Math.max(0, zoneX + zoneW - labelWidth),
-      y: Math.min(zoneY + zoneH + 8, height - 10),
+      x: Math.max(0, visRight - labelWidth),
+      y: Math.min(y + visH + 8, height - 10),
       size: 7,
       font,
       color: rgb(0.8, 0.12, 0.12),
