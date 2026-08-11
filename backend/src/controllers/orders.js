@@ -195,6 +195,14 @@ export async function updateOrderStatus(req, res) {
       order.productionStartedAt = new Date()
       if (parsed.data.assignedAtelier) order.assignedAtelier = parsed.data.assignedAtelier
     }
+    // L'Ingénieur 2 a re-soumis le dessin corrigé → le motif du refus n'a plus
+    // lieu d'être : on l'efface pour que le Vérificateur voie une commande propre.
+    // (ATTENTE_VERIFICATION n'est atteignable QUE par cette re-soumission.)
+    if (parsed.data.status === 'ATTENTE_VERIFICATION') {
+      order.rejectionReason = null
+      order.rejectedBy = null
+      order.rejectedAt = null
+    }
     await order.save()
     notifyOrderStatusChanged(order._id.toString(), order.serialNumber, oldStatus, order.status) // temps réel
     res.json({
