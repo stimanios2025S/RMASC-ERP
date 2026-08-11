@@ -3,8 +3,10 @@
 //   Ingénieur 2  →  upload PDF (EN_ATTENTE) + métadonnées (matériau,
 //                   épaisseur, quantité, commande/fiche technique)
 //   Production   →  aperçu navigateur + "Approuver & Tamponner" :
-//                   incruste public/cachet.png.png en bas à droite de CHAQUE
-//                   page (copie aplatie, original intact) → APPROVED_LASER
+//                   incruste public/cachet.png.png à l'emplacement EXACT de
+//                   la signature du bordereau standard (bas-droit, zone
+//                   65%×8% / 25%×10% de la page) sur CHAQUE page
+//                   (copie aplatie, original intact) → APPROVED_LASER
 // Modifier un PDF approuvé → retour EN_ATTENTE (approbation invalidée).
 // Supprimer → purge des fichiers disque + base (visible pour les deux rôles).
 
@@ -47,10 +49,25 @@ function findStamp() {
   return null
 }
 
-// ─── Moteur de tamponnage (pdf-lib) : cachet bas-droite sur chaque page ──
+// ─── Moteur de tamponnage (pdf-lib) : cachet sur la ZONE SIGNATURE ────────
 // Le PDF est ré-écrit avec l'image incrustée directement dans le flux de
 // page → résultat aplati, original intact. Ajoute une ligne de traçabilité
 // (qui + quand) au-dessus du cachet.
+//
+// ZONE SIGNATURE (bordereau standard — analyse du modèle fourni) :
+//   A4 portrait — signature en bas-droit :
+//   • bord gauche de la zone : 65% de la largeur de page
+//   • bord bas de la zone     :  8% de la hauteur de page
+//   • largeur de la zone      : 25% de la largeur
+//   • hauteur de la zone      : 10% de la hauteur
+// Exprimé en % de la page → s'adapte à tout format (A4/A3, portrait/paysage).
+const STAMP_ZONE = {
+  leftPct:   0.65, // bord gauche de la zone signature (% largeur page)
+  bottomPct: 0.08, // bord bas de la zone signature (% hauteur page)
+  widthPct:  0.25, // largeur de la zone (% largeur page)
+  heightPct: 0.10, // hauteur de la zone (% hauteur page)
+}
+
 async function stampPdf(originalPath, stampPath, outputPath, approvedBy) {
   const pdfBytes = await fs.promises.readFile(originalPath)
   const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true })
@@ -66,26 +83,30 @@ async function stampPdf(originalPath, stampPath, outputPath, approvedBy) {
   const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
   const pages = pdfDoc.getPages()
 
-  const margin = 24
-  const targetWidth = 150 // px de base — adapté à chaque page si besoin
-
   for (const page of pages) {
     const { width, height } = page.getSize()
-    const aspect = stampImage.height / stampImage.width
-    const w = Math.min(targetWidth, width * 0.35)
-    const h = w * aspect
-    const x = width - w - margin
-    const y = margin
 
-    // Cachet (coin bas droit)
+    // ── Zone signature (en points) ────────────────────────────────────────
+    const zoneX = STAMP_ZONE.leftPct   * width
+    const zoneY = STAMP_ZONE.bottomPct * height
+    const zoneW = STAMP_ZONE.widthPct  * width
+    const zoneH = STAMP_ZONE.heightPct * height
+
+    // ── Cachet : s'adapte à la zone, proportions conservées, centré ──────
+    const aspect = stampImage.height / stampImage.width
+    const w = Math.min(zoneW, zoneH / aspect)
+    const h = w * aspect
+    const x = zoneX + (zoneW - w) / 2
+    const y = zoneY + (zoneH - h) / 2
+
     page.drawImage(stampImage, { x, y, width: w, height: h })
 
-    // Traçabilité au-dessus du cachet
+    // ── Traçabilité au-dessus du cachet (alignée droite de la zone) ───────
     const label = `APPROUVÉ — ${approvedBy} — ${new Date().toLocaleDateString('fr-FR')}`
     const labelWidth = font.widthOfTextAtSize(label, 7)
     page.drawText(label, {
-      x: x + w - labelWidth,
-      y: Math.min(y + h + 8, height - 10),
+      x: Math.max(0, zoneX + zoneW - labelWidth),
+      y: Math.min(zoneY + zoneH + 8, height - 10),
       size: 7,
       font,
       color: rgb(0.8, 0.12, 0.12),
