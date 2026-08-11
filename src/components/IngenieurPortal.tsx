@@ -102,6 +102,9 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
   const [showAgent, setShowAgent] = useState(false)
   const [showSmartSearch, setShowSmartSearch] = useState(false)
   const [vaultPreviewFile, setVaultPreviewFile] = useState<{ name: string; type: string; url?: string } | null>(null)
+  const [showRefuse, setShowRefuse] = useState(false)
+  const [refuseReason, setRefuseReason] = useState('')
+  const [refusing, setRefusing] = useState(false)
 
   // ── Open a vault file in the FileViewer modal ──
   const openVaultFile = async (f: VaultFile) => {
@@ -175,6 +178,21 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
       loadOrders()
     } catch (err: any) { flash(false, err.message) }
     finally { setUploading(false) }
+  }
+
+  // ── Vérificateur : REFUSER le plan (retour à l'Ingénieur 2 avec motif) ──
+  const refusePlan = async (orderId: string) => {
+    const motif = refuseReason.trim()
+    if (!motif) { flash(false, 'Le motif du refus est obligatoire.'); return }
+    try {
+      setRefusing(true)
+      await apiFetch(`/orders/${orderId}/refuse-verification`, { method: 'POST', body: JSON.stringify({ reason: motif }) })
+      flash(true, '❌ Plan refusé — renvoyé à l\'Ingénieur 2 avec le motif.')
+      setShowRefuse(false)
+      setRefuseReason('')
+      loadOrders()
+    } catch (err: any) { flash(false, err.message) }
+    finally { setRefusing(false) }
   }
 
   const myOrders = orders.filter(o => o.status === config.status)
@@ -291,6 +309,12 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
               className="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-amber-500/90 to-orange-600/90 hover:from-amber-400 hover:to-orange-500 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]">
               {uploading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block mr-2" /> Envoi...</> : config.nextLabel}
             </button>
+            {role === 'VERIFICATEUR' && (
+              <button onClick={() => setShowRefuse(true)} disabled={uploading}
+                className="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-red-600/90 hover:bg-red-700 shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]">
+                ❌ Refuser le plan
+              </button>
+            )}
             <button onClick={() => { setSelectedOrder(order); setShowFiche(true) }}
               className="w-full py-2.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/10 transition-all active:scale-[0.98]">
               📄 Fiche Technique
@@ -528,6 +552,48 @@ export default function IngenieurPortal({ onBack, session, role }: Props) {
       )}
       {showAgent && <AgentPanel onClose={() => setShowAgent(false)} />}
       {showSmartSearch && <SmartSearch onNavigate={() => setShowSmartSearch(false)} />}
+
+      {/* ── Modale : REFUSER le plan (Vérificateur) ── */}
+      {showRefuse && selectedOrder && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-slate-800 border border-red-500/30 shadow-2xl shadow-red-900/30 overflow-hidden">
+            <div className="px-5 py-4 bg-gradient-to-r from-red-600/90 to-rose-700/90 border-b border-red-400/30 flex items-center gap-3">
+              <span className="text-2xl">❌</span>
+              <div>
+                <h3 className="text-base font-extrabold text-white">Refuser le plan</h3>
+                <p className="text-xs text-red-100/90 font-medium">Commande {selectedOrder.serialNumber} — le plan sera renvoyé à l'Ingénieur 2</p>
+              </div>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wide">
+                  Motif du refus <span className="text-red-400">*</span>
+                </label>
+                <textarea
+                  value={refuseReason}
+                  onChange={(e) => setRefuseReason(e.target.value)}
+                  rows={4}
+                  maxLength={600}
+                  autoFocus
+                  placeholder="Expliquez à l'Ingénieur 2 ce qui doit être corrigé sur le plan (dimensions, matériau, cotes, format...) — ce motif lui sera affiché."
+                  className="w-full rounded-xl bg-slate-900/70 border border-slate-600 focus:border-red-400 focus:ring-2 focus:ring-red-500/20 text-sm text-white placeholder-slate-500 px-3.5 py-3 outline-none resize-none transition-all"
+                />
+                <p className="text-right text-[10px] text-slate-500 mt-1">{refuseReason.length}/600</p>
+              </div>
+            </div>
+            <div className="px-5 py-4 bg-slate-900/40 border-t border-slate-700/60 flex justify-end gap-3">
+              <button onClick={() => { setShowRefuse(false); setRefuseReason('') }} disabled={refusing}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-300 bg-slate-700/60 hover:bg-slate-600/60 disabled:opacity-50 transition-all">
+                Annuler
+              </button>
+              <button onClick={() => refusePlan(selectedOrder.id)} disabled={refusing || !refuseReason.trim()}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]">
+                {refusing ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block mr-2" /> Refus en cours...</> : 'Confirmer le refus'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

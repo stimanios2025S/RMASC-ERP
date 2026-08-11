@@ -25,7 +25,7 @@ import {
   listOrders, getOrder, getOrderDatasheet, createOrder, updateOrderStatus,
   updateProductionPhase, uploadFile, listFiles, downloadFile, deleteFile,
   searchArchives, getOrderArchive, approvePlan, restampOrder, rejectPlan,
-  markDelivery, confirmDelivery, updateOrder, deleteOrder, deleteAllOrders, exportOrders,
+  refuseVerification, markDelivery, confirmDelivery, updateOrder, deleteOrder, deleteAllOrders, exportOrders,
 } from './src/controllers/orders.js'
 import {
   listItems, createItem, getItem, updateItem, deleteItem, uploadItemImage,
@@ -160,6 +160,7 @@ app.post('/api/orders/:id/upload', authenticate, upload.single('file'), uploadFi
 app.delete('/api/orders/:id/files/:fileId', authenticate, deleteFile)
 app.post('/api/orders/:id/approve-plan', authenticate, requireAdmin, loadOrder, approvePlan)
 app.post('/api/orders/:id/reject-plan', authenticate, requireAdmin, loadOrder, rejectPlan)
+app.post('/api/orders/:id/refuse-verification', authenticate, loadOrder, refuseVerification) // Vérificateur/Admin — motif obligatoire
 app.post('/api/orders/:id/restamp', authenticate, requireAdmin, restampOrder)
 app.post('/api/orders/:id/mark-delivery', authenticate, loadOrder, markDelivery)
 app.post('/api/orders/:id/confirm-delivery', authenticate, requireAdmin, loadOrder, confirmDelivery)

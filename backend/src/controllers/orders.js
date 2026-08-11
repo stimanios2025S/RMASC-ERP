@@ -442,6 +442,49 @@ export async function rejectPlan(req, res) {
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
 
+// POST /api/orders/:id/refuse-verification
+// Le Vérificateur (ou Admin) REFUSE le dessin 2D envoyé par l'Ingénieur 2 :
+// la commande revient en ATTENTE_DESSIN_2D avec le motif du refus.
+// L'Ingénieur 2 voit le motif dans son portail (bannière rouge).
+export async function refuseVerification(req, res) {
+  try {
+    const order = req.order  // loaded by loadOrder middleware
+    if (!order) return res.status(404).json({ error: 'Commande introuvable.' })
+
+    const role = req.user?.role
+    if (role !== 'VERIFICATEUR' && role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Accès refusé. Seul le Vérificateur (ou Admin) peut refuser le plan.' })
+    }
+
+    if (order.status !== 'ATTENTE_VERIFICATION') {
+      return res.status(409).json({ error: `Statut actuel: ${order.status}. Seules les commandes en Vérification peuvent être refusées.` })
+    }
+
+    const motif = String(req.body?.reason || '').trim()
+    if (!motif) {
+      return res.status(400).json({ error: 'Le motif du refus est obligatoire.' })
+    }
+
+    order.status = 'ATTENTE_DESSIN_2D'
+    order.statusChangedAt = new Date()
+    order.rejectionReason = motif
+    order.rejectedBy = req.user?.name || 'Vérificateur'
+    order.rejectedAt = new Date()
+    await order.save()
+
+    // Temps réel : l'Ingénieur 2 voit la commande revenir + le motif
+    notifyOrderStatusChanged(order._id.toString(), order.serialNumber, 'ATTENTE_VERIFICATION', order.status)
+
+    res.json({
+      message: '❌ Plan refusé — renvoyé à l\'Ingénieur 2 avec le motif.',
+      rejectionReason: order.rejectionReason,
+      rejectedBy: order.rejectedBy,
+      rejectedAt: order.rejectedAt,
+      status: order.status,
+    })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+}
+
 // POST /api/orders/:id/mark-delivery
 export async function markDelivery(req, res) {
   try {

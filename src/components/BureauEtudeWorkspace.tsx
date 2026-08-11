@@ -401,8 +401,8 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                   </div>
                   {selectedOrder?.id === order.id && (
                     <div className="px-4 py-3 space-y-2">
-                      {/* ── REJECTION NOTICE (rendered when plan was rejected by Admin) ── */}
-                      {order.status === 'ATTENTE_DESSIN_TECH' && order.rejectionReason && (
+                      {/* ── REJECTION NOTICE (rendered when plan was rejected by Admin or Verificateur) ── */}
+                      {(order.status === 'ATTENTE_DESSIN_TECH' || order.status === 'ATTENTE_DESSIN_2D') && order.rejectionReason && (
                         <div className="bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2.5">
                           <div className="flex items-center gap-1.5 mb-1">
                             <span className="w-2 h-2 rounded-full bg-red-500" />
@@ -420,7 +420,7 @@ export default function BureauEtudeWorkspace({ onBack, forcedTab, session }: Pro
                         </div>
                       )}
                       {/* ── APPROVAL NOTICE (rendered when plan was approved) ── */}
-                      {order.status !== 'ATTENTE_DESSIN_TECH' && order.approvedBy && (
+                      {order.status !== 'ATTENTE_DESSIN_TECH' && order.status !== 'ATTENTE_DESSIN_2D' && order.approvedBy && (
                         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2.5 flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-emerald-400" />
                           <span className="text-[10px] font-semibold text-emerald-400">

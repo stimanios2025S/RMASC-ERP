@@ -2,7 +2,7 @@
   "short_name": "RMASC ERP",
   "name": "RMASC FACTORY — ERP Ascenseur",
   "description": "Système de gestion intégré pour la fabrication d'ascenseurs. Bureau d'Études, Production, Stocks & Logistique.",
-  "start_url": "/?source=pwa&v=2.7.5",
+  "start_url": "/?source=pwa&v=2.7.6",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#f97316",
