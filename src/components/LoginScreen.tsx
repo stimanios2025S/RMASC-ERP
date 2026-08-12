@@ -32,7 +32,6 @@ export default function LoginScreen({ onLogin }: Props) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [showHint, setShowHint] = useState(false)
   const [networkOnline, setNetworkOnline] = useState(true)
 
   useEffect(() => {
@@ -147,26 +146,6 @@ export default function LoginScreen({ onLogin }: Props) {
               </div>
             </div>
 
-            <button type="button" onClick={() => setShowHint(p => !p)}
-              className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-all">
-              <span>💡</span>
-              <span>{showHint ? 'Masquer' : 'Afficher les identifiants de test'}</span>
-            </button>
-
-            {showHint && (
-              <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1 backdrop-blur-sm">
-                <p className="text-[11px] font-bold text-white/70 uppercase tracking-wider mb-1.5">Comptes disponibles</p>
-                <div className="text-[12px] text-white/60 space-y-0.5 font-mono">
-                  <p>👑 <span className="text-amber-300 font-bold">admin</span> / admin123 — Direction</p>
-                  <p>📐 <span className="text-sky-300 font-bold">ingenieur1</span> / ingenieur1 — BE Dessin 1</p>
-                  <p>✏️ <span className="text-violet-300 font-bold">ingenieur2</span> / ingenieur2 — BE Dessin 2</p>
-                  <p>🔍 <span className="text-rose-300 font-bold">verificateur</span> / verificateur — BE Vérif.</p>
-                  <p>🏭 <span className="text-emerald-300 font-bold">production</span> / production — Atelier</p>
-                  <p>📦 <span className="text-cyan-300 font-bold">magasinier</span> / magasinier — Stocks</p>
-                </div>
-              </div>
-            )}
-
             {error && (
               <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20">
                 <span className="text-red-400 text-lg">⚠️</span>
@@ -186,7 +165,7 @@ export default function LoginScreen({ onLogin }: Props) {
 
           <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[10px] text-white/40 font-medium">
             <span className="flex items-center gap-1.5"><span>🔒</span> Connexion locale sécurisée</span>
-            <span>RMASC ERP <span className="text-amber-400/80">v2.6.0</span></span>
+            <span>RMASC ERP <span className="text-amber-400/80">v2.7.9</span></span>
           </div>
         </div>
       </div>

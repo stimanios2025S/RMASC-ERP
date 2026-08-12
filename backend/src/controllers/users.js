@@ -7,18 +7,24 @@ import { loginSchema, changePasswordSchema, changeAdminCredentialsSchema } from 
 const JWT_SECRET = process.env.JWT_SECRET
 const BCRYPT_ROUNDS = 12
 
+// ⚠️  SÉCURITÉ : ces identifiants ont été ROTÉS (v2.7.9) — les anciens
+// (salim/salim123, chergui123, ingenieur1, verificateur, production,
+// production2, magasinier…) ne fonctionnent PLUS.
+// `oldPassword` sert UNIQUEMENT à la rotation au démarrage : si le compte a
+// encore l'ancien mot de passe par défaut → on le remplace. Si l'Admin a déjà
+// changé le mot de passe manuellement → on respecte son choix.
 const DEFAULT_USERS = [
-  { loginId: 'salim', password: 'salim123', name: 'Salim', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'chergui_ghani', password: 'chergui123', name: 'Chergui El Ghani', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'chergui_nassim', password: 'chergui123', name: 'Chergui Nassim', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'chergui_said', password: 'chergui123', name: 'Chergui Said', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'chergui_aziz', password: 'chergui123', name: 'Chergui El Aziz', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'ingenieur1', password: 'ingenieur1', name: 'Karim Bensalem', role: 'INGENIEUR_1', canChangePassword: false },
-  { loginId: 'ingenieur2', password: 'ingenieur2', name: 'Yasmine Hamidi', role: 'INGENIEUR_2', canChangePassword: false },
-  { loginId: 'verificateur', password: 'verificateur', name: 'Rachid Imane', role: 'VERIFICATEUR', canChangePassword: false },
-  { loginId: 'production', password: 'production', name: 'Said Mansouri', role: 'PRODUCTION', canChangePassword: false },
-  { loginId: 'production2', password: 'production2', name: 'Chef Atelier 2', role: 'PRODUCTION_2', canChangePassword: false },
-  { loginId: 'magasinier', password: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER', canChangePassword: false },
+  { loginId: 'salim.rmasc', password: 'Rm#Salim2026!', oldPassword: 'salim123', name: 'Salim', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'ghani.rmasc', password: 'Rm#Ghani2026!', oldPassword: 'chergui123', name: 'Chergui El Ghani', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'nassim.rmasc', password: 'Rm#Nassim2026!', oldPassword: 'chergui123', name: 'Chergui Nassim', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'said.rmasc', password: 'Rm#Said2026!', oldPassword: 'chergui123', name: 'Chergui Said', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'aziz.rmasc', password: 'Rm#Aziz2026!', oldPassword: 'chergui123', name: 'Chergui El Aziz', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'karim.be1', password: 'Rm#Karim2026!', oldPassword: 'ingenieur1', name: 'Karim Bensalem', role: 'INGENIEUR_1', canChangePassword: false },
+  { loginId: 'yasmine.be2', password: 'Rm#Yasmine2026!', oldPassword: 'ingenieur2', name: 'Yasmine Hamidi', role: 'INGENIEUR_2', canChangePassword: false },
+  { loginId: 'rachid.verif', password: 'Rm#Rachid2026!', oldPassword: 'verificateur', name: 'Rachid Imane', role: 'VERIFICATEUR', canChangePassword: false },
+  { loginId: 'said.prod1', password: 'Rm#Prod1_2026!', oldPassword: 'production', name: 'Said Mansouri', role: 'PRODUCTION', canChangePassword: false },
+  { loginId: 'chef.prod2', password: 'Rm#Prod2_2026!', oldPassword: 'production2', name: 'Chef Atelier 2', role: 'PRODUCTION_2', canChangePassword: false },
+  { loginId: 'ahmed.mag', password: 'Rm#Ahmed2026!', oldPassword: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER', canChangePassword: false },
 ]
 
 async function hashDefaults() {
@@ -84,17 +90,12 @@ export async function resetAndReseed(_req, res) {
 // POST /api/users/seed-admins
 export async function seedAdmins(_req, res) {
   try {
-    const admins = [
-      { loginId: 'chergui_ghani', name: 'Chergui El Ghani', role: 'ADMIN', canChangePassword: true },
-      { loginId: 'chergui_nassim', name: 'Chergui Nassim', role: 'ADMIN', canChangePassword: true },
-      { loginId: 'chergui_said', name: 'Chergui Said', role: 'ADMIN', canChangePassword: true },
-      { loginId: 'chergui_aziz', name: 'Chergui El Aziz', role: 'ADMIN', canChangePassword: true },
-    ]
+    const admins = DEFAULT_USERS.filter(d => d.role === 'ADMIN')
     let created = 0
     for (const admin of admins) {
       const exists = await PortalUser.findOne({ loginId: admin.loginId })
       if (!exists) {
-        await PortalUser.create({ ...admin, password: await bcrypt.hash('chergui123', BCRYPT_ROUNDS) })
+        await PortalUser.create({ ...admin, password: await bcrypt.hash(admin.password, BCRYPT_ROUNDS) })
         created++
       }
     }
@@ -103,17 +104,18 @@ export async function seedAdmins(_req, res) {
 }
 
 // ─── Création auto du compte Atelier 2 (idempotent) ─────────────────────
-// Appelé au démarrage du serveur + via POST /api/users/ensure-production2.
-// Sans étape manuelle : après déploiement, le compte existe déjà.
+// Fallback manuel via POST /api/users/ensure-production2.
+// (La rotation rotateCredentials() couvre ce compte au démarrage.)
 export async function ensureProduction2User() {
-  const exists = await PortalUser.findOne({ loginId: 'production2' }).select('_id').lean()
+  const prod2 = DEFAULT_USERS.find(d => d.role === 'PRODUCTION_2')
+  const exists = await PortalUser.findOne({ loginId: prod2.loginId }).select('_id').lean()
   if (exists) return { created: false }
   await PortalUser.create({
-    loginId: 'production2',
-    password: await bcrypt.hash('production2', BCRYPT_ROUNDS),
-    name: 'Chef Atelier 2',
-    role: 'PRODUCTION_2',
-    canChangePassword: false,
+    loginId: prod2.loginId,
+    password: await bcrypt.hash(prod2.password, BCRYPT_ROUNDS),
+    name: prod2.name,
+    role: prod2.role,
+    canChangePassword: prod2.canChangePassword,
   })
   return { created: true }
 }
@@ -123,9 +125,46 @@ export async function ensureProduction2(_req, res) {
   try {
     const result = await ensureProduction2User()
     res.json(result.created
-      ? { message: '✅ Compte Atelier 2 créé (login: production2 / mot de passe: production2).', created: true }
+      ? { message: '✅ Compte Atelier 2 créé.', created: true }
       : { message: 'Compte Atelier 2 déjà présent.', created: false })
   } catch (e) { res.status(500).json({ error: e.message }) }
+}
+
+// ─── Rotation des identifiants (v2.7.9 — sécurité) ────────────────────────
+// Appelée au démarrage du serveur. Pour chaque compte par défaut :
+//   • Compte absent      → créé avec les nouveaux identifiants
+//   • Mot de passe encore = ancien défaut → rotation (nouvel ID + nouveau MDP)
+//   • Mot de passe changé manuellement (Admin) → respecté, rien d'écrasé
+// Idempotente : relancer plusieurs fois ne casse rien.
+export async function rotateCredentials() {
+  let created = 0, rotated = 0, kept = 0
+  for (const d of DEFAULT_USERS) {
+    const existing = await PortalUser.findOne({ $or: [{ loginId: d.loginId }, { name: d.name }] })
+    if (!existing) {
+      await PortalUser.create({
+        loginId: d.loginId,
+        password: await bcrypt.hash(d.password, BCRYPT_ROUNDS),
+        name: d.name,
+        role: d.role,
+        canChangePassword: d.canChangePassword,
+      })
+      created++
+      continue
+    }
+    // Toujours sur l'ancien mot de passe par défaut → on applique la rotation
+    const stillOldDefault = existing.password && await bcrypt.compare(d.oldPassword, existing.password).catch(() => false)
+    if (stillOldDefault) {
+      existing.loginId = d.loginId
+      existing.password = await bcrypt.hash(d.password, BCRYPT_ROUNDS)
+      existing.role = d.role
+      existing.canChangePassword = d.canChangePassword
+      await existing.save()
+      rotated++
+    } else {
+      kept++ // mot de passe déjà changé manuellement → respecté
+    }
+  }
+  return { created, rotated, kept }
 }
 
 // GET /api/users

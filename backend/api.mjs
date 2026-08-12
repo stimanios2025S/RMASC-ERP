@@ -20,7 +20,7 @@ import { healthCheck, versionCheck } from './src/controllers/health.js'
 import {
   login, seedUsers, fixPasswords, resetAndReseed, seedAdmins,
   listUsers, updateUserName, changeAdminCredentials, changeUserPassword,
-  ensureProduction2, ensureProduction2User,
+  ensureProduction2, ensureProduction2User, rotateCredentials,
 } from './src/controllers/users.js'
 import {
   listOrders, getOrder, getOrderDatasheet, createOrder, updateOrderStatus,
@@ -364,11 +364,13 @@ async function start() {
     const { connectDB } = await import('./src/lib/mongoose.js')
     await connectDB()
     console.log(`  ✅ MongoDB connectée`)
-    // Compte Atelier 2 (PRODUCTION_2) créé automatiquement s'il manque
+    // Rotation des identifiants (v2.7.9) : applique les nouveaux ID/MDP aux
+    // comptes encore sur l'ancien défaut, crée les comptes manquants
+    // (dont Atelier 2), et respecte les mots de passe changés manuellement.
     try {
-      const { created } = await ensureProduction2User()
-      console.log(created ? `  ✅ Compte Atelier 2 créé (production2 / production2)` : `  ℹ️  Compte Atelier 2 déjà présent`)
-    } catch (e) { console.warn(`  ⚠️  Compte Atelier 2: ${e.message}`) }
+      const { created, rotated, kept } = await rotateCredentials()
+      console.log(`  🔐 Identifiants: ${created} créé(s), ${rotated} roté(s), ${kept} inchangé(s) (changés manuellement)`)
+    } catch (e) { console.warn(`  ⚠️  Rotation des identifiants: ${e.message}`) }
   } catch (err) {
     console.warn(`  ⚠️  MongoDB: ${err.message}`)
   }

@@ -69,17 +69,23 @@ PORT=4001 nohup node backend/api.mjs > /tmp/rmasc.log 2>&1 &
 
 ---
 
-## 🔐 Identifiants par défaut
+## 🔐 Identifiants (rotés en v2.7.9 — les anciens ne fonctionnent plus)
+
+> ⚠️ **Confidentiel** : ne pas afficher ces identifiants sur l'écran de connexion ni les partager publiquement.
 
 | Rôle | Identifiant | Mot de passe |
 |------|-------------|--------------|
-| 👑 Administration | `salim` | `salim123` |
-| 👑 Administration | `chergui_ghani` | `chergui123` |
-| 📐 Ingénieur Dessinateur 1 | `ingenieur1` | `ingenieur1` |
-| ✏️ Ingénieur Dessinateur 2 | `ingenieur2` | `ingenieur2` |
-| 🔍 Vérificateur | `verificateur` | `verificateur` |
-| 🏭 Production | `production` | `production` |
-| 📦 Magasinier | `magasinier` | `magasinier` |
+| 👑 Admin — Salim | `salim.rmasc` | `Rm#Salim2026!` |
+| 👑 Admin — Chergui El Ghani | `ghani.rmasc` | `Rm#Ghani2026!` |
+| 👑 Admin — Chergui Nassim | `nassim.rmasc` | `Rm#Nassim2026!` |
+| 👑 Admin — Chergui Said | `said.rmasc` | `Rm#Said2026!` |
+| 👑 Admin — Chergui El Aziz | `aziz.rmasc` | `Rm#Aziz2026!` |
+| 📐 Ingénieur Dessinateur 1 | `karim.be1` | `Rm#Karim2026!` |
+| ✏️ Ingénieur Dessinateur 2 | `yasmine.be2` | `Rm#Yasmine2026!` |
+| 🔍 Vérificateur | `rachid.verif` | `Rm#Rachid2026!` |
+| 🏭 Production 1 | `said.prod1` | `Rm#Prod1_2026!` |
+| 🏭 Production 2 | `chef.prod2` | `Rm#Prod2_2026!` |
+| 📦 Magasinier | `ahmed.mag` | `Rm#Ahmed2026!` |
 
 ---
 

@@ -8,7 +8,7 @@
 // in MongoDB, NOT localStorage. This ensures cross-device sync.
 // For offline fallback, we only keep user credentials (read-only).
 
-const SEED_KEY = 'rmasc_local_seeded_v4'
+const SEED_KEY = 'rmasc_local_seeded_v5'
 const SESSION_KEY = 'rmasc_portal_session'
 
 interface LocalUser {
@@ -31,18 +31,19 @@ function seedOnce() {
   localStorage.removeItem(SEED_KEY)
 
   // Only seed users — NO orders, NO items, NO suppliers, NO vault files
+  // 🔐 v5 : identifiants ROTÉS (v2.7.9) — les anciens ne fonctionnent plus
   const users: LocalUser[] = [
-    { id: 'u100', loginId: 'salim', password: 'salim123', name: 'Salim', role: 'ADMIN' },
-    { id: 'u101', loginId: 'chergui_ghani', password: 'chergui123', name: 'Chergui El Ghani', role: 'ADMIN' },
-    { id: 'u102', loginId: 'chergui_nassim', password: 'chergui123', name: 'Chergui Nassim', role: 'ADMIN' },
-    { id: 'u103', loginId: 'chergui_said', password: 'chergui123', name: 'Chergui Said', role: 'ADMIN' },
-    { id: 'u104', loginId: 'chergui_aziz', password: 'chergui123', name: 'Chergui El Aziz', role: 'ADMIN' },
-    { id: 'u105', loginId: 'ingenieur1', password: 'ingenieur1', name: 'Karim Bensalem', role: 'INGENIEUR_1' },
-    { id: 'u106', loginId: 'ingenieur2', password: 'ingenieur2', name: 'Yasmine Hamidi', role: 'INGENIEUR_2' },
-    { id: 'u107', loginId: 'verificateur', password: 'verificateur', name: 'Rachid Imane', role: 'VERIFICATEUR' },
-    { id: 'u108', loginId: 'production', password: 'production', name: 'Said Mansouri', role: 'PRODUCTION' },
-    { id: 'u109', loginId: 'production2', password: 'production2', name: 'Chef Atelier 2', role: 'PRODUCTION_2' },
-    { id: 'u110', loginId: 'magasinier', password: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER' },
+    { id: 'u100', loginId: 'salim.rmasc', password: 'Rm#Salim2026!', name: 'Salim', role: 'ADMIN' },
+    { id: 'u101', loginId: 'ghani.rmasc', password: 'Rm#Ghani2026!', name: 'Chergui El Ghani', role: 'ADMIN' },
+    { id: 'u102', loginId: 'nassim.rmasc', password: 'Rm#Nassim2026!', name: 'Chergui Nassim', role: 'ADMIN' },
+    { id: 'u103', loginId: 'said.rmasc', password: 'Rm#Said2026!', name: 'Chergui Said', role: 'ADMIN' },
+    { id: 'u104', loginId: 'aziz.rmasc', password: 'Rm#Aziz2026!', name: 'Chergui El Aziz', role: 'ADMIN' },
+    { id: 'u105', loginId: 'karim.be1', password: 'Rm#Karim2026!', name: 'Karim Bensalem', role: 'INGENIEUR_1' },
+    { id: 'u106', loginId: 'yasmine.be2', password: 'Rm#Yasmine2026!', name: 'Yasmine Hamidi', role: 'INGENIEUR_2' },
+    { id: 'u107', loginId: 'rachid.verif', password: 'Rm#Rachid2026!', name: 'Rachid Imane', role: 'VERIFICATEUR' },
+    { id: 'u108', loginId: 'said.prod1', password: 'Rm#Prod1_2026!', name: 'Said Mansouri', role: 'PRODUCTION' },
+    { id: 'u109', loginId: 'chef.prod2', password: 'Rm#Prod2_2026!', name: 'Chef Atelier 2', role: 'PRODUCTION_2' },
+    { id: 'u110', loginId: 'ahmed.mag', password: 'Rm#Ahmed2026!', name: 'Ahmed Benali', role: 'MAGASINIER' },
   ]
   localStorage.setItem('rmasc_local_users', JSON.stringify(users))
 
