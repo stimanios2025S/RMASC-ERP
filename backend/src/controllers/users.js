@@ -1,30 +1,30 @@
 // ─── RMASC FACTORY — Users Controller ───────────────────────────────────
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose'
 import PortalUser from '../models/PortalUser.js'
 import { loginSchema, changePasswordSchema, changeAdminCredentialsSchema } from '../schemas/validation.js'
 
 const JWT_SECRET = process.env.JWT_SECRET
 const BCRYPT_ROUNDS = 12
 
-// ⚠️  SÉCURITÉ : ces identifiants ont été ROTÉS (v2.7.9) — les anciens
+// ⚠️  SÉCURITÉ : ces identifiants ont été ROTÉS (v2.8.0) — les anciens
 // (salim/salim123, chergui123, ingenieur1, verificateur, production,
 // production2, magasinier…) ne fonctionnent PLUS.
-// `oldPassword` sert UNIQUEMENT à la rotation au démarrage : si le compte a
-// encore l'ancien mot de passe par défaut → on le remplace. Si l'Admin a déjà
-// changé le mot de passe manuellement → on respecte son choix.
+// `oldLoginId` / `oldPassword` servent UNIQUEMENT à la rotation au démarrage :
+// retrouver chaque compte (même si renommé) et détecter les MDP encore par défaut.
 const DEFAULT_USERS = [
-  { loginId: 'salim.rmasc', password: 'Rm#Salim2026!', oldPassword: 'salim123', name: 'Salim', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'ghani.rmasc', password: 'Rm#Ghani2026!', oldPassword: 'chergui123', name: 'Chergui El Ghani', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'nassim.rmasc', password: 'Rm#Nassim2026!', oldPassword: 'chergui123', name: 'Chergui Nassim', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'said.rmasc', password: 'Rm#Said2026!', oldPassword: 'chergui123', name: 'Chergui Said', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'aziz.rmasc', password: 'Rm#Aziz2026!', oldPassword: 'chergui123', name: 'Chergui El Aziz', role: 'ADMIN', canChangePassword: true },
-  { loginId: 'karim.be1', password: 'Rm#Karim2026!', oldPassword: 'ingenieur1', name: 'Karim Bensalem', role: 'INGENIEUR_1', canChangePassword: false },
-  { loginId: 'yasmine.be2', password: 'Rm#Yasmine2026!', oldPassword: 'ingenieur2', name: 'Yasmine Hamidi', role: 'INGENIEUR_2', canChangePassword: false },
-  { loginId: 'rachid.verif', password: 'Rm#Rachid2026!', oldPassword: 'verificateur', name: 'Rachid Imane', role: 'VERIFICATEUR', canChangePassword: false },
-  { loginId: 'said.prod1', password: 'Rm#Prod1_2026!', oldPassword: 'production', name: 'Said Mansouri', role: 'PRODUCTION', canChangePassword: false },
-  { loginId: 'chef.prod2', password: 'Rm#Prod2_2026!', oldPassword: 'production2', name: 'Chef Atelier 2', role: 'PRODUCTION_2', canChangePassword: false },
-  { loginId: 'ahmed.mag', password: 'Rm#Ahmed2026!', oldPassword: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER', canChangePassword: false },
+  { loginId: 'salim.rmasc', password: 'Rm#Salim2026!', oldLoginId: 'salim', oldPassword: 'salim123', name: 'Salim', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'ghani.rmasc', password: 'Rm#Ghani2026!', oldLoginId: 'chergui_ghani', oldPassword: 'chergui123', name: 'Chergui El Ghani', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'nassim.rmasc', password: 'Rm#Nassim2026!', oldLoginId: 'chergui_nassim', oldPassword: 'chergui123', name: 'Chergui Nassim', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'said.rmasc', password: 'Rm#Said2026!', oldLoginId: 'chergui_said', oldPassword: 'chergui123', name: 'Chergui Said', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'aziz.rmasc', password: 'Rm#Aziz2026!', oldLoginId: 'chergui_aziz', oldPassword: 'chergui123', name: 'Chergui El Aziz', role: 'ADMIN', canChangePassword: true },
+  { loginId: 'karim.be1', password: 'Rm#Karim2026!', oldLoginId: 'ingenieur1', oldPassword: 'ingenieur1', name: 'Karim Bensalem', role: 'INGENIEUR_1', canChangePassword: false },
+  { loginId: 'yasmine.be2', password: 'Rm#Yasmine2026!', oldLoginId: 'ingenieur2', oldPassword: 'ingenieur2', name: 'Yasmine Hamidi', role: 'INGENIEUR_2', canChangePassword: false },
+  { loginId: 'rachid.verif', password: 'Rm#Rachid2026!', oldLoginId: 'verificateur', oldPassword: 'verificateur', name: 'Rachid Imane', role: 'VERIFICATEUR', canChangePassword: false },
+  { loginId: 'said.prod1', password: 'Rm#Prod1_2026!', oldLoginId: 'production', oldPassword: 'production', name: 'Said Mansouri', role: 'PRODUCTION', canChangePassword: false },
+  { loginId: 'chef.prod2', password: 'Rm#Prod2_2026!', oldLoginId: 'production2', oldPassword: 'production2', name: 'Chef Atelier 2', role: 'PRODUCTION_2', canChangePassword: false },
+  { loginId: 'ahmed.mag', password: 'Rm#Ahmed2026!', oldLoginId: 'magasinier', oldPassword: 'magasinier', name: 'Ahmed Benali', role: 'MAGASINIER', canChangePassword: false },
 ]
 
 async function hashDefaults() {
@@ -130,16 +130,29 @@ export async function ensureProduction2(_req, res) {
   } catch (e) { res.status(500).json({ error: e.message }) }
 }
 
-// ─── Rotation des identifiants (v2.7.9 — sécurité) ────────────────────────
-// Appelée au démarrage du serveur. Pour chaque compte par défaut :
-//   • Compte absent      → créé avec les nouveaux identifiants
-//   • Mot de passe encore = ancien défaut → rotation (nouvel ID + nouveau MDP)
-//   • Mot de passe changé manuellement (Admin) → respecté, rien d'écrasé
+// ─── Rotation des identifiants (v2.8.0 — sécurité) ────────────────────────
+// Appelée au démarrage du serveur.
+//   • 1ère exécution (marqueur `app_meta.credentials_rotation` absent) :
+//     FORCE la rotation de TOUS les comptes — y compris ceux dont le mot de
+//     passe avait été changé manuellement (bug v2.7.9 : ils étaient sautés,
+//     d'où "seul l'admin avait changé").
+//   • Exécutions suivantes : seuls les comptes encore sur un ancien mot de
+//     passe PAR DÉFAUT sont rotés → les changements manuels sont respectés.
+//   • Matching robuste : nouvel ID → nom → ancien ID → rôle (hors ADMIN).
 // Idempotente : relancer plusieurs fois ne casse rien.
-export async function rotateCredentials() {
+export async function rotateCredentials({ force = false } = {}) {
+  const meta = mongoose.connection.db.collection('app_meta')
+  const flag = await meta.findOne({ key: 'credentials_rotation' })
+  const forceAll = force || !flag || flag.value !== 'v2.8.0'
+
   let created = 0, rotated = 0, kept = 0
   for (const d of DEFAULT_USERS) {
-    const existing = await PortalUser.findOne({ $or: [{ loginId: d.loginId }, { name: d.name }] })
+    let existing = await PortalUser.findOne({ loginId: d.loginId })
+    if (!existing) existing = await PortalUser.findOne({ name: d.name })
+    if (!existing) existing = await PortalUser.findOne({ loginId: d.oldLoginId })
+    // Fallback par rôle : un seul compte par rôle (hors ADMIN, géré par nom/ID)
+    if (!existing && d.role !== 'ADMIN') existing = await PortalUser.findOne({ role: d.role })
+
     if (!existing) {
       await PortalUser.create({
         loginId: d.loginId,
@@ -151,20 +164,27 @@ export async function rotateCredentials() {
       created++
       continue
     }
-    // Toujours sur l'ancien mot de passe par défaut → on applique la rotation
+
     const stillOldDefault = existing.password && await bcrypt.compare(d.oldPassword, existing.password).catch(() => false)
-    if (stillOldDefault) {
+    if (forceAll || stillOldDefault) {
       existing.loginId = d.loginId
       existing.password = await bcrypt.hash(d.password, BCRYPT_ROUNDS)
+      existing.name = d.name
       existing.role = d.role
       existing.canChangePassword = d.canChangePassword
       await existing.save()
       rotated++
     } else {
-      kept++ // mot de passe déjà changé manuellement → respecté
+      kept++ // mot de passe déjà changé manuellement après la rotation → respecté
     }
   }
-  return { created, rotated, kept }
+
+  await meta.updateOne(
+    { key: 'credentials_rotation' },
+    { $set: { value: 'v2.8.0', rotatedAt: new Date() } },
+    { upsert: true }
+  )
+  return { created, rotated, kept, forceAll }
 }
 
 // GET /api/users

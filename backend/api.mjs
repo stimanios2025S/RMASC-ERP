@@ -364,12 +364,13 @@ async function start() {
     const { connectDB } = await import('./src/lib/mongoose.js')
     await connectDB()
     console.log(`  ✅ MongoDB connectée`)
-    // Rotation des identifiants (v2.7.9) : applique les nouveaux ID/MDP aux
-    // comptes encore sur l'ancien défaut, crée les comptes manquants
-    // (dont Atelier 2), et respecte les mots de passe changés manuellement.
+    // Rotation des identifiants (v2.8.0) : 1ère exécution = FORCÉE pour tous
+    // les comptes (corrige le bug où seuls les MDP encore par défaut passaient),
+    // puis seuls les comptes restés sur un ancien défaut sont rotés.
     try {
-      const { created, rotated, kept } = await rotateCredentials()
-      console.log(`  🔐 Identifiants: ${created} créé(s), ${rotated} roté(s), ${kept} inchangé(s) (changés manuellement)`)
+      const { created, rotated, kept, forceAll } = await rotateCredentials()
+      console.log(`  🔐 Identifiants: ${forceAll ? 'ROTATION FORCÉE (tous les comptes)' : 'rotation incrémentale'} — ${rotated} roté(s), ${created} créé(s), ${kept} inchangé(s)`)
+      console.log(`     👉 Utilisez les NOUVEAUX identifiants (voir la liste fournie par l'administrateur)`)
     } catch (e) { console.warn(`  ⚠️  Rotation des identifiants: ${e.message}`) }
   } catch (err) {
     console.warn(`  ⚠️  MongoDB: ${err.message}`)

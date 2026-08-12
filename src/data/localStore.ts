@@ -8,7 +8,7 @@
 // in MongoDB, NOT localStorage. This ensures cross-device sync.
 // For offline fallback, we only keep user credentials (read-only).
 
-const SEED_KEY = 'rmasc_local_seeded_v5'
+const SEED_KEY = 'rmasc_local_seeded_v6'
 const SESSION_KEY = 'rmasc_portal_session'
 
 interface LocalUser {
@@ -20,31 +20,19 @@ function getUsers(): LocalUser[] {
 }
 
 function isSeedValid(): boolean {
-  if (!localStorage.getItem(SEED_KEY)) return false
-  const users = getUsers()
-  if (users.length < 8) return false
-  return users.some(u => u.loginId === 'salim' || u.loginId === 'admin')
+  // v6 : la présence de la clé = déjà purgé (aucun compte local à re-seeder)
+  return !!localStorage.getItem(SEED_KEY)
 }
 
 function seedOnce() {
   if (isSeedValid()) return
   localStorage.removeItem(SEED_KEY)
 
-  // Only seed users — NO orders, NO items, NO suppliers, NO vault files
-  // 🔐 v5 : identifiants ROTÉS (v2.7.9) — les anciens ne fonctionnent plus
-  const users: LocalUser[] = [
-    { id: 'u100', loginId: 'salim.rmasc', password: 'Rm#Salim2026!', name: 'Salim', role: 'ADMIN' },
-    { id: 'u101', loginId: 'ghani.rmasc', password: 'Rm#Ghani2026!', name: 'Chergui El Ghani', role: 'ADMIN' },
-    { id: 'u102', loginId: 'nassim.rmasc', password: 'Rm#Nassim2026!', name: 'Chergui Nassim', role: 'ADMIN' },
-    { id: 'u103', loginId: 'said.rmasc', password: 'Rm#Said2026!', name: 'Chergui Said', role: 'ADMIN' },
-    { id: 'u104', loginId: 'aziz.rmasc', password: 'Rm#Aziz2026!', name: 'Chergui El Aziz', role: 'ADMIN' },
-    { id: 'u105', loginId: 'karim.be1', password: 'Rm#Karim2026!', name: 'Karim Bensalem', role: 'INGENIEUR_1' },
-    { id: 'u106', loginId: 'yasmine.be2', password: 'Rm#Yasmine2026!', name: 'Yasmine Hamidi', role: 'INGENIEUR_2' },
-    { id: 'u107', loginId: 'rachid.verif', password: 'Rm#Rachid2026!', name: 'Rachid Imane', role: 'VERIFICATEUR' },
-    { id: 'u108', loginId: 'said.prod1', password: 'Rm#Prod1_2026!', name: 'Said Mansouri', role: 'PRODUCTION' },
-    { id: 'u109', loginId: 'chef.prod2', password: 'Rm#Prod2_2026!', name: 'Chef Atelier 2', role: 'PRODUCTION_2' },
-    { id: 'u110', loginId: 'ahmed.mag', password: 'Rm#Ahmed2026!', name: 'Ahmed Benali', role: 'MAGASINIER' },
-  ]
+  // 🔐 SÉCURITÉ (v2.8.0) : AUCUN identifiant / mot de passe dans le bundle client.
+  // L'authentification passe UNIQUEMENT par le backend (MongoDB, hachage bcrypt).
+  // Ce seed vide PURGE aussi les anciens identifiants en clair déjà stockés sur
+  // les appareils (v5) — plus aucune trace de mot de passe côté navigateur.
+  const users: LocalUser[] = []
   localStorage.setItem('rmasc_local_users', JSON.stringify(users))
 
   // Clean up any stale test data that prevents cross-device sync
