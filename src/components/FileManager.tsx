@@ -123,20 +123,15 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
     return `/api/orders/${orderId}/files/${fileId}`
   }
 
-  const openFilePicker = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '*/*'
-    input.multiple = true
-    input.onchange = (ev: any) => {
-      const selected = ev.target?.files
-      if (selected) {
-        for (let i = 0; i < selected.length; i++) {
-          handleUpload(selected[i])
-        }
-      }
+  // iOS : le sélecteur de fichiers est ouvert NATIVEMENT via un <label> qui
+  // enveloppe l'input (sr-only) — pas de document.createElement + .click() qui
+  // est bloqué par Safari en mode PWA installé.
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files
+    if (selected) {
+      Array.from(selected).forEach(f => handleUpload(f))
     }
-    input.click()
+    e.target.value = ''
   }
 
   // ── Build the main content (compact or full) ──────────────────────
@@ -182,16 +177,16 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
         </div>
       ) : null}
 
-      <div onClick={openFilePicker}
-        onDragOver={e => e.preventDefault()}
+      <label onDragOver={e => e.preventDefault()}
         onDrop={e => { e.preventDefault(); Array.from(e.dataTransfer.files).forEach(f => handleUpload(f)) }}
-        className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${uploading ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10 bg-white/[0.02] hover:border-amber-500/30 hover:bg-amber-500/5'}`}>
+        className={`block border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${uploading ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10 bg-white/[0.02] hover:border-amber-500/30 hover:bg-amber-500/5'}`}>
+        <input type="file" multiple className="sr-only" onChange={handleInputChange} />
         {uploading ? (
           <p className="text-sm text-amber-400 font-semibold">⏳ Upload en cours...</p>
         ) : (
           <><p className="text-sm font-semibold text-white/70 mb-0.5">📂 Ajouter un fichier</p><p className="text-xs text-white/50">Cliquez ou glissez-déposez</p></>
         )}
-      </div>
+      </label>
     </div>
   ) : (
     <div className="bg-white/[0.03] rounded-2xl border border-white/5 shadow-sm">
@@ -213,15 +208,15 @@ export default function FileManager({ orderId, orderSerial, engineerName, compac
       )}
 
       <div className="p-5 space-y-4">
-        <div onClick={openFilePicker}
-          onDragOver={e => e.preventDefault()}
+        <label onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); Array.from(e.dataTransfer.files).forEach(f => handleUpload(f)) }}
-          className="border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all bg-white/[0.02] border-white/10 hover:border-amber-500/30 hover:bg-amber-500/5">
+          className="block border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all bg-white/[0.02] border-white/10 hover:border-amber-500/30 hover:bg-amber-500/5">
+          <input type="file" multiple className="sr-only" onChange={handleInputChange} />
           <span className="text-2xl block mb-2">📤</span>
           <p className="text-sm font-semibold text-white/70">Cliquez pour ajouter un fichier</p>
           <p className="text-xs text-white/50 mt-0.5">ou glissez-déposez ici — PDF, DWG, images, tout format • stockage serveur illimité</p>
           {uploading && <p className="text-xs text-amber-400 font-semibold mt-2">⏳ Upload en cours...</p>}
-        </div>
+        </label>
 
         {loading ? (
           <div className="text-center py-4"><p className="text-xs text-white/50 italic">Chargement des fichiers...</p></div>

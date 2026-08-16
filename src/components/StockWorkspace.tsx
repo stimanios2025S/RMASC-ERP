@@ -700,7 +700,7 @@ function ItemsTab({ items, lowStockItems, selectedItem, setSelectedItem, showFor
             <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-white/10 bg-white/[0.04] cursor-pointer hover:bg-white/[0.06] transition-all text-sm text-white hover:text-white">
               <span>📷</span>
               <span>{imageFile ? imageFile.name : 'Ajouter une photo'}</span>
-              <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+              <input type="file" accept="image/*" onChange={handleImageSelect} className="sr-only" />
             </label>
             {imagePreview && (
               <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-white/10">

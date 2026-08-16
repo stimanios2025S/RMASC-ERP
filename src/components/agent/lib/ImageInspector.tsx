@@ -4,7 +4,7 @@
 //  et Salim analyse l'image et donne des informations contextuelles.
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 
 interface ImageInspectorProps {
   onClose: () => void
@@ -17,8 +17,6 @@ export default function ImageInspector({ onClose, onAnalyze }: ImageInspectorPro
   const [fileSize, setFileSize] = useState('')
   const [loading, setLoading] = useState(false)
   const [analysis, setAnalysis] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-
   const handleFile = (file: File) => {
     if (!file) return
     setFileName(file.name)
@@ -69,24 +67,23 @@ export default function ImageInspector({ onClose, onAnalyze }: ImageInspectorPro
         <div className="p-5">
           {/* Drop zone */}
           {!image && (
-            <div
-              onClick={() => inputRef.current?.click()}
+            <label
               onDrop={handleDrop}
               onDragOver={e => e.preventDefault()}
-              className="border-2 border-dashed border-slate-600 rounded-2xl p-10 text-center cursor-pointer hover:border-amber-500/50 hover:bg-slate-800/50 transition-all group"
+              className="block border-2 border-dashed border-slate-600 rounded-2xl p-10 text-center cursor-pointer hover:border-amber-500/50 hover:bg-slate-800/50 transition-all group"
             >
               <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📸</div>
               <p className="text-sm font-semibold text-white mb-1">Cliquez pour uploader une image</p>
               <p className="text-xs text-white/70">Photo de cabine, plan technique, schéma, document scanné...</p>
               <p className="text-[10px] text-white/50 mt-2">ou glissez-déposez ici • PNG, JPG, JPEG, WEBP</p>
+              {/* iOS : input natif dans un <label> (sr-only) — le picker s'ouvre sans JS */}
               <input
-                ref={inputRef}
                 type="file"
                 accept="image/*"
-                onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
-                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }}
+                className="sr-only"
               />
-            </div>
+            </label>
           )}
 
           {/* Preview */}

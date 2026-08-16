@@ -483,24 +483,20 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
     setTimeout(() => setNoteSent(false), 3000)
   }
 
-  const handleUploadFile = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '*/*'
-    input.onchange = (ev: any) => {
-      const file = ev.target?.files?.[0]
-      if (!file) return
-      const reader = new FileReader()
-      reader.onload = () => {
-        try {
-          addUpload(order.id, { data: reader.result as string, name: file.name, type: file.type, uploadedAt: new Date().toISOString() })
-          setNoteSent(true)
-          setTimeout(() => setNoteSent(false), 3000)
-        } catch { /* quota */ }
-      }
-      reader.readAsDataURL(file)
+  // iOS : input natif dans un <label> (sr-only) — le picker s'ouvre sans JS
+  const handleUploadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        addUpload(order.id, { data: reader.result as string, name: file.name, type: file.type, uploadedAt: new Date().toISOString() })
+        setNoteSent(true)
+        setTimeout(() => setNoteSent(false), 3000)
+      } catch { /* quota */ }
     }
-    input.click()
+    reader.readAsDataURL(file)
+    e.target.value = ''
   }
 
   const handleSaveEdit = async () => {
@@ -685,10 +681,10 @@ function OrderDetailView({ order, onBack, onEdit, onDelete }: {
           <div className="bg-slate-800/70 rounded-xl border border-white/10 p-5 shadow-sm">
             <h3 className="text-sm font-bold text-white mb-3">📎 Ajouter des fichiers</h3>
             <p className="text-xs text-white/50 mb-3">Ces fichiers seront archivés avec la commande.</p>
-            <button onClick={handleUploadFile}
-              className="px-4 py-2.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/25">
+            <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/25 cursor-pointer">
               📂 Choisir un fichier
-            </button>
+              <input type="file" accept="*/*" className="sr-only" onChange={handleUploadFile} />
+            </label>
             {uploadedFiles.length > 0 && (
               <div className="mt-4 space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1">Fichiers attachés ({uploadedFiles.length})</p>

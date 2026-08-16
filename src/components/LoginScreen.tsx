@@ -165,7 +165,7 @@ export default function LoginScreen({ onLogin }: Props) {
 
           <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[10px] text-white/40 font-medium">
             <span className="flex items-center gap-1.5"><span>🔒</span> Connexion locale sécurisée</span>
-            <span>RMASC ERP <span className="text-amber-400/80">v2.8.0</span></span>
+            <span>RMASC ERP <span className="text-amber-400/80">v2.8.1</span></span>
           </div>
         </div>
       </div>

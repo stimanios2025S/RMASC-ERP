@@ -110,7 +110,7 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
       className={`relative bg-[#0a0f1a] rounded-xl border border-slate-700 overflow-hidden select-none flex flex-col ${
         fullscreen ? 'fixed inset-0 z-[100] rounded-none border-0' : ''
       }`}
-      style={{ height: fullscreen ? '100vh' : '100%', minHeight: fullscreen ? undefined : 400 }}
+      style={{ height: fullscreen ? 'var(--app-height, 100vh)' : '100%', minHeight: fullscreen ? undefined : 400 }}
     >
       {/* ─── Toolbar ─── */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-[#1a2332] to-[#111827] border-b border-slate-700 flex-shrink-0">
@@ -122,6 +122,15 @@ export default function PDFViewer({ data, fileName, onClose }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          {/* Retour visible — indispensable en mode PWA installé (pas de bouton
+              navigateur sur téléphone). Toujours affiché en plein écran. */}
+          {fullscreen && (
+            <button onClick={() => { document.exitFullscreen?.().catch(() => {}); onClose?.() }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-colors" title="Retour">
+              ← Retour
+            </button>
+          )}
+
           {/* Zoom controls */}
           <button onClick={() => setZoom(z => Math.min(z + 0.25, 3))}
             className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold flex items-center justify-center transition-colors" title="Zoom avant">+</button>

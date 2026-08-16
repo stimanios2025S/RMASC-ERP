@@ -16,7 +16,7 @@ Sentry.init({
 })
 
 // ═══ VERSION CONTROL — forces cache reset on all devices when deployed ═════
-const APP_VERSION = 'v2.8.0'
+const APP_VERSION = 'v2.8.1'
 
 ;(() => {
   try {

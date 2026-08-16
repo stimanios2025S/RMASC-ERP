@@ -2,7 +2,10 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <!-- user-scalable=no : indispensable en mode PWA installé (écran d'accueil).
+         Sans lui, le double-tap / pincement zoome la page et, sans bouton retour
+         navigateur en mode standalone, l'utilisateur reste bloqué zoomé. -->
 
     <!-- iOS 17 PWA fix: hauteur pilotée par JS — les unités vh/dvh sont cassées
          en mode "écran d'accueil" sur iOS 17 (contenu coupé en bas). Cette

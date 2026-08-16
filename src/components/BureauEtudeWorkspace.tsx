@@ -62,13 +62,15 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleDateString('fr-DZ', { day
 
 function FileDropZone({ onDrop, uploaded }: { onDrop: (f: File) => void; uploaded?: { name: string } }) {
   return (
-    <div onDragOver={e => e.preventDefault()}
+    <label onDragOver={e => e.preventDefault()}
       onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) onDrop(f) }}
-      onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '*/*'; i.onchange = (ev: any) => { const f = ev.target?.files?.[0]; if (f) onDrop(f) }; i.click() }}
-      className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${uploaded ? 'border-emerald-400/30 bg-emerald-500/5' : 'border-white/10 bg-slate-800/60 hover:border-white/15 hover:bg-white/[0.06]'}`}>
+      className={`block border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-all ${uploaded ? 'border-emerald-400/30 bg-emerald-500/5' : 'border-white/10 bg-slate-800/60 hover:border-white/15 hover:bg-white/[0.06]'}`}>
+      {/* iOS : input natif dans un <label> (sr-only) — le picker s'ouvre sans JS */}
+      <input type="file" accept="*/*" className="sr-only"
+        onChange={e => { const f = e.target.files?.[0]; if (f) onDrop(f); e.target.value = '' }} />
       {uploaded ? <p className="text-sm text-emerald-600 font-semibold">✅ {uploaded.name}</p>
         : <><p className="text-sm font-semibold text-white/80 mb-1">📂 Déposer le fichier</p><p className="text-xs text-white">Cliquez ou glissez-déposez</p></>}
-    </div>
+    </label>
   )
 }
 

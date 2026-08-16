@@ -294,12 +294,11 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                 </div>
               </div>
 
-              {/* File upload zone */}
+              {/* File upload zone — <label> natif compatible iOS (aucun .click() JS) */}
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Plan 2D (DXF/DWG/PDF)</label>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
+                <label
+                  className={`block border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
                     file
                       ? 'border-amber-500/30 bg-amber-500/5'
                       : 'border-white/10 bg-white/[0.02] hover:border-amber-500/25 hover:bg-amber-500/5'
@@ -310,7 +309,7 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                     type="file"
                     accept=".dxf,.dwg,.pdf,.png,.jpg,.jpeg"
                     onChange={e => setFile(e.target.files?.[0] || null)}
-                    className="hidden"
+                    className="sr-only"
                   />
                   {file ? (
                     <div className="space-y-1">
@@ -325,7 +324,7 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                       <p className="text-[10px] text-white/50">DXF, DWG, PDF — Cliquez pour parcourir</p>
                     </div>
                   )}
-                </div>
+                </label>
               </div>
 
               {/* Feedback message */}

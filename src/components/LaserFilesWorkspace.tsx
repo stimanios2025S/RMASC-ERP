@@ -118,8 +118,6 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
   const [allFiles, setAllFiles] = useState<LaserFileRow[]>([])
   const [preview, setPreview] = useState<LaserFileRow | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const replaceRef = useRef<HTMLInputElement>(null)
-  const [replaceTarget, setReplaceTarget] = useState<LaserFileRow | null>(null)
 
   const loadFiles = useCallback(async () => {
     try {
@@ -212,26 +210,26 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
     }
   }
 
-  const triggerReplace = (f: LaserFileRow) => {
-    setReplaceTarget(f)
-    setTimeout(() => replaceRef.current?.click(), 50)
-  }
-  const handleReplaceFile = async (e: ChangeEvent<HTMLInputElement>) => {
+  // iOS : PAS de programmatic click / setTimeout — le clic DOIT rester dans le
+  // geste utilisateur. Chaque bouton "🔄" est un <label> natif qui enveloppe
+  // son propre <input> (visuellement masqué via sr-only) → le sélecteur de
+  // fichiers s'ouvre nativement, même en mode PWA installé sur iPhone.
+  const handleReplaceFile = async (f: LaserFileRow, e: ChangeEvent<HTMLInputElement>) => {
     const newFile = e.target.files?.[0]
-    if (!newFile || !replaceTarget) return
+    if (!newFile) return
     try {
       const formData = new FormData()
-      formData.append('projectName', replaceTarget.projectName)
-      formData.append('material', replaceTarget.material || '')
-      formData.append('thickness', replaceTarget.thickness || '')
-      formData.append('quantity', String(replaceTarget.quantity))
-      if (replaceTarget.orderId) formData.append('orderId', replaceTarget.orderId)
-      if (replaceTarget.orderSerial) formData.append('orderSerial', replaceTarget.orderSerial)
-      if (replaceTarget.orderClient) formData.append('orderClient', replaceTarget.orderClient)
+      formData.append('projectName', f.projectName)
+      formData.append('material', f.material || '')
+      formData.append('thickness', f.thickness || '')
+      formData.append('quantity', String(f.quantity))
+      if (f.orderId) formData.append('orderId', f.orderId)
+      if (f.orderSerial) formData.append('orderSerial', f.orderSerial)
+      if (f.orderClient) formData.append('orderClient', f.orderClient)
       formData.append('pdfFile', newFile)
 
       const token = localStorage.getItem('rmasc_token')
-      const res = await fetch(`/api/laser-files/${replaceTarget.id}/replace`, {
+      const res = await fetch(`/api/laser-files/${f.id}/replace`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
@@ -246,8 +244,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message })
     } finally {
-      setReplaceTarget(null)
-      if (e.target) e.target.value = ''
+      e.target.value = ''
     }
   }
 
@@ -257,9 +254,6 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Hidden input for replace */}
-      <input ref={replaceRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={handleReplaceFile} />
-
       {/* Top bar */}
       <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b border-white/5 bg-white/[0.03] gap-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -384,12 +378,11 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                 </div>
               </div>
 
-              {/* File upload zone */}
+              {/* File upload zone — <label> natif compatible iOS (aucun .click() JS) */}
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Fichier de Découpe (PDF) *</label>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
+                <label
+                  className={`block border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
                     file
                       ? 'border-amber-500/30 bg-amber-500/5'
                       : 'border-white/10 bg-white/[0.02] hover:border-amber-500/25 hover:bg-amber-500/5'
@@ -400,7 +393,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                     type="file"
                     accept=".pdf,application/pdf"
                     onChange={e => setFile(e.target.files?.[0] || null)}
-                    className="hidden"
+                    className="sr-only"
                   />
                   {file ? (
                     <div className="space-y-1">
@@ -415,7 +408,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                       <p className="text-[10px] text-white/50">PDF uniquement — Cliquez pour parcourir</p>
                     </div>
                   )}
-                </div>
+                </label>
               </div>
 
               {/* Feedback */}
@@ -550,11 +543,12 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                                   className="p-1.5 rounded-lg hover:bg-emerald-500/20 text-white/40 hover:text-emerald-400 transition-all" title="Télécharger">
                                   ⬇️
                                 </button>
-                                <button
-                                  onClick={() => triggerReplace(f)}
-                                  className="p-1.5 rounded-lg hover:bg-amber-500/20 text-white/40 hover:text-amber-400 transition-all" title={isApproved ? 'Remplacer (invalide l\'approbation → En Attente)' : 'Remplacer le fichier'}>
+                                <label
+                                  className="p-1.5 rounded-lg hover:bg-amber-500/20 text-white/40 hover:text-amber-400 transition-all cursor-pointer"
+                                  title={isApproved ? 'Remplacer (invalide l\'approbation → En Attente)' : 'Remplacer le fichier'}>
                                   🔄
-                                </button>
+                                  <input type="file" accept=".pdf,application/pdf" className="sr-only" onChange={e => handleReplaceFile(f, e)} />
+                                </label>
                                 <button
                                   onClick={() => handleDelete(f)}
                                   className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-all" title="Supprimer">
