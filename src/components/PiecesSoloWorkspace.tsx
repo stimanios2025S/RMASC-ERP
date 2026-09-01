@@ -371,7 +371,7 @@ function IngenieurView({ onBack }: { onBack?: () => void }) {
                   <p className="text-xs text-white/50 mt-1">Soumettez votre première pièce via le formulaire.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto overflow-y-auto max-h-[60vh] scrollbar-thin">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-white/5 bg-white/[0.02]">
