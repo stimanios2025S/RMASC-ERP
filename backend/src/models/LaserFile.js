@@ -18,6 +18,7 @@ const laserFileSchema = new mongoose.Schema({
   material:  String,                       // e.g. "Acier", "Inox", "Aluminium"
   thickness: String,                       // e.g. "2mm", "3mm", "5mm"
   quantity:  { type: Number, default: 1 },
+  commandes: String,                       // commandes liées au fichier (saisi manuellement)
 
   // ── Cycle de vie ─────────────────────────────────────────────────────
   status: {

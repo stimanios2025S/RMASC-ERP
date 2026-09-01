@@ -230,6 +230,7 @@ export async function createLaserFile(req, res) {
       },
       status: 'EN_ATTENTE',
       atelier: parsed.data.atelier || 'ATELIER_1', // atelier choisi par l'Ingénieur 2
+      commandes: parsed.data.commandes || undefined,
       createdBy: req.user.name || req.user.userId,
     })
 

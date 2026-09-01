@@ -24,6 +24,7 @@ interface LaserFileRow {
   material?: string | null
   thickness?: string | null
   quantity: number
+  commandes?: string | null
   status: 'EN_ATTENTE' | 'APPROVED_LASER'
   atelier?: string
   fileUrl?: string | null
@@ -112,6 +113,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
   const [thickness, setThickness] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [atelier, setAtelier] = useState<'ATELIER_1' | 'ATELIER_2'>('ATELIER_1') // atelier cible (choisi par l'Ingénieur 2)
+  const [commandes, setCommandes] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -173,6 +175,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
       formData.append('thickness', thickness.trim())
       formData.append('quantity', String(quantity))
       formData.append('atelier', atelier) // Production 1 ou Production 2
+      if (commandes.trim()) formData.append('commandes', commandes.trim())
       formData.append('pdfFile', file)
 
       const token = localStorage.getItem('rmasc_token')
@@ -188,7 +191,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
       const data = await res.json()
       setMessage({ type: 'success', text: `✅ ${data.message}` })
       setProjectName(''); setMaterial(''); setThickness(''); setQuantity(1)
-      setOrderId(''); setAtelier('ATELIER_1'); setFile(null)
+      setOrderId(''); setAtelier('ATELIER_1'); setCommandes(''); setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       setTab('attente')
       loadFiles()
@@ -226,6 +229,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
       if (f.orderId) formData.append('orderId', f.orderId)
       if (f.orderSerial) formData.append('orderSerial', f.orderSerial)
       if (f.orderClient) formData.append('orderClient', f.orderClient)
+      if (f.commandes) formData.append('commandes', f.commandes)
       formData.append('pdfFile', newFile)
 
       const token = localStorage.getItem('rmasc_token')
@@ -348,6 +352,18 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                   value={quantity}
                   onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-full h-10 px-3.5 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all"
+                />
+              </div>
+
+              {/* Commandes */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1 block">Commandes</label>
+                <textarea
+                  value={commandes}
+                  onChange={e => setCommandes(e.target.value)}
+                  placeholder="Commandes liées à ce fichier..."
+                  rows={2}
+                  className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-white/[0.06] text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/30 transition-all resize-none"
                 />
               </div>
 
@@ -490,6 +506,7 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                         <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Commande</th>
                         <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Matière</th>
                         <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Qté</th>
+                        <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Commandes</th>
                         <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Statut</th>
                         <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-white/80">Actions</th>
                       </tr>
@@ -525,6 +542,11 @@ function IngenieurLaserView({ onBack }: { onBack?: () => void }) {
                             </td>
                             <td className="px-5 py-3 text-center">
                               <span className="text-sm font-bold text-white">{f.quantity}</span>
+                            </td>
+                            <td className="px-5 py-3">
+                              {f.commandes ? (
+                                <span className="text-xs text-white/80">{f.commandes}</span>
+                              ) : <span className="text-xs text-white/40">—</span>}
                             </td>
                             <td className="px-5 py-3 text-center">
                               <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${badge.cls}`}>{badge.label}</span>

@@ -195,4 +195,5 @@ export const createLaserFileSchema = z.object({
   quantity: z.string().optional().default('1'),
   // Atelier cible choisi par l'Ingénieur 2 (form-data → '' si absent)
   atelier: z.enum(['ATELIER_1', 'ATELIER_2']).or(z.literal('')).default('ATELIER_1'),
+  commandes: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
 })
