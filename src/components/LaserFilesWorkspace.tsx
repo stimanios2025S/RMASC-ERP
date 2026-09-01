@@ -768,7 +768,8 @@ function ProductionLaserView({ onBack }: { onBack?: () => void }) {
                 <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Approuvés &amp; Tamponnés · {approuves.length} fichier{approuves.length > 1 ? 's' : ''}</h3>
               </div>
               <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/5 shadow-lg overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Scroll vertical pour atteindre les fichiers plus anciens */}
+                <div className="overflow-x-auto overflow-y-auto max-h-[60vh] scrollbar-thin">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-white/5 bg-white/[0.02]">
