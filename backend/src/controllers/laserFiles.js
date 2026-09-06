@@ -364,6 +364,7 @@ export async function replaceLaserFile(req, res) {
         laser.orderSerial = parsed.data.orderSerial || undefined
         laser.orderClient = parsed.data.orderClient || undefined
       }
+      if (parsed.data.commandes !== undefined) laser.commandes = parsed.data.commandes || undefined
     }
     await laser.save()
 
